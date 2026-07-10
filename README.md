@@ -140,13 +140,22 @@ Or with Docker Compose:
 VITE_API_BASE_URL=https://api.example.com/api docker compose up --build
 ```
 
-## Branching & CI
+## Branching, CI & releases
 
-- **`main`** — production-ready, protected. Merges via reviewed PRs only.
+- **`main`** — production-ready. Protected: no direct pushes, PR + green CI required.
 - **`dev`** — integration branch for day-to-day work.
 
-Every push and pull request to `main`/`dev` runs the [CI workflow](.github/workflows/ci.yml):
-lint → typecheck → build, plus a Docker build check.
+Every push and pull request to `main`/`dev` runs [CI](.github/workflows/ci.yml):
+lint → typecheck → build, plus a Docker build check. Both are required status checks.
+
+When a change lands on `main`, [Publish](.github/workflows/publish.yml) builds and pushes
+a container image to GHCR:
+
+```bash
+docker run --rm -p 8080:80 ghcr.io/mustafakurtt/uniclub-frontend:latest
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full workflow and review policy.
 
 ## Contributing
 
