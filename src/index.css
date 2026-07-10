@@ -1,0 +1,412 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   UniClub Core Design System — bileşen katmanı
+   Tüm sayfalar bu sınıfları kullanır; ham utility tekrarına
+   girmeden tutarlı bir görünüm sağlar. Sub-domain temaları için
+   tailwind.config.js'teki `brand`/`accent` skalasını değiştirmek
+   yeterlidir.
+   ============================================================ */
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-club-light text-slate-800 font-sans;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display;
+  }
+
+  ::selection {
+    @apply bg-brand-600 text-white;
+  }
+
+  /* İnce, markaya uygun scrollbar */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-brand-200 rounded-full border-2 border-solid border-transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-brand-400;
+    background-clip: padding-box;
+  }
+}
+
+@layer components {
+  /* ---------- Butonlar ---------- */
+  .btn {
+    @apply relative inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3
+           font-bold text-sm tracking-wide transition-all duration-300 ease-spring
+           focus:outline-none focus-visible:ring-4 disabled:opacity-60 disabled:pointer-events-none
+           active:scale-[0.97] overflow-hidden;
+  }
+
+  /* Ana aksiyon — gradyan + parıltı süpürmesi */
+  .btn-primary {
+    @apply btn text-white bg-gradient-to-r from-brand-700 via-brand-600 to-accent-500
+           bg-200% bg-left hover:bg-right shadow-lg shadow-brand-600/30
+           hover:shadow-glow focus-visible:ring-brand-300;
+  }
+  .btn-primary::after {
+    content: '';
+    @apply absolute inset-y-0 -left-1/2 w-1/3 bg-white/25 blur-md opacity-0
+           transition-opacity duration-300;
+    transform: skewX(-20deg);
+  }
+  .btn-primary:hover::after {
+    @apply opacity-100 animate-shine;
+  }
+
+  .btn-secondary {
+    @apply btn bg-white text-brand-800 border border-brand-200 shadow-card
+           hover:border-brand-400 hover:shadow-card-hover hover:-translate-y-0.5
+           focus-visible:ring-brand-200;
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent text-brand-700 hover:bg-brand-50 focus-visible:ring-brand-100;
+  }
+
+  /* Koyu zemin üstünde kullanılan beyaz buton */
+  .btn-white {
+    @apply btn bg-white text-brand-900 shadow-lg shadow-brand-950/30
+           hover:shadow-glow hover:-translate-y-0.5 focus-visible:ring-white/40;
+  }
+
+  /* ---------- Form elemanları ---------- */
+  .input-label {
+    @apply block text-sm font-semibold text-slate-700 mb-1.5;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl
+           text-slate-800 placeholder:text-slate-400
+           transition-all duration-300 outline-none
+           focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15
+           hover:border-slate-300;
+  }
+
+  .input-error {
+    @apply text-red-500 text-xs mt-1.5 font-medium animate-fade-in;
+  }
+
+  /* Açılır liste (native select) — input-field ile aynı görsel dil + markaya
+     uygun özel chevron. Yerel ok gizlenir (appearance-none); ok, sağ tarafta
+     inline SVG arkaplanı olarak çizilir. `<option>` listesi tarayıcı
+     tarafından çizildiği için tema sınırlıdır — kutu ve odak tamamen
+     temaya uyar. */
+  .select-field {
+    @apply input-field cursor-pointer appearance-none bg-no-repeat pr-11;
+    /* brand-500 (#3b82f6) chevron */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%233b82f6' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-position: right 0.85rem center;
+    background-size: 1.15rem;
+  }
+  /* Firefox: seçenek metnindeki odak taraması gölgesini kaldır */
+  .select-field:-moz-focusring {
+    color: transparent;
+    text-shadow: 0 0 0 theme("colors.slate.800");
+  }
+  .select-field option {
+    @apply bg-white text-slate-800 font-medium;
+  }
+
+  /* ---------- Kartlar ve yüzeyler ---------- */
+  .card {
+    @apply bg-white rounded-3xl border border-slate-100 shadow-card;
+  }
+
+  .card-hover {
+    @apply card transition-all duration-300 ease-spring
+           hover:shadow-card-hover hover:-translate-y-1.5 hover:border-brand-200;
+  }
+
+  /* Cam efekti — açık zemin */
+  .glass {
+    @apply bg-white/70 backdrop-blur-xl border border-white/60 shadow-card;
+  }
+
+  /* Cam efekti — koyu/mavi zemin */
+  .glass-dark {
+    @apply bg-white/10 backdrop-blur-xl border border-white/20 shadow-inner-light;
+  }
+
+  /* Gradyan çerçeveli panel — öne çıkması gereken kartlar için */
+  .card-gradient {
+    @apply rounded-3xl shadow-card;
+    border: 1px solid transparent;
+    background:
+      linear-gradient(#ffffff, #ffffff) padding-box,
+      linear-gradient(135deg, rgba(37, 99, 235, 0.45), rgba(14, 165, 233, 0.25), rgba(37, 99, 235, 0.08)) border-box;
+  }
+
+  /* Gradyan ikon karosu — kart başlıkları ve aksiyon karoları */
+  .icon-tile {
+    @apply w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-50 to-accent-100
+           flex items-center justify-center text-2xl shadow-inner-light shrink-0;
+  }
+
+  /* Parıltı süpürmeli skeleton (yükleme yer tutucusu) */
+  .skeleton {
+    @apply relative overflow-hidden bg-slate-100 rounded-xl;
+  }
+  .skeleton::after {
+    content: '';
+    @apply absolute inset-0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+    animation: shimmer 1.6s ease-in-out infinite;
+  }
+
+  /* ---------- Dokunmatik geri bildirim ----------
+     Mobilde hover yoktur; his "bastırma" ile verilir. Tıklanabilir her
+     yüzey bunu almalı — mavi tap highlight'ı da kaldırır. */
+  .tap {
+    @apply transition-transform duration-150 ease-spring active:scale-[0.97];
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* ---------- Sticker rozet ----------
+     Kalın, yüksek kontrast, beyaz çerçeveli — çıkartma hissi. Zemin ve metin
+     rengi çağıran tarafından verilir. */
+  .sticker {
+    @apply inline-flex items-center gap-1 rounded-full border-2 border-white
+           px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider
+           shadow-sm;
+  }
+
+  /* ---------- Pop kart ----------
+     Az sayıda kulüp olduğunda boş görünmeyen, kompakt ve tıklanası kart. */
+  .card-pop {
+    @apply relative overflow-hidden rounded-3xl border border-slate-100 bg-white
+           shadow-card transition-all duration-300 ease-spring
+           hover:-translate-y-1 hover:border-brand-200 hover:shadow-card-hover
+           active:scale-[0.98];
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* ---------- Alt tab bar (yalnızca mobil) ---------- */
+  .tab-item {
+    @apply relative flex flex-1 flex-col items-center justify-center gap-1
+           rounded-2xl py-2 text-[10px] font-bold text-slate-400
+           transition-colors duration-200;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tab-item[aria-current="page"] {
+    @apply text-brand-700;
+  }
+  /* Aktif sekmenin üstündeki kayan gösterge */
+  .tab-item[aria-current="page"]::before {
+    content: '';
+    @apply absolute -top-px h-1 w-8 rounded-full bg-gradient-to-r from-brand-600 to-accent-400;
+  }
+
+  /* ---------- Yatay kaydırmalı filtre şeridi ----------
+     Çipler mobilde satıra sığmaz; sarmak yerine kaydırılır (dikey yer harcamaz).
+     `min-w-0` esnek kapsayıcıda taşmayı önler. */
+  .chip-rail {
+    @apply flex min-w-0 flex-1 snap-x gap-2 overflow-x-auto py-1;
+    scrollbar-width: none;
+  }
+  .chip-rail::-webkit-scrollbar {
+    display: none;
+  }
+  .chip-rail > * {
+    @apply shrink-0 snap-start;
+  }
+
+  /* Filtre çipi — seçili hâli dolu ve hafif büyür */
+  .chip-filter {
+    @apply rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-bold
+           text-slate-600 transition-all duration-300 ease-spring
+           hover:border-brand-400 hover:text-brand-700 active:scale-95;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .chip-filter[aria-pressed="true"] {
+    @apply scale-105 border-transparent bg-brand-600 text-white shadow-glow;
+  }
+
+  /* ---------- Rozet / etiket ---------- */
+  .badge {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold
+           bg-brand-50 text-brand-700 border border-brand-100;
+  }
+
+  .badge-glow {
+    @apply badge bg-brand-600/10 text-brand-700 border-brand-300/50 shadow-glow;
+  }
+
+  .chip {
+    @apply inline-flex items-center rounded-full px-4 py-1.5 text-sm font-semibold
+           bg-white text-slate-600 border border-slate-200 shadow-sm
+           transition-all duration-300 hover:border-brand-400 hover:text-brand-700
+           hover:-translate-y-0.5 cursor-default;
+  }
+
+  /* ---------- Uyarılar ---------- */
+  .alert-error {
+    @apply p-4 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100
+           font-medium animate-scale-in;
+  }
+
+  .alert-success {
+    @apply p-4 bg-green-50 text-green-700 rounded-xl text-sm border border-green-100
+           font-medium animate-scale-in;
+  }
+
+  /* ---------- Tipografi ---------- */
+  .text-gradient {
+    @apply bg-gradient-to-r from-brand-600 via-accent-500 to-brand-700
+           bg-clip-text text-transparent bg-200% animate-aurora;
+  }
+
+  .section-title {
+    @apply text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900;
+  }
+
+  .section-subtitle {
+    @apply text-lg text-slate-500 max-w-2xl;
+  }
+
+  /* Navbar linki — alttan büyüyen çizgi animasyonu */
+  .link-nav {
+    @apply relative text-sm font-semibold text-slate-600 transition-colors
+           hover:text-brand-700 py-2;
+  }
+  .link-nav::after {
+    content: '';
+    @apply absolute left-0 -bottom-0.5 h-0.5 w-full origin-left scale-x-0
+           bg-gradient-to-r from-brand-600 to-accent-400 rounded-full
+           transition-transform duration-300 ease-spring;
+  }
+  .link-nav:hover::after {
+    @apply scale-x-100;
+  }
+}
+
+@layer utilities {
+  /* ---------- 3D yardımcıları ---------- */
+  .perspective-800 { perspective: 800px; }
+  .perspective-1200 { perspective: 1200px; }
+  .preserve-3d { transform-style: preserve-3d; }
+  .backface-hidden { backface-visibility: hidden; }
+
+  /* ---------- Animasyon gecikmeleri (sahneleme için) ---------- */
+  .delay-0   { animation-delay: 0ms; }
+  .delay-100 { animation-delay: 100ms; }
+  .delay-200 { animation-delay: 200ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-500 { animation-delay: 500ms; }
+  .delay-700 { animation-delay: 700ms; }
+  .delay-1000 { animation-delay: 1000ms; }
+
+  /* Kenarlara doğru yumuşakça kaybolan maske (marquee vb.) */
+  .mask-fade-x {
+    -webkit-mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 12%, black 88%, transparent);
+  }
+
+  /* iOS çentik/ana ekran çubuğu güvenli alanı — sabit alt bar için şart */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .mb-safe {
+    margin-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ============================================================
+   Dekoratif yapılar (saf CSS 3D ve arkaplan parçaları)
+   ============================================================ */
+
+/* Yüzen ışık küresi — AuroraBackground bileşeni kullanır */
+.orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(64px);
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* ---------- CSS 3D Küp ---------- */
+.cube-scene {
+  perspective: 900px;
+}
+.cube {
+  position: relative;
+  transform-style: preserve-3d;
+  animation: spin-3d 16s linear infinite;
+}
+.cube-face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.35), rgba(14, 165, 233, 0.15));
+  backdrop-filter: blur(6px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  font-size: 2rem;
+}
+@keyframes spin-3d {
+  0%   { transform: rotateX(-18deg) rotateY(0deg); }
+  100% { transform: rotateX(-18deg) rotateY(360deg); }
+}
+
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ---------- Marquee (kayan şerit) ---------- */
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 32s linear infinite;
+}
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ============================================================
+   Erişilebilirlik: hareket azaltma tercihi
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
