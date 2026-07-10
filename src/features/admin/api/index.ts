@@ -1,0 +1,8 @@
+// Admin API yüzeyi — /api/admin (docs/FRONTEND_YONETIM.md §5).
+// Dosyalar dokümanın bölümlemesiyle aynı sırada; buradan toplu import edilir.
+export * from "./universities"; // §2 yönetim kapsamındaki üniversiteler
+export * from "./users"; // §5.1 kullanıcılar
+export * from "./applications"; // §5.2 kulüp kurma başvuruları
+export * from "./clubs"; // §5.3 kulüp durum/profil/silme
+export * from "./advisors"; // §5.4 danışmanlar
+export * from "./moderation"; // §5.5 üye & içerik moderasyonu
