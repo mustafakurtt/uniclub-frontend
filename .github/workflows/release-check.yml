@@ -1,0 +1,72 @@
+name: Release check
+
+# Production'a deploy BURADA olmaz.
+#
+# Deploy, pull-based bir ajanla yapılır (scripts/deploy-agent.sh): production
+# makinesi GitHub'ı okur, en son release'i görür, CI'ının yeşil olduğunu
+# doğrular ve imajı KENDİ üzerinde derleyip deploy eder. GitHub production
+# makinesine hiçbir zaman bağlanmaz — public bir repo'da self-hosted runner,
+# fork PR'larına makinede kod çalıştırma yüzeyi açardı.
+#
+# Bu workflow'un işi: release'e aday her commit için, prod imajının gerçekten
+# derlendiğini ve ayağa kalkıp sayfayı servis ettiğini kanıtlamak. "Derlendi"
+# yetmez; container gerçekten HTTP 200 + index.html döndürmeli.
+
+on:
+  push:
+    branches: [main, dev]
+  workflow_dispatch:
+
+concurrency:
+  group: release-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  image:
+    name: Build & smoke-test image
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compute image tag
+        id: meta
+        run: echo "tag=uniclub-frontend:${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      # Prod ile aynı imaj: göreli /api gömülü (tek-origin topolojisi).
+      - name: Build image
+        run: |
+          docker build \
+            --build-arg VITE_API_BASE_URL=/api \
+            -t "${{ steps.meta.outputs.tag }}" .
+
+      - name: Run container and check it serves the SPA
+        run: |
+          docker run -d --name smoke -p 8080:80 "${{ steps.meta.outputs.tag }}"
+
+          ok=0
+          for i in $(seq 1 30); do
+            body="$(curl -fsS http://localhost:8080/ 2>/dev/null || true)"
+            if echo "$body" | grep -qi '<div id="root"'; then
+              echo "✓ nginx ${i}. saniyede index.html servis etti"
+              ok=1
+              break
+            fi
+            sleep 1
+          done
+
+          if [ "$ok" -ne 1 ]; then
+            echo "✗ Container index.html döndürmedi"
+            docker logs smoke
+            docker rm -f smoke >/dev/null
+            exit 1
+          fi
+
+          # SPA fallback: bilinmeyen bir rota da index.html dönmeli (client-side routing).
+          code="$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/clubs/some-deep-route)"
+          docker rm -f smoke >/dev/null
+          if [ "$code" != "200" ]; then
+            echo "✗ SPA fallback çalışmadı (derin rota HTTP ${code})"
+            exit 1
+          fi
+          echo "✓ SPA fallback çalışıyor (derin rota HTTP 200)"
