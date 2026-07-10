@@ -1,10 +1,3 @@
-# Default owner for everything in the repo.
-# Add your collaborator here to have them auto-requested on every PR, e.g.
-#   *  @mustafakurtt @friend-username
+# @mustafakurtt owns and maintains this project. Every pull request automatically
+# requests his review — including contributions from collaborators.
 *                       @mustafakurtt
-
-# Infrastructure changes deserve a closer look.
-/Dockerfile             @mustafakurtt
-/nginx.conf             @mustafakurtt
-/docker-compose.yml     @mustafakurtt
-/.github/               @mustafakurtt
