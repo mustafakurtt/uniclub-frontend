@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Development guide
+    url: https://github.com/mustafakurtt/uniclub-frontend/blob/main/CONTRIBUTING.md
+    about: Setup, branching model and commit conventions.
+  - name: Architecture & API contract
+    url: https://github.com/mustafakurtt/uniclub-frontend/tree/main/docs
+    about: How the frontend talks to the backend.

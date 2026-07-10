@@ -1,0 +1,41 @@
+name: Feature request
+description: Suggest a new capability
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What can a user not do today? Describe the need, not the solution.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - auth
+        - clubs
+        - admin
+        - universities
+        - notifications
+        - shared / UI
+        - build / CI
+        - other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: backend
+    attributes:
+      label: Backend
+      options:
+        - label: This needs a backend change / new endpoint

@@ -148,6 +148,12 @@ VITE_API_BASE_URL=https://api.example.com/api docker compose up --build
 Every push and pull request to `main`/`dev` runs the [CI workflow](.github/workflows/ci.yml):
 lint → typecheck → build, plus a Docker build check.
 
+## Contributing
+
+Branch off `dev`, follow [Conventional Commits](https://www.conventionalcommits.org/),
+and open a PR. Setup instructions, the branching model and code conventions are in
+[CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Roadmap
 
 - [ ] Automated tests (component + e2e)

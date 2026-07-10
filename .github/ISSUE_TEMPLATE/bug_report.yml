@@ -1,0 +1,50 @@
+name: Bug report
+description: Report something that is broken
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you see, and what did you expect instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Log in as a `university_admin`
+        2. Go to /admin/users
+        3. ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - auth
+        - clubs
+        - admin
+        - universities
+        - notifications
+        - shared / UI
+        - build / CI
+        - other
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      placeholder: "Chrome 140, local dev, VITE_API_BASE_URL=http://localhost:3000/api"
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Console errors / screenshots
+      description: Paste any console or network errors.
