@@ -1,0 +1,21 @@
+node_modules
+dist
+dist-ssr
+.git
+.github
+.vscode
+.idea
+.claude
+*.log
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+
+# Docs & meta (not needed in the image)
+docs
+CLAUDE.md
+README.md
+LICENSE
+.editorconfig

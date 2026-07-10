@@ -1,0 +1,20 @@
+# UniClub frontend — static bundle served by nginx.
+# The backend is a separate service; point VITE_API_BASE_URL at it.
+#
+#   VITE_API_BASE_URL=https://api.example.com/api docker compose up --build
+#
+services:
+  web:
+    build:
+      context: .
+      args:
+        # Baked into the bundle at build time (Vite reads it during `bun run build`).
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3000/api}
+    image: uniclub-frontend
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    # If you run the backend via compose too, add it here and put both on a shared
+    # network so the frontend can reach it by service name.
+    # depends_on:
+    #   - api
