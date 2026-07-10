@@ -1,0 +1,26 @@
+{
+  // Use the TypeScript version pinned in package.json, not VS Code's bundled one,
+  // so everyone sees identical type errors.
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+
+  // Prefer the `@/` alias over relative paths in auto-imports.
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "javascript.preferences.importModuleSpecifier": "non-relative",
+
+  "files.eol": "\n",
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+
+  // Tailwind IntelliSense inside the component classes defined in src/index.css.
+  "tailwindCSS.experimental.classRegex": [
+    ["(?:clsx|cn|classNames)\\(([^)]*)\\)", "[\"'`]([^\"'`]*)[\"'`]"]
+  ],
+  "css.validate": false,
+
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/bun.lock": true
+  }
+}

@@ -18,8 +18,10 @@ dist-ssr
 .env.*.local
 
 # Editor directories and files
+# Share team-wide editor config; keep personal overrides (launch.json etc.) local.
 .vscode/*
 !.vscode/extensions.json
+!.vscode/settings.json
 .idea
 .DS_Store
 *.suo

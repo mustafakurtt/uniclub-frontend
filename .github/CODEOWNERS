@@ -1,0 +1,10 @@
+# Default owner for everything in the repo.
+# Add your collaborator here to have them auto-requested on every PR, e.g.
+#   *  @mustafakurtt @friend-username
+*                       @mustafakurtt
+
+# Infrastructure changes deserve a closer look.
+/Dockerfile             @mustafakurtt
+/nginx.conf             @mustafakurtt
+/docker-compose.yml     @mustafakurtt
+/.github/               @mustafakurtt
