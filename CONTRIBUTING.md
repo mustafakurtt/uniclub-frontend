@@ -64,12 +64,32 @@ git push -u origin feature/club-gallery-upload
 gh pr create --base dev --fill
 ```
 
-CI (lint → typecheck → build → Docker build) must pass, and one review is required,
-before the PR can merge. Use **Squash and merge** so `dev` keeps one commit per unit of
-work.
+CI (lint → typecheck → build → Docker build) must pass before the PR can merge. Use
+**Squash and merge** so `dev` keeps one commit per unit of work.
 
 **Releasing:** when `dev` is stable, open a PR from `dev` into `main`. Use a **merge
-commit** (not squash) so `main` and `dev` do not diverge.
+commit** (not squash) so `main` and `dev` do not diverge. Landing on `main` publishes a
+container image (see [Releases & deployment](#releases--deployment)).
+
+### Review policy
+
+This project has a single maintainer ([@mustafakurtt](https://github.com/mustafakurtt))
+and occasional contributors. Branch protection is therefore configured for throughput,
+not ceremony:
+
+| | `main` | `dev` |
+| --- | --- | --- |
+| Direct pushes | Blocked (admins included) | Blocked |
+| Pull request | Required | Required |
+| CI green (`Quality`, `Docker`) | Required | Required |
+| Approving reviews | 0 — the maintainer self-merges | 0 |
+| Branch up to date before merge | Required | Not required |
+| Force push / deletion | Blocked | Blocked |
+
+Zero *required* approvals does not mean no review: `CODEOWNERS` auto-requests the
+maintainer on every PR, so contributor changes are always looked at. The count is zero
+because a sole maintainer cannot approve their own pull request — requiring one would
+deadlock the repository whenever the contributor is unavailable.
 
 > `dev` and `main` always contain the *same files*. Branches are not environments —
 > environment differences belong in env vars, `.dockerignore` and build config, never in
@@ -134,6 +154,56 @@ a green build is not proof the feature works.
   is **public**. Never put a secret in a `VITE_` variable.
 - The API base URL is baked in at build time. For containers, pass it as a build arg:
   `docker build --build-arg VITE_API_BASE_URL=... .`
+
+## CI/CD
+
+Two GitHub Actions workflows, with different jobs:
+
+**[`ci.yml`](.github/workflows/ci.yml) — Continuous Integration.** Runs on every push and
+pull request to `main`/`dev`. It answers *"is this change safe to merge?"*
+
+| Job | What it does |
+| --- | --- |
+| `Quality` | `bun run lint` → `bun run typecheck` → `bun run build` |
+| `Docker` | Builds the production image (does not push it) |
+
+Both are **required status checks** — a red build cannot be merged.
+
+**[`publish.yml`](.github/workflows/publish.yml) — Continuous Delivery.** Runs only after
+something lands on `main`, or when a `v*` tag is pushed. It builds the container image and
+pushes it to GitHub Container Registry:
+
+```
+ghcr.io/mustafakurtt/uniclub-frontend:latest      # every commit on main
+ghcr.io/mustafakurtt/uniclub-frontend:sha-a1b2c3d # immutable, per commit
+ghcr.io/mustafakurtt/uniclub-frontend:1.2.0       # from tag v1.2.0
+```
+
+Pull and run any of them:
+
+```bash
+docker run --rm -p 8080:80 ghcr.io/mustafakurtt/uniclub-frontend:latest
+```
+
+Nothing is deployed to a server automatically — the image *is* the release artifact.
+Adding a deploy step (a hosting provider, or `docker pull` on a VPS) is a later concern;
+the artifact it would consume already exists.
+
+### Releases & deployment
+
+Cutting a version:
+
+```bash
+git checkout main && git pull origin main
+git tag v0.2.0 && git push origin v0.2.0   # triggers a versioned image build
+```
+
+> **The API URL is baked into the bundle at build time.** Vite inlines `VITE_*` variables
+> during `bun run build`, so one image is tied to one backend URL. The published image
+> defaults to `http://localhost:3000/api`. To point it at a real backend, set a repository
+> variable `VITE_API_BASE_URL` (Settings → Secrets and variables → Actions → Variables) —
+> the workflow reads it. Making one image work across environments would require injecting
+> the URL at container start instead; that is on the roadmap, not built yet.
 
 ## Questions
 
