@@ -68,8 +68,8 @@ CI (lint → typecheck → build → Docker build) must pass before the PR can m
 **Squash and merge** so `dev` keeps one commit per unit of work.
 
 **Releasing:** when `dev` is stable, open a PR from `dev` into `main`. Use a **merge
-commit** (not squash) so `main` and `dev` do not diverge. Landing on `main` publishes a
-container image (see [Releases & deployment](#releases--deployment)).
+commit** (not squash) so `main` and `dev` do not diverge. Then cut a release — that, not the
+merge, is what the deploy agent picks up (see [Releases & deployment](#releases--deployment)).
 
 ### Review policy
 
@@ -169,41 +169,38 @@ pull request to `main`/`dev`. It answers *"is this change safe to merge?"*
 
 Both are **required status checks** — a red build cannot be merged.
 
-**[`publish.yml`](.github/workflows/publish.yml) — Continuous Delivery.** Runs only after
-something lands on `main`, or when a `v*` tag is pushed. It builds the container image and
-pushes it to GitHub Container Registry:
-
-```
-ghcr.io/mustafakurtt/uniclub-frontend:latest      # every commit on main
-ghcr.io/mustafakurtt/uniclub-frontend:sha-a1b2c3d # immutable, per commit
-ghcr.io/mustafakurtt/uniclub-frontend:1.2.0       # from tag v1.2.0
-```
-
-Pull and run any of them:
-
-```bash
-docker run --rm -p 8080:80 ghcr.io/mustafakurtt/uniclub-frontend:latest
-```
-
-Nothing is deployed to a server automatically — the image *is* the release artifact.
-Adding a deploy step (a hosting provider, or `docker pull` on a VPS) is a later concern;
-the artifact it would consume already exists.
+**[`release-check.yml`](.github/workflows/release-check.yml) — Release check.** Runs on
+pushes to `main`/`dev`. It builds the production image and proves it actually *works*: the
+nginx container must return HTTP 200 with `index.html`, and a deep client-side route must
+also return 200 (SPA fallback). "It builds" is not enough — it must serve.
 
 ### Releases & deployment
+
+**Deployment is pull-based and self-building — there is no registry.** The production
+machine (a laptop) runs a scheduled agent ([`scripts/deploy-agent.sh`](scripts/deploy-agent.sh))
+that reads GitHub, sees the latest release, verifies its `CI` run is green, then checks the
+deploy clone out to that commit and **builds the image locally** via
+[`scripts/deploy-local.sh`](scripts/deploy-local.sh) (build → run → health-check →
+roll back to the previous image on failure). GitHub never connects to the production box.
+
+This mirrors the backend exactly — one trust chain, one delivery model across both repos.
+The full machine setup, the single-origin topology and the scheduled task are documented in
+[`docs/architecture/MAKINE_KURULUMU.md`](docs/architecture/MAKINE_KURULUMU.md).
 
 Cutting a version:
 
 ```bash
 git checkout main && git pull origin main
-git tag v0.2.0 && git push origin v0.2.0   # triggers a versioned image build
+git tag v0.2.0 && git push origin v0.2.0
+gh release create v0.2.0 --generate-notes   # the release is what the agent deploys
 ```
 
 > **The API URL is baked into the bundle at build time.** Vite inlines `VITE_*` variables
-> during `bun run build`, so one image is tied to one backend URL. The published image
-> defaults to `http://localhost:3000/api`. To point it at a real backend, set a repository
-> variable `VITE_API_BASE_URL` (Settings → Secrets and variables → Actions → Variables) —
-> the workflow reads it. Making one image work across environments would require injecting
-> the URL at container start instead; that is on the roadmap, not built yet.
+> during `bun run build`. In production the frontend and backend share one origin
+> (`uniclub.test`, backend under `/api`), so the prod image is built with the **relative**
+> `VITE_API_BASE_URL=/api` — one image works regardless of hostname, with no CORS. Only a
+> setup that serves the frontend on a *separate* host from the backend needs an absolute URL
+> (and then you own CORS too).
 
 ## Questions
 

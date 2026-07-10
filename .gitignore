@@ -12,10 +12,11 @@ dist
 dist-ssr
 *.local
 
-# Environment files (never commit secrets — use .env.example as the template)
+# Environment files (never commit secrets — use the *.example files as templates)
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+!.env.*.example
 
 # Editor directories and files
 # Share team-wide editor config; keep personal overrides (launch.json etc.) local.
