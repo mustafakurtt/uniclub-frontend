@@ -146,16 +146,16 @@ VITE_API_BASE_URL=https://api.example.com/api docker compose up --build
 - **`dev`** — integration branch for day-to-day work.
 
 Every push and pull request to `main`/`dev` runs [CI](.github/workflows/ci.yml):
-lint → typecheck → build, plus a Docker build check. Both are required status checks.
+lint → typecheck → build, plus a Docker build check. In parallel,
+[Release check](.github/workflows/release-check.yml) builds the production image and
+proves nginx actually serves the SPA (HTTP 200 + SPA fallback on deep routes).
 
-When a change lands on `main`, [Publish](.github/workflows/publish.yml) builds and pushes
-a container image to GHCR:
-
-```bash
-docker run --rm -p 8080:80 ghcr.io/mustafakurtt/uniclub-frontend:latest
-```
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full workflow and review policy.
+**Deployment is pull-based** — the production machine (a laptop) reads GitHub, sees the
+latest release, verifies its CI is green, then **builds the image itself** and deploys it.
+Nothing is pushed to a registry and GitHub never connects to the production box. Cutting a
+release is the only trigger. See [CONTRIBUTING.md](CONTRIBUTING.md) and
+[docs/architecture/MAKINE_KURULUMU.md](docs/architecture/MAKINE_KURULUMU.md) for the full
+pipeline.
 
 ## Contributing
 
@@ -166,7 +166,7 @@ and open a PR. Setup instructions, the branching model and code conventions are 
 ## Roadmap
 
 - [ ] Automated tests (component + e2e)
-- [ ] Continuous deployment (static host / container registry)
+- [x] Pull-based deployment (release-triggered, self-building agent — see [MAKINE_KURULUMU.md](docs/architecture/MAKINE_KURULUMU.md))
 - [ ] Web Push (VAPID) for notifications while the app is closed
 
 ## License

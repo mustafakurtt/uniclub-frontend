@@ -1,0 +1,47 @@
+# Production frontend stack. Dev'den (bun run dev) tamamen ayrı: kendi imajı,
+# kendi container'ı. Backend prod stack'inin (uniclub-backend) YANINDA çalışır.
+#
+#   ./scripts/deploy-local.sh                          # önerilen yol
+#   docker compose -p uniclub-frontend-prod -f docker-compose.prod.yml up -d
+#
+# ── TEK ORIGIN, PATH TABANLI ──────────────────────────────────
+# Frontend kökte, backend `/api` altında (bkz. backend deploy/Caddyfile). Reverse
+# proxy (Caddy) `uniclub.test`'in kökünü BU container'a (uniclub_prod_web),
+# `/api/*`'ı backend'e yönlendirir. Bunun üç somut kazancı var:
+#   1. Vite, VITE_API_BASE_URL'i BUILD ANINDA gömer. Adres göreli (`/api`)
+#      olduğundan aynı imaj her ortamda çalışır — ortam başına imaj gerekmez.
+#   2. CORS tamamen ortadan kalkar (tarayıcı için tek origin).
+#   3. WebSocket de aynı origin'den bağlanır; ayrı ws host'u gerekmez.
+#
+# ── AĞ ────────────────────────────────────────────────────────
+# Caddy, container'a ADIYLA ulaşır (`reverse_proxy uniclub_prod_web:80`). Bunun
+# çalışması için web, backend prod stack'iyle AYNI docker ağında olmalı. O ağı
+# backend'in `-p uniclub-prod` compose'u yaratır; buraya external olarak
+# bağlanıyoruz. Bu yüzden prod'da önce backend ayağa kalkmış olmalı.
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Tek-origin: göreli `/api`. Backend ile aynı host'tan servis edilir.
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+    image: uniclub-frontend:${IMAGE_TAG:-local}
+    container_name: uniclub_prod_web
+    restart: unless-stopped
+    ports:
+      # Trafik normalde Caddy'den (:443) gelir. Bu port doğrudan erişim/hata
+      # ayıklama içindir ve VARSAYILAN OLARAK yalnızca bu makineye açıktır —
+      # paylaşımlı bir ağda 0.0.0.0'a bind etmek uygulamayı tüm ağa açar.
+      - "${BIND_ADDR:-127.0.0.1}:${WEB_PORT:-8081}:80"
+    networks:
+      - prod
+
+networks:
+  # Backend production stack'inin ağı. `docker compose -p uniclub-prod` onu
+  # yaratır; burada external olarak bağlanıyoruz ki Caddy uniclub_prod_web'i
+  # adıyla çözebilsin.
+  prod:
+    external: true
+    name: uniclub-prod_default
