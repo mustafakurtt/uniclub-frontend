@@ -8,7 +8,12 @@
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy:agent": "bash scripts/deploy-agent.sh",
+    "deploy:local": "bash scripts/deploy-local.sh",
+    "deploy:logs": "tail -f -n 50 ~/uniclub-frontend-prod/logs/deploy-agent.log",
+    "prod:ps": "docker compose -p uniclub-frontend-prod -f docker-compose.prod.yml ps",
+    "prod:logs": "docker logs -f --tail 50 uniclub_prod_web"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.4.0",
