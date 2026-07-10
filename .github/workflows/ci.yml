@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   quality:
-    name: Lint · Typecheck · Build
+    name: Quality
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +38,7 @@ jobs:
           VITE_API_BASE_URL: http://localhost:3000/api
 
   docker:
-    name: Docker build
+    name: Docker
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
