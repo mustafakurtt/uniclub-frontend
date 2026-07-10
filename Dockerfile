@@ -23,7 +23,10 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /usr/share/nginx/html
 
 EXPOSE 80
+# 127.0.0.1, `localhost` DEĞİL: container içinde `localhost` `::1`'e (IPv6)
+# çözülebiliyor, oysa nginx yalnızca IPv4 (`listen 80`) dinliyor — bu durumda
+# wget başarısız olur ve container "unhealthy" görünür (sayfa gelse bile).
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD wget -qO- http://localhost/ >/dev/null 2>&1 || exit 1
+  CMD wget -qO- http://127.0.0.1/ >/dev/null 2>&1 || exit 1
 
 CMD ["nginx", "-g", "daemon off;"]
