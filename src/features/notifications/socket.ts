@@ -24,9 +24,30 @@ interface SocketHandlers {
   onStatusChange?: (connected: boolean) => void;
 }
 
-/** http://…/api → ws://…/api (https → wss). Adres tek kaynaktan türetilir. */
+/**
+ * REST temel adresini WebSocket temel adresine çevirir. Adres tek kaynaktan
+ * (`API_BASE_URL`) türetilir ve iki biçim de desteklenir:
+ *
+ *   • Mutlak (dev):  `http(s)://host/api` → `ws(s)://host/api`
+ *   • Göreli (prod tek-origin):  `/api` → `wss://<sayfa-host>/api`
+ *
+ * Prod'da imaj `VITE_API_BASE_URL=/api` ile derlenir (frontend kökte, backend
+ * `/api` altında; bkz. deploy/Caddyfile). Göreli adreste `replace(/^http/…)`
+ * hiçbir şey yapmaz; o yüzden şemayı ve host'u sayfanın konumundan alırız.
+ * `new WebSocket("/api/…")` çoğu modern tarayıcıda çalışsa da davranış
+ * spec'e yeni girmiştir — mutlak adres üretmek her yerde güvenlidir.
+ */
+const wsBaseUrl = (): string => {
+  if (/^https?:\/\//i.test(API_BASE_URL)) {
+    return API_BASE_URL.replace(/^http/i, "ws");
+  }
+  const scheme = window.location.protocol === "https:" ? "wss:" : "ws:";
+  const path = API_BASE_URL.startsWith("/") ? API_BASE_URL : `/${API_BASE_URL}`;
+  return `${scheme}//${window.location.host}${path}`;
+};
+
 const socketUrl = (ticket: string): string =>
-  `${API_BASE_URL.replace(/^http/, "ws")}/notifications/ws?ticket=${encodeURIComponent(ticket)}`;
+  `${wsBaseUrl()}/notifications/ws?ticket=${encodeURIComponent(ticket)}`;
 
 /**
  * Gelen mesaj şekli iki biçimde olabilir: bildirim ya doğrudan gövdedir
