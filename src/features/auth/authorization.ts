@@ -33,13 +33,26 @@ export const UNIVERSITY_PLATFORM_PERMISSIONS: GlobalPermission[] = [
 ];
 
 // Kulüp gözetimi yetkileri (tenant). Nav'da "Kulüpler" bölümünün görünürlüğü.
+// `club.member.manage` BİLİNÇLİ olarak burada YOK: AdminClubs sayfasında hiçbir
+// buton bu yetkiye bakmaz, gerçek karşılığı "Moderasyon" bölümüdür (aşağıda) —
+// yoksa yalnızca bu yetkisi olan bir rol boş bir "Kulüpler" sekmesine düşerdi.
 export const CLUB_PERMISSIONS: GlobalPermission[] = [
   "club.view",
   "club.approve",
   "club.update",
   "club.advisor.manage",
-  "club.member.manage",
   "club.delete",
+];
+
+// Üye & içerik moderasyonu (tenant üstten müdahale) — kulübün KENDİ officer/
+// başkan katmanından ayrı, granüler yetkilerle çalışır. Nav'da "Moderasyon"
+// bölümünün görünürlüğü bu demetten herhangi birine bakar. `club.view` bilinçli
+// olarak burada YOK: yalnızca görüntüleme yetkisi olan biri (ör. auditor) bu
+// sayfada hiçbir aksiyon alamaz, "Kulüpler" bölümü zaten onu karşılar.
+export const MODERATION_PERMISSIONS: GlobalPermission[] = [
+  "club.member.manage",
+  "announcement.moderate",
+  "gallery.moderate",
 ];
 
 // Çekirdek (sistem) rol adları — UI'da adları değiştirilemez/silinemez olarak

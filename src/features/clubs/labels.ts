@@ -1,7 +1,7 @@
 // Kulüp yüzeyinde ortak Türkçe etiketler + ikon eşlemeleri — tek nokta
 // (Dashboard, ClubDetail, admin). İkonlar merkezi kayıttan (Icon.tsx) semantik
 // adlarla referanslanır; burada emoji/görsel tutulmaz.
-import type { ClubRole, ClubStatus, ContactPlatform, JoinPolicy } from "@/shared/types";
+import type { ClubRole, ClubStatus, ContactPlatform, JoinPolicy, MembershipStatus } from "@/shared/types";
 import type { IconName } from "@/shared/ui/Icon";
 
 export const CLUB_ROLE_LABELS: Record<ClubRole, string> = {
@@ -14,6 +14,12 @@ export const CLUB_ROLE_ICONS: Record<ClubRole, IconName> = {
   member: "member",
   officer: "officer",
   president: "president",
+};
+
+export const MEMBERSHIP_STATUS_LABELS: Record<MembershipStatus, string> = {
+  pending: "Onay Bekliyor",
+  approved: "Onaylandı",
+  rejected: "Reddedildi",
 };
 
 export const CLUB_STATUS_LABELS: Record<ClubStatus, string> = {

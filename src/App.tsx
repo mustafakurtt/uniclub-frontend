@@ -15,6 +15,7 @@ import AdminLayout from "@/layouts/AdminLayout";
 import AdminUniversities from "@/features/universities/pages/AdminUniversities";
 import AdminUniversityDetail from "@/features/universities/pages/AdminUniversityDetail";
 import AdminClubs from "@/features/admin/pages/AdminClubs";
+import AdminModeration from "@/features/admin/pages/AdminModeration";
 import AdminHome from "@/features/admin/pages/AdminHome";
 import AdminUsers from "@/features/admin/pages/AdminUsers";
 import AdminRoles from "@/features/admin/pages/AdminRoles";
@@ -70,6 +71,9 @@ function App() {
             <Route path="/admin/users" element={<AdminUsers />} />
             {/* Kulüp yönetimi: başvurular + kulüpler + danışmanlar (granüler club.*) */}
             <Route path="/admin/clubs" element={<AdminClubs />} />
+            {/* Üye & içerik moderasyonu: tenant üstten müdahale (club.member.manage,
+                announcement.moderate, gallery.moderate) */}
+            <Route path="/admin/moderation" element={<AdminModeration />} />
             {/* Akademik yapı: üniversite/domain/fakülte/bölüm */}
             <Route path="/admin/universities" element={<AdminUniversities />} />
             <Route path="/admin/universities/:universityId" element={<AdminUniversityDetail />} />
