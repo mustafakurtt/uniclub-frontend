@@ -19,6 +19,7 @@ import AdminHome from "@/features/admin/pages/AdminHome";
 import AdminUsers from "@/features/admin/pages/AdminUsers";
 import AdminRoles from "@/features/admin/pages/AdminRoles";
 import AdminPermissions from "@/features/admin/pages/AdminPermissions";
+import AdminAudit from "@/features/admin/pages/AdminAudit";
 import Forbidden from "@/features/auth/pages/Forbidden";
 
 function App() {
@@ -76,6 +77,8 @@ function App() {
             {/* RBAC: roller (role.manage) + yetki kataloğu (permission.manage) */}
             <Route path="/admin/roles" element={<AdminRoles />} />
             <Route path="/admin/permissions" element={<AdminPermissions />} />
+            {/* Denetim izi: korunan her yazma isteği (audit.view) */}
+            <Route path="/admin/audit" element={<AdminAudit />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

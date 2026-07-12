@@ -12,6 +12,7 @@ import AuroraBackground from "@/shared/ui/AuroraBackground";
 import Cube3D from "@/shared/ui/Cube3D";
 import TiltCard from "@/shared/ui/TiltCard";
 import { Icon, type IconName } from "@/shared/ui/Icon";
+import LanguageSwitcher from "@/shared/ui/LanguageSwitcher";
 
 const registerSchema = z.object({
   firstName: z.string().min(2, "Ad en az 2 karakter olmalıdır.").max(100),
@@ -54,6 +55,9 @@ export default function Register() {
 
   return (
     <div className="min-h-screen w-full flex bg-club-light">
+      <div className="fixed top-4 right-4 z-50">
+        <LanguageSwitcher />
+      </div>
 
       {/* SOL PANEL — hareketli aurora zemin */}
       <div className="hidden lg:flex w-1/2 relative overflow-hidden flex-col justify-between px-16 py-14 bg-aurora bg-300% animate-aurora">

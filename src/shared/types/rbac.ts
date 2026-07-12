@@ -35,6 +35,8 @@ export type GlobalPermission =
   // RBAC yönetimi (role.manage tenant-scoped; permission.manage platform)
   | "role.manage"
   | "permission.manage"
+  // Denetim izi (salt-okunur; docs/DENETIM_VE_HATA.md §1)
+  | "audit.view"
   | (string & {});
 
 /** Permission kataloğu satırı — GET /api/auth/permissions (§6.3) */

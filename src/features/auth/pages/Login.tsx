@@ -12,6 +12,7 @@ import AuroraBackground from "@/shared/ui/AuroraBackground";
 import Cube3D from "@/shared/ui/Cube3D";
 import TiltCard from "@/shared/ui/TiltCard";
 import { Icon } from "@/shared/ui/Icon";
+import LanguageSwitcher from "@/shared/ui/LanguageSwitcher";
 
 const loginSchema = z.object({
   email: z.string().email("Geçerli bir e-posta adresi giriniz."),
@@ -52,6 +53,9 @@ export default function Login() {
 
   return (
     <div className="min-h-screen w-full flex bg-club-light">
+      <div className="fixed top-4 right-4 z-50">
+        <LanguageSwitcher />
+      </div>
 
       {/* SOL PANEL — hareketli aurora zemin + 3D küp */}
       <div className="hidden lg:flex w-1/2 relative overflow-hidden flex-col justify-between px-16 py-14 bg-aurora bg-300% animate-aurora">
