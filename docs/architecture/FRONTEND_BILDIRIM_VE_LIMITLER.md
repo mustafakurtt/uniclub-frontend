@@ -1,9 +1,11 @@
+> **Senkron kopya** — Kaynak: `../uniclub-backend/docs/integration/notifications-and-limits.md` · Backend commit: `806f82a`
+
 # Frontend — Bildirimler, Hız Sınırı ve Doğrulanmamış Hesap
 
 **Kime:** Frontend ekibine. **Ne:** Üç yeni davranış geldi — gerçek zamanlı
 bildirimler (WebSocket), `429` hız sınırı ve `pending` hesabın yazma kilidi.
 
-> Mimari ayrıntı: [BILDIRIMLER.md](BILDIRIMLER.md). Mail akışı: [MAIL_DOGRULAMA.md](MAIL_DOGRULAMA.md).
+> Mimari ayrıntı: [notifications.md](../architecture/notifications.md). Mail akışı: [mail-verification.md](../architecture/mail-verification.md).
 
 ---
 
@@ -129,7 +131,7 @@ const ws = new WebSocket(`${proto}://${location.host}/api/notifications/ws?ticke
 ```
 
 Tam örnek (yeniden bağlanma + backoff + heartbeat) için
-[BILDIRIMLER.md → Frontend](BILDIRIMLER.md#frontend--bağlanma-ve-yeniden-bağlanma).
+[notifications.md → Frontend](../architecture/notifications.md#frontend--bağlanma-ve-yeniden-bağlanma).
 
 **Üç kural:**
 1. `{"event":"ping"}` gelince `"pong"` (düz metin) gönder — yoksa 90sn'de kopar.
@@ -161,6 +163,8 @@ const { items, nextCursor } = res.data;
 |---|---|---|
 | `account.verified` | — | `me`'yi refetch et, banner'ı kaldır |
 | `account.suspended` | — | Oturumu sonlandır |
+| `account.unsuspended` | — | Bilgilendir; kullanıcı yeniden erişebilir |
+| `account.passwordReset` | — | Geçici şifre uyarısı; giriş sonrası zorunlu şifre değiştirme (`mustChangePassword`) |
 | `club.application.decided` | `{ applicationId, status, clubId }` | `status==="approved"` ? kulüp sayfası : başvuru detayı |
 | `club.membership.decided` | `{ clubId, status }` | Kulüp sayfası |
 | `role.assigned` | `{ roleId, roleName }` | `me/permissions` refetch (yeni menüler açılır) |
@@ -170,7 +174,56 @@ ikonla `title`/`body`'yi göster.
 
 ---
 
-## 5. Bilinen sınırlar
+## 6. Bildirim tercihleri (ayar ekranı)
+
+Üniversite geneli duyuru fan-out'u öncesinde kullanıcıların opt-out yapabilmesi için
+self-service tercih uçları eklendi. Varsayılan: **tüm susturulabilir tipler açık**.
+
+### GET `/api/users/me/notification-preferences`
+
+```jsonc
+{
+  "success": true,
+  "messageKey": "user.notificationPreferencesListed",
+  "data": {
+    "mutes": [
+      { "type": "announcement.published", "clubId": null, "createdAt": "..." }
+    ],
+    "optOutableTypes": [
+      { "type": "announcement.published", "labelTr": "Yeni duyuru", "labelEn": "New announcement" }
+    ],
+    "typeCatalog": { /* NotificationTypeMeta — tüm tipler + optOutable */ }
+  }
+}
+```
+
+`mutes` = mevcut susturmalar. Ayar ekranını `optOutableTypes` + `mutes` ile kurun;
+susturulamaz tipler listede yok.
+
+### PUT `/api/users/me/notification-preferences`
+
+Idempotent — aynı kuralı iki kez yazmak hata üretmez.
+
+```jsonc
+// Tip bazlı susturma
+{ "type": "announcement.published", "muted": true }
+
+// Kulüp bazlı susturma (üyelik şart değil — co-host daveti vb.)
+{ "clubId": "<uuid>", "muted": true }
+
+// Kesişim
+{ "type": "announcement.published", "clubId": "<uuid>", "muted": true }
+
+// Susturmayı kaldır
+{ "type": "announcement.published", "muted": false }
+```
+
+En az `type` veya `clubId` zorunlu (ikisi de `null` → `400`). Susturulamaz tip
+(`account.suspended` vb.) → `400` + `user.notificationPreferenceNotOptOutable`.
+
+---
+
+## 7. Bilinen sınırlar
 
 - **Uygulama kapalıyken push yok.** WS yalnızca sayfa açıkken çalışır. Gerçek push
   (kapalı uygulama/mobil) için Web Push (VAPID) ayrı bir katman — henüz yok.
