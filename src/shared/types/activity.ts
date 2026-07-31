@@ -50,6 +50,8 @@ export interface ActivityListItem {
   coHostClubs?: ActivityClubRef[];
   goingCount?: number;
   myRsvp?: ActivityRsvp | null;
+  /** UTC — yalnızca zamanlanmış taslaklarda dolu. */
+  scheduledPublishAt?: string | null;
 }
 
 /** @deprecated ActivityListItem kullan — geriye dönük alias */

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Landing from "@/pages/Landing";
 import Register from "@/features/auth/pages/Register";
 import Login from "@/features/auth/pages/Login";
@@ -23,6 +23,7 @@ import AdminUsers from "@/features/admin/pages/AdminUsers";
 import AdminRoles from "@/features/admin/pages/AdminRoles";
 import AdminPermissions from "@/features/admin/pages/AdminPermissions";
 import Forbidden from "@/features/auth/pages/Forbidden";
+import NotFound from "@/shared/pages/NotFound";
 
 function App() {
   return (
@@ -86,7 +87,7 @@ function App() {
             <Route path="/admin/permissions" element={<AdminPermissions />} />
           </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
     </BrowserRouter>

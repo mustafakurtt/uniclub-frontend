@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getAnnouncements } from "@/features/clubs/api/clubs";
 import { getErrorMessage } from "@/shared/api/client";
+import { isScheduledDraft } from "@/shared/lib/publishState";
 import AnnouncementFormModal from "@/features/clubs/components/announcements/AnnouncementFormModal";
 import AnnouncementRow from "@/features/clubs/components/announcements/AnnouncementRow";
 import EmptyState from "@/shared/ui/EmptyState";
@@ -29,7 +30,10 @@ export default function ClubAnnouncementsSection({ clubId, canManage }: ClubAnno
     queryClient.invalidateQueries({ queryKey: ["clubs", clubId, "announcements"] });
 
   const announcements = announcementsQuery.data ?? [];
-  const drafts = canManage ? announcements.filter((a) => a.status === "draft") : [];
+  const plainDrafts = canManage
+    ? announcements.filter((a) => a.status === "draft" && !isScheduledDraft(a))
+    : [];
+  const scheduledDrafts = canManage ? announcements.filter((a) => isScheduledDraft(a)) : [];
   const published = announcements.filter((a) => a.status === "published");
 
   return (
@@ -64,13 +68,31 @@ export default function ClubAnnouncementsSection({ clubId, canManage }: ClubAnno
         <EmptyState icon="announcement" title="Henüz duyuru yok" />
       ) : (
         <div className="space-y-6">
-          {canManage && drafts.length > 0 && (
+          {scheduledDrafts.length > 0 && (
+            <div>
+              <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-400">
+                Zamanlanmış taslaklar (yalnızca staff görür)
+              </h3>
+              <ul className="space-y-4">
+                {scheduledDrafts.map((a) => (
+                  <AnnouncementRow
+                    key={a.id}
+                    clubId={clubId}
+                    announcement={a}
+                    canManage={canManage}
+                    onUpdated={invalidate}
+                  />
+                ))}
+              </ul>
+            </div>
+          )}
+          {plainDrafts.length > 0 && (
             <div>
               <h3 className="mb-3 text-xs font-bold uppercase tracking-wide text-slate-400">
                 Taslaklar (yalnızca staff görür)
               </h3>
               <ul className="space-y-4">
-                {drafts.map((a) => (
+                {plainDrafts.map((a) => (
                   <AnnouncementRow
                     key={a.id}
                     clubId={clubId}
@@ -96,7 +118,8 @@ export default function ClubAnnouncementsSection({ clubId, canManage }: ClubAnno
             </ul>
           ) : (
             canManage &&
-            drafts.length === 0 && (
+            plainDrafts.length === 0 &&
+            scheduledDrafts.length === 0 && (
               <EmptyState icon="announcement" title="Yayınlanmış duyuru yok" />
             )
           )}

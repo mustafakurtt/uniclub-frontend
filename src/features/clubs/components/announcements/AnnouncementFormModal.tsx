@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -5,8 +6,13 @@ import {
   type AnnouncementFormValues,
 } from "@/features/clubs/schemas/announcementForm";
 import { createAnnouncement } from "@/features/clubs/api/clubs";
+import { useTenantTimezone } from "@/features/auth/hooks/useTenantTimezone";
 import { getErrorMessage } from "@/shared/api/client";
 import { ANNOUNCEMENT_VISIBILITY_LABELS } from "@/features/clubs/labels";
+import PublishTimingFields, {
+  validatePublishTiming,
+  type PublishTimingMode,
+} from "@/shared/ui/PublishTimingFields";
 import Modal from "@/shared/ui/Modal";
 
 interface AnnouncementFormModalProps {
@@ -22,6 +28,10 @@ export default function AnnouncementFormModal({
   onSaved,
   onClose,
 }: AnnouncementFormModalProps) {
+  const timezone = useTenantTimezone();
+  const [publishMode, setPublishMode] = useState<PublishTimingMode>("draft");
+  const [scheduledAtLocal, setScheduledAtLocal] = useState("");
+
   const {
     register,
     handleSubmit,
@@ -39,9 +49,21 @@ export default function AnnouncementFormModal({
   });
 
   const onSubmit = async (values: AnnouncementFormValues) => {
+    const timingErr = validatePublishTiming(publishMode, scheduledAtLocal, timezone);
+    if (timingErr) {
+      setError("root", { message: timingErr });
+      return;
+    }
+
     try {
-      await createAnnouncement(clubId, { ...values, publish: false });
+      await createAnnouncement(clubId, {
+        ...values,
+        publish: publishMode === "now",
+        ...(publishMode === "scheduled" ? { scheduledPublishAtLocal: scheduledAtLocal } : {}),
+      });
       reset();
+      setPublishMode("draft");
+      setScheduledAtLocal("");
       onSaved();
       onClose();
     } catch (error) {
@@ -49,19 +71,25 @@ export default function AnnouncementFormModal({
     }
   };
 
+  const submitLabel =
+    publishMode === "now"
+      ? "Yayınla"
+      : publishMode === "scheduled"
+        ? "Zamanla ve Kaydet"
+        : "Taslak Olarak Kaydet";
+
   return (
     <Modal
       open={open}
       onClose={onClose}
       title="Yeni Duyuru"
-      description="Taslak olarak kaydedilir; yayınlamak için listeden yayınla."
       footer={
         <>
           <button type="button" className="btn-ghost" onClick={onClose} disabled={isSubmitting}>
             Vazgeç
           </button>
           <button type="submit" form="announcement-form" className="btn-primary" disabled={isSubmitting}>
-            {isSubmitting ? "Kaydediliyor..." : "Taslak Olarak Kaydet"}
+            {isSubmitting ? "Kaydediliyor..." : submitLabel}
           </button>
         </>
       }
@@ -89,6 +117,12 @@ export default function AnnouncementFormModal({
           <input type="checkbox" {...register("pinned")} className="rounded border-slate-300" />
           Oluşturulunca sabitle (en fazla 3 sabit duyuru)
         </label>
+        <PublishTimingFields
+          mode={publishMode}
+          onModeChange={setPublishMode}
+          scheduledAtLocal={scheduledAtLocal}
+          onScheduledAtLocalChange={setScheduledAtLocal}
+        />
       </form>
     </Modal>
   );

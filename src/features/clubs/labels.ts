@@ -52,6 +52,8 @@ export const ANNOUNCEMENT_STATUS_LABELS: Record<AnnouncementStatus, string> = {
   published: "Yayında",
 };
 
+export const SCHEDULED_PUBLISH_LABEL = "Zamanlanmış";
+
 export const ANNOUNCEMENT_VISIBILITY_LABELS: Record<AnnouncementVisibility, string> = {
   university: "Üniversite geneli",
   members: "Yalnızca üyeler",

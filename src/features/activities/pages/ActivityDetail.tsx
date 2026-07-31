@@ -13,6 +13,7 @@ import {
   RSVP_STATUS_LABELS,
 } from "@/features/activities/labels";
 import { formatActivityRange } from "@/features/activities/formatActivityDateTime";
+import { useTenantTimezone } from "@/features/auth/hooks/useTenantTimezone";
 import type { UserRsvpStatus } from "@/shared/types";
 import PageLoader from "@/shared/ui/PageLoader";
 import Reveal from "@/shared/ui/Reveal";
@@ -26,6 +27,7 @@ import axios from "axios";
 export default function ActivityDetail() {
   const { activityId = "" } = useParams();
   const queryClient = useQueryClient();
+  const timezone = useTenantTimezone();
 
   const activityQuery = useQuery({
     queryKey: ["activities", activityId],
@@ -155,7 +157,7 @@ export default function ActivityDetail() {
                 </dt>
                 <dd className="mt-1 flex items-start gap-2 text-sm font-semibold text-slate-800">
                   <Icon name="calendar" size={16} className="mt-0.5 shrink-0 text-brand-600" />
-                  {formatActivityRange(activity.startsAt, activity.endsAt)}
+                  {formatActivityRange(activity.startsAt, activity.endsAt, timezone)}
                 </dd>
               </div>
 

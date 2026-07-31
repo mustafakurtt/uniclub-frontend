@@ -1,15 +1,21 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { deleteAnnouncement, updateAnnouncement } from "@/features/clubs/api/clubs";
 import {
-  deleteAnnouncement,
-  publishAnnouncement,
-  updateAnnouncement,
-} from "@/features/clubs/api/clubs";
+  publishAnnouncementNow,
+  publishAnnouncementScheduled,
+  cancelAnnouncementScheduledPublish,
+} from "@/features/clubs/publishAnnouncement";
 import { getErrorMessage } from "@/shared/api/client";
 import {
   ANNOUNCEMENT_STATUS_LABELS,
   ANNOUNCEMENT_VISIBILITY_LABELS,
+  SCHEDULED_PUBLISH_LABEL,
 } from "@/features/clubs/labels";
+import { formatScheduledPublishAt } from "@/features/activities/formatActivityDateTime";
+import { useTenantTimezone } from "@/features/auth/hooks/useTenantTimezone";
+import { isScheduledDraft } from "@/shared/lib/publishState";
+import ScheduledPublishManage from "@/shared/ui/ScheduledPublishManage";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 import IconButton from "@/shared/ui/IconButton";
 import { Icon } from "@/shared/ui/Icon";
@@ -28,17 +34,11 @@ export default function AnnouncementRow({
   canManage,
   onUpdated,
 }: AnnouncementRowProps) {
+  const timezone = useTenantTimezone();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const publishMutation = useMutation({
-    mutationFn: () => publishAnnouncement(clubId, announcement.id),
-    onSuccess: () => {
-      setActionError(null);
-      onUpdated();
-    },
-    onError: (err) => setActionError(getErrorMessage(err, "Yayınlanamadı.")),
-  });
+  const scheduled = isScheduledDraft(announcement);
 
   const pinMutation = useMutation({
     mutationFn: (pinned: boolean) =>
@@ -81,11 +81,7 @@ export default function AnnouncementRow({
           year: "numeric",
         });
 
-  const busy =
-    publishMutation.isPending ||
-    pinMutation.isPending ||
-    visibilityMutation.isPending ||
-    deleteMutation.isPending;
+  const busy = pinMutation.isPending || visibilityMutation.isPending || deleteMutation.isPending;
 
   return (
     <li className="rounded-2xl border border-slate-100 bg-white/70 p-4">
@@ -98,9 +94,19 @@ export default function AnnouncementRow({
                 <Icon name="pin" size={11} /> Sabit
               </span>
             )}
-            {announcement.status === "draft" && canManage && (
+            {announcement.status === "draft" && canManage && !scheduled && (
               <span className="chip bg-slate-100 text-[10px] text-slate-600">
                 {ANNOUNCEMENT_STATUS_LABELS.draft}
+              </span>
+            )}
+            {scheduled && canManage && (
+              <span className="chip bg-violet-50 text-[10px] text-violet-700">
+                {SCHEDULED_PUBLISH_LABEL}
+              </span>
+            )}
+            {announcement.status === "published" && (
+              <span className="chip bg-emerald-50 text-[10px] text-emerald-700">
+                {ANNOUNCEMENT_STATUS_LABELS.published}
               </span>
             )}
             <span className="chip text-[10px] text-slate-500">
@@ -113,32 +119,45 @@ export default function AnnouncementRow({
           <p className="mt-2 text-[11px] font-semibold text-slate-400">
             {announcement.author ? `${announcement.author.firstName} ${announcement.author.lastName} · ` : ""}
             {dateLabel}
+            {scheduled && timezone && announcement.scheduledPublishAt && (
+              <>
+                {" · Yayın: "}
+                {formatScheduledPublishAt(announcement.scheduledPublishAt, timezone)}
+              </>
+            )}
           </p>
 
           {actionError && <div className="alert-error mt-3">{actionError}</div>}
 
-          {canManage && (
+          {canManage && announcement.status === "draft" && (
+            <div className="mt-3">
+              <ScheduledPublishManage
+                scheduledPublishAt={announcement.scheduledPublishAt ?? null}
+                onPublishNow={() =>
+                  publishAnnouncementNow(clubId, announcement.id).then(onUpdated)
+                }
+                onSchedule={(local) =>
+                  publishAnnouncementScheduled(clubId, announcement.id, local).then(onUpdated)
+                }
+                onCancelSchedule={() =>
+                  cancelAnnouncementScheduledPublish(clubId, announcement.id).then(onUpdated)
+                }
+                actionError={actionError}
+                onClearError={() => setActionError(null)}
+              />
+            </div>
+          )}
+
+          {canManage && announcement.status === "published" && (
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              {announcement.status === "draft" && (
-                <button
-                  type="button"
-                  className="btn-primary text-xs"
-                  disabled={busy}
-                  onClick={() => publishMutation.mutate()}
-                >
-                  {publishMutation.isPending ? "Yayınlanıyor..." : "Yayınla"}
-                </button>
-              )}
-              {announcement.status === "published" && (
-                <button
-                  type="button"
-                  className="btn-secondary text-xs"
-                  disabled={busy}
-                  onClick={() => pinMutation.mutate(!announcement.pinned)}
-                >
-                  {announcement.pinned ? "Sabitlemeyi Kaldır" : "Sabitle"}
-                </button>
-              )}
+              <button
+                type="button"
+                className="btn-secondary text-xs"
+                disabled={busy}
+                onClick={() => pinMutation.mutate(!announcement.pinned)}
+              >
+                {announcement.pinned ? "Sabitlemeyi Kaldır" : "Sabitle"}
+              </button>
               <select
                 value={announcement.visibility}
                 disabled={busy}

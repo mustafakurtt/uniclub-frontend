@@ -1,15 +1,20 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   activityFormSchema,
   toActivityApiPayload,
-  toDatetimeLocalValue,
   type ActivityFormValues,
 } from "@/features/activities/schemas/activityForm";
 import { createClubActivity, updateClubActivity } from "@/features/activities/api/clubActivities";
+import { toDatetimeLocalValue } from "@/features/activities/formatActivityDateTime";
+import { useTenantTimezone } from "@/features/auth/hooks/useTenantTimezone";
 import { getErrorMessage } from "@/shared/api/client";
 import { ACTIVITY_VISIBILITY_LABELS } from "@/features/activities/labels";
+import PublishTimingFields, {
+  validatePublishTiming,
+  type PublishTimingMode,
+} from "@/shared/ui/PublishTimingFields";
 import Modal from "@/shared/ui/Modal";
 import type { ActivityListItem } from "@/shared/types";
 
@@ -29,6 +34,9 @@ export default function ActivityFormModal({
   onClose,
 }: ActivityFormModalProps) {
   const isEdit = !!activity;
+  const timezone = useTenantTimezone();
+  const [publishMode, setPublishMode] = useState<PublishTimingMode>("draft");
+  const [scheduledAtLocal, setScheduledAtLocal] = useState("");
 
   const {
     register,
@@ -52,6 +60,8 @@ export default function ActivityFormModal({
 
   useEffect(() => {
     if (!open) return;
+    setPublishMode("draft");
+    setScheduledAtLocal("");
     if (activity) {
       reset({
         title: activity.title,
@@ -78,6 +88,14 @@ export default function ActivityFormModal({
   }, [open, activity, reset]);
 
   const onSubmit = async (values: ActivityFormValues) => {
+    if (!isEdit) {
+      const timingErr = validatePublishTiming(publishMode, scheduledAtLocal, timezone);
+      if (timingErr) {
+        setError("root", { message: timingErr });
+        return;
+      }
+    }
+
     try {
       const payload = toActivityApiPayload(values);
       if (isEdit && activity) {
@@ -87,7 +105,12 @@ export default function ActivityFormModal({
           capacity: payload.capacity ?? null,
         });
       } else {
-        await createClubActivity(clubId, { ...payload, publish: false });
+        const createBody = {
+          ...payload,
+          publish: publishMode === "now",
+          ...(publishMode === "scheduled" ? { scheduledPublishAtLocal: scheduledAtLocal } : {}),
+        };
+        await createClubActivity(clubId, createBody);
       }
       onSaved();
       onClose();
@@ -96,13 +119,23 @@ export default function ActivityFormModal({
     }
   };
 
+  const submitLabel = isEdit
+    ? "Kaydet"
+    : publishMode === "now"
+      ? "Yayınla"
+      : publishMode === "scheduled"
+        ? "Zamanla ve Kaydet"
+        : "Taslak Olarak Kaydet";
+
   return (
     <Modal
       open={open}
       onClose={onClose}
       title={isEdit ? "Etkinliği Düzenle" : "Yeni Etkinlik"}
       description={
-        isEdit ? undefined : "Taslak olarak kaydedilir; yayınlamak için yönetim panelini kullanın."
+        isEdit
+          ? "Yayın zamanı yönetim panelinden değiştirilir."
+          : undefined
       }
       size="lg"
       footer={
@@ -111,7 +144,7 @@ export default function ActivityFormModal({
             Vazgeç
           </button>
           <button type="submit" form="activity-form" className="btn-primary" disabled={isSubmitting}>
-            {isSubmitting ? "Kaydediliyor..." : isEdit ? "Kaydet" : "Taslak Olarak Kaydet"}
+            {isSubmitting ? "Kaydediliyor..." : submitLabel}
           </button>
         </>
       }
@@ -163,6 +196,14 @@ export default function ActivityFormModal({
             <option value="members">{ACTIVITY_VISIBILITY_LABELS.members}</option>
           </select>
         </div>
+        {!isEdit && (
+          <PublishTimingFields
+            mode={publishMode}
+            onModeChange={setPublishMode}
+            scheduledAtLocal={scheduledAtLocal}
+            onScheduledAtLocalChange={setScheduledAtLocal}
+          />
+        )}
       </form>
     </Modal>
   );

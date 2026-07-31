@@ -12,6 +12,8 @@ export const ACTIVITY_VISIBILITY_LABELS: Record<ActivityVisibility, string> = {
   members: "Yalnızca üyeler",
 };
 
+export const SCHEDULED_PUBLISH_LABEL = "Zamanlanmış";
+
 export const ACTIVITY_STATUS_LABELS: Record<ActivityStatus, string> = {
   draft: "Taslak",
   published: "Yayında",

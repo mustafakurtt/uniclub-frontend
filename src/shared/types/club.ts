@@ -75,6 +75,8 @@ export interface Announcement {
   visibility: AnnouncementVisibility;
   createdAt: string;
   author?: SafeUser;
+  /** UTC — yalnızca zamanlanmış taslaklarda dolu. */
+  scheduledPublishAt?: string | null;
 }
 
 export interface GalleryImage {

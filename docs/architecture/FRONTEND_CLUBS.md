@@ -1,4 +1,4 @@
-> **Senkron kopya** — Kaynak: `../uniclub-backend/docs/integration/clubs.md` · Backend commit: `806f82a`
+> **Senkron kopya** — Kaynak: `../uniclub-backend/docs/integration/clubs.md` · Backend commit: `526035d`
 
 # Clubs Katmanı — Frontend Entegrasyon Dokümanı
 

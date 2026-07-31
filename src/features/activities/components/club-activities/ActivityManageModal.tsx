@@ -2,11 +2,17 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getActivity } from "@/features/activities/api/activities";
 import { cancelClubActivity } from "@/features/activities/api/clubActivities";
-import { publishActivityNow } from "@/features/activities/publishActivity";
+import {
+  publishActivityNow,
+  publishActivityScheduled,
+  cancelActivityScheduledPublish,
+} from "@/features/activities/publishActivity";
 import { declineActivityCoHostInvite } from "@/features/activities/api/clubActivities";
 import { getErrorMessage } from "@/shared/api/client";
 import { invalidateActivityQueries } from "@/features/activities/invalidateActivities";
-import { ACTIVITY_STATUS_LABELS } from "@/features/activities/labels";
+import { ACTIVITY_STATUS_LABELS, SCHEDULED_PUBLISH_LABEL } from "@/features/activities/labels";
+import { isScheduledDraft } from "@/shared/lib/publishState";
+import ScheduledPublishManage from "@/shared/ui/ScheduledPublishManage";
 import Modal from "@/shared/ui/Modal";
 import ActivityAttendeesModal from "@/features/activities/components/club-activities/ActivityAttendeesModal";
 import ActivityCoHostsPanel from "@/features/activities/components/club-activities/ActivityCoHostsPanel";
@@ -49,18 +55,12 @@ export default function ActivityManageModal({
 
   const isHost = detailQuery.data?.hostClub.id === clubId;
   const isCoHostOnly =
-    !isHost &&
-    detailQuery.data?.coHostClubs.some((c) => c.id === clubId) === true;
+    !isHost && detailQuery.data?.coHostClubs.some((c) => c.id === clubId) === true;
 
-  const publishMutation = useMutation({
-    mutationFn: () => publishActivityNow(clubId, activity.id),
-    onSuccess: () => {
-      setActionError(null);
-      invalidate();
-      detailQuery.refetch();
-    },
-    onError: (err) => setActionError(getErrorMessage(err, "Yayınlanamadı.")),
-  });
+  const detail = detailQuery.data;
+  const status = detail?.status ?? activity.status;
+  const scheduledAt = detail?.scheduledPublishAt ?? activity.scheduledPublishAt ?? null;
+  const scheduled = status === "draft" && isScheduledDraft({ status, scheduledPublishAt: scheduledAt });
 
   const cancelMutation = useMutation({
     mutationFn: () => cancelClubActivity(clubId, activity.id),
@@ -83,10 +83,9 @@ export default function ActivityManageModal({
     onError: (err) => setActionError(getErrorMessage(err, "Ayrılınamadı.")),
   });
 
-  const status = detailQuery.data?.status ?? activity.status;
   const canEdit = isHost && status !== "cancelled";
-  const canPublish = isHost && status === "draft";
   const canCancel = isHost && status !== "cancelled";
+  const showDraftPublish = isHost && status === "draft";
 
   return (
     <>
@@ -112,6 +111,9 @@ export default function ActivityManageModal({
           <div className="space-y-5">
             <div className="flex flex-wrap gap-2">
               <span className="chip">{ACTIVITY_STATUS_LABELS[status]}</span>
+              {scheduled && (
+                <span className="chip bg-violet-50 text-violet-700">{SCHEDULED_PUBLISH_LABEL}</span>
+              )}
               {isHost && <span className="chip bg-brand-50 text-brand-700">Host kulüp</span>}
               {isCoHostOnly && (
                 <span className="chip bg-amber-50 text-amber-700">Co-host</span>
@@ -120,21 +122,26 @@ export default function ActivityManageModal({
 
             {actionError && <div className="alert-error">{actionError}</div>}
 
+            {showDraftPublish && (
+              <ScheduledPublishManage
+                scheduledPublishAt={scheduledAt}
+                onPublishNow={() => publishActivityNow(clubId, activity.id).then(() => invalidate())}
+                onSchedule={(local) =>
+                  publishActivityScheduled(clubId, activity.id, local).then(() => invalidate())
+                }
+                onCancelSchedule={() =>
+                  cancelActivityScheduledPublish(clubId, activity.id).then(() => invalidate())
+                }
+                actionError={actionError}
+                onClearError={() => setActionError(null)}
+              />
+            )}
+
             {isHost && (
               <div className="flex flex-wrap gap-2">
                 {canEdit && (
                   <button type="button" className="btn-secondary text-xs" onClick={() => setEditing(true)}>
                     <Icon name="edit" size={14} /> Düzenle
-                  </button>
-                )}
-                {canPublish && (
-                  <button
-                    type="button"
-                    className="btn-primary text-xs"
-                    disabled={publishMutation.isPending}
-                    onClick={() => publishMutation.mutate()}
-                  >
-                    {publishMutation.isPending ? "Yayınlanıyor..." : "Şimdi Yayınla"}
                   </button>
                 )}
                 {status === "published" && (

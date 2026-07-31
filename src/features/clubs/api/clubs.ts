@@ -52,13 +52,16 @@ export interface CreateAnnouncementDto {
   content: string; // 1-5000
   visibility?: "university" | "members";
   pinned?: boolean;
-  /** false → taslak; true → anında yayınla */
+  /** false → taslak; true → anında yayınla. scheduledPublishAtLocal varsa yok sayılır. */
   publish?: boolean;
+  /** Tenant yerel YYYY-MM-DDTHH:mm — offset yok. */
+  scheduledPublishAtLocal?: string;
 }
 
 export interface UpdateAnnouncementDto {
   pinned?: boolean;
   visibility?: "university" | "members";
+  scheduledPublishAtLocal?: string | null;
 }
 
 export interface CreateGalleryImageDto {

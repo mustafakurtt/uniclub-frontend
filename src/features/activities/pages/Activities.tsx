@@ -5,6 +5,7 @@ import { getActivities, getClubActivities } from "@/features/activities/api/acti
 import { getAvailableClubs } from "@/features/clubs/api/clubs";
 import { ACTIVITY_SCOPE_LABELS } from "@/features/activities/labels";
 import { formatActivityDateTime } from "@/features/activities/formatActivityDateTime";
+import { useTenantTimezone } from "@/features/auth/hooks/useTenantTimezone";
 import type { Activity, ActivityScope } from "@/shared/types";
 import Reveal from "@/shared/ui/Reveal";
 import { Icon } from "@/shared/ui/Icon";
@@ -24,7 +25,7 @@ function ActivityCardSkeleton() {
   );
 }
 
-function ActivityCard({ activity }: { activity: Activity }) {
+function ActivityCard({ activity, timezone }: { activity: Activity; timezone: string | null }) {
   const isCancelled = activity.status === "cancelled";
   const capacityLabel =
     activity.capacity == null
@@ -50,7 +51,7 @@ function ActivityCard({ activity }: { activity: Activity }) {
         </h2>
         <p className="mt-0.5 flex items-center gap-1.5 text-xs text-slate-500 sm:text-sm">
           <Icon name="calendar" size={13} className="shrink-0 text-brand-500" />
-          {formatActivityDateTime(activity.startsAt)}
+          {formatActivityDateTime(activity.startsAt, timezone)}
         </p>
         {activity.location && (
           <p className="mt-0.5 truncate text-xs text-slate-400">{activity.location}</p>
@@ -87,6 +88,7 @@ function ActivityCard({ activity }: { activity: Activity }) {
 }
 
 export default function Activities() {
+  const timezone = useTenantTimezone();
   const [scope, setScope] = useState<ActivityScope>("upcoming");
   const [search, setSearch] = useState("");
   const [clubFilter, setClubFilter] = useState<string>("");
@@ -224,7 +226,7 @@ export default function Activities() {
         <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
           {filteredActivities.map((activity, i) => (
             <Reveal key={activity.id} delay={Math.min(i, 5) * 60}>
-              <ActivityCard activity={activity} />
+              <ActivityCard activity={activity} timezone={timezone} />
             </Reveal>
           ))}
         </div>

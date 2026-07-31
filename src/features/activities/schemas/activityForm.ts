@@ -45,12 +45,6 @@ export function toActivityApiPayload(values: ActivityFormValues) {
   };
 }
 
-export function toDatetimeLocalValue(iso: string): string {
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
 export const activityCancelSchema = z.object({
   reason: z.string().trim().min(3, "İptal gerekçesi en az 3 karakter olmalıdır.").max(500),
 });

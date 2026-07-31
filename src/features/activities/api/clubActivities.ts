@@ -17,8 +17,10 @@ export interface CreateClubActivityDto {
   endsAt?: string;
   capacity?: number;
   visibility?: ActivityVisibility;
-  /** false → taslak; true → anında yayınla (zamanlanmış yayın bu turda yok). */
+  /** false → taslak; true → anında yayınla. scheduledPublishAtLocal varsa yok sayılır. */
   publish?: boolean;
+  /** Tenant yerel YYYY-MM-DDTHH:mm — offset yok, olduğu gibi gönderilir. */
+  scheduledPublishAtLocal?: string;
 }
 
 export interface UpdateClubActivityDto {
@@ -30,6 +32,7 @@ export interface UpdateClubActivityDto {
   endsAt?: string | null;
   capacity?: number | null;
   visibility?: ActivityVisibility;
+  scheduledPublishAtLocal?: string | null;
 }
 
 // ---------------------------------------------------------------------------
