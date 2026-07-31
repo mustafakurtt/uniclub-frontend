@@ -8,5 +8,6 @@ export type * from "./common"; // API zarfı
 export type * from "./user"; // kullanıcı + global rol (Katman A)
 export type * from "./university"; // tenant hiyerarşisi
 export type * from "./club"; // kulüp + kulüp içi rol (Katman B)
+export type * from "./activity"; // etkinlikler + RSVP
 export type * from "./rbac"; // yetkiler + yönetim görünümleri
 export type * from "./notification"; // gerçek zamanlı bildirimler (WS + REST)

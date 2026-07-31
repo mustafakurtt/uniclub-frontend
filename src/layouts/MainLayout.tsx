@@ -60,6 +60,7 @@ export default function MainLayout() {
                 <div className="hidden items-center gap-1 md:flex">
                   <NavLink to="/dashboard" className={navLinkClass}>Ana Sayfa</NavLink>
                   <NavLink to="/clubs" className={navLinkClass}>Kulüpler</NavLink>
+                  <NavLink to="/activities" className={navLinkClass}>Etkinlikler</NavLink>
                   {isAdmin && <NavLink to="/admin" className={navLinkClass}>Yönetim</NavLink>}
                 </div>
               </div>

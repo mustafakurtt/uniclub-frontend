@@ -23,7 +23,8 @@ export default function BottomTabBar() {
 
   const tabs: Tab[] = [
     { to: "/dashboard", label: "Ana Sayfa", icon: "home" },
-    { to: "/clubs", label: "Keşfet", icon: "explore" },
+    { to: "/clubs", label: "Kulüpler", icon: "explore" },
+    { to: "/activities", label: "Etkinlik", icon: "calendar" },
     { to: "/profile", label: "Profil", icon: "profile" },
     ...(isAdmin ? [{ to: "/admin", label: "Yönetim", icon: "officer" as IconName }] : []),
   ];
