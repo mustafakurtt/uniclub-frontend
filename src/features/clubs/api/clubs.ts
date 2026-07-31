@@ -50,6 +50,15 @@ export interface CreateContactLinkDto {
 export interface CreateAnnouncementDto {
   title: string; // 3-256
   content: string; // 1-5000
+  visibility?: "university" | "members";
+  pinned?: boolean;
+  /** false → taslak; true → anında yayınla */
+  publish?: boolean;
+}
+
+export interface UpdateAnnouncementDto {
+  pinned?: boolean;
+  visibility?: "university" | "members";
 }
 
 export interface CreateGalleryImageDto {
@@ -233,6 +242,30 @@ export const deleteAnnouncement = async (
   announcementId: string
 ): Promise<void> => {
   await apiClient.delete(`/clubs/${clubId}/announcements/${announcementId}`);
+};
+
+/** POST /clubs/:clubId/announcements/:id/publish — taslak → yayın. */
+export const publishAnnouncement = async (
+  clubId: string,
+  announcementId: string
+): Promise<Announcement> => {
+  const response = await apiClient.post<ApiEnvelope<Announcement>>(
+    `/clubs/${clubId}/announcements/${announcementId}/publish`
+  );
+  return response.data.data;
+};
+
+/** PATCH /clubs/:clubId/announcements/:id — sabitleme / görünürlük. */
+export const updateAnnouncement = async (
+  clubId: string,
+  announcementId: string,
+  dto: UpdateAnnouncementDto
+): Promise<Announcement> => {
+  const response = await apiClient.patch<ApiEnvelope<Announcement>>(
+    `/clubs/${clubId}/announcements/${announcementId}`,
+    dto
+  );
+  return response.data.data;
 };
 
 /** GET /clubs/:clubId/gallery — herkes (§9.2). */

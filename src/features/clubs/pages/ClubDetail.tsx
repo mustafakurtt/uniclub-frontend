@@ -219,7 +219,7 @@ export default function ClubDetail() {
         <div className="space-y-6 lg:col-span-2">
           {/* İstek listesi staff'a görünür; kararı yalnızca officer/başkan verir (§7.1-7.2) */}
           {isStaff && <ClubJoinRequestsSection clubId={clubId} canDecide={isOfficer} />}
-          <ClubActivitiesSection clubId={clubId} />
+          <ClubActivitiesSection clubId={clubId} canManage={isStaff} />
           <ClubAnnouncementsSection clubId={clubId} canManage={isStaff} />
           <ClubGallerySection clubId={clubId} canManage={isStaff} />
         </div>

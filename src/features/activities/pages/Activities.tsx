@@ -58,7 +58,7 @@ function ActivityCard({ activity }: { activity: Activity }) {
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <span className="chip gap-1 text-[11px]">
             <Icon name="club" size={11} className="text-brand-600" />
-            {activity.hostClub.name}
+            {activity.hostClub?.name ?? "Kulüp"}
           </span>
           {capacityLabel && (
             <span className="chip gap-1 text-[11px]">
@@ -117,7 +117,7 @@ export default function Activities() {
       return (
         a.title.toLocaleLowerCase("tr-TR").includes(q) ||
         (a.location ?? "").toLocaleLowerCase("tr-TR").includes(q) ||
-        a.hostClub.name.toLocaleLowerCase("tr-TR").includes(q)
+        (a.hostClub?.name ?? "").toLocaleLowerCase("tr-TR").includes(q)
       );
     });
   }, [activitiesQuery.data, clubFilter, scope, search]);

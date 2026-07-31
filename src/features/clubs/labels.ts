@@ -1,7 +1,15 @@
 // Kulüp yüzeyinde ortak Türkçe etiketler + ikon eşlemeleri — tek nokta
 // (Dashboard, ClubDetail, admin). İkonlar merkezi kayıttan (Icon.tsx) semantik
 // adlarla referanslanır; burada emoji/görsel tutulmaz.
-import type { ClubRole, ClubStatus, ContactPlatform, JoinPolicy, MembershipStatus } from "@/shared/types";
+import type {
+  AnnouncementStatus,
+  AnnouncementVisibility,
+  ClubRole,
+  ClubStatus,
+  ContactPlatform,
+  JoinPolicy,
+  MembershipStatus,
+} from "@/shared/types";
 import type { IconName } from "@/shared/ui/Icon";
 
 export const CLUB_ROLE_LABELS: Record<ClubRole, string> = {
@@ -37,6 +45,16 @@ export const JOIN_POLICY_LABELS: Record<JoinPolicy, string> = {
 export const JOIN_POLICY_ICONS: Record<JoinPolicy, IconName> = {
   open: "policyOpen",
   approval_required: "policyApproval",
+};
+
+export const ANNOUNCEMENT_STATUS_LABELS: Record<AnnouncementStatus, string> = {
+  draft: "Taslak",
+  published: "Yayında",
+};
+
+export const ANNOUNCEMENT_VISIBILITY_LABELS: Record<AnnouncementVisibility, string> = {
+  university: "Üniversite geneli",
+  members: "Yalnızca üyeler",
 };
 
 export const CONTACT_PLATFORM_LABELS: Record<ContactPlatform, { label: string; icon: IconName }> = {

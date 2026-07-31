@@ -17,13 +17,22 @@ export interface ActivityClubRef {
   logoUrl?: string | null;
 }
 
-export interface ActivityRsvp {
-  status: RsvpStatus;
-  checkedInAt: string | null;
+export interface ActivityCoHostRow {
+  clubId: string;
+  status: ActivityClubStatus;
+  createdAt: string;
+  club: ActivityClubRef;
 }
 
-/** Keşif listesi ve kulüp listesi satırı */
-export interface Activity {
+export interface ActivityAttendeeRow {
+  status: RsvpStatus;
+  checkedInAt: string | null;
+  createdAt: string;
+  user: SafeUser;
+}
+
+/** Keşif listesi satırı — hostClub kulüp listesinde dönmeyebilir. */
+export interface ActivityListItem {
   id: string;
   title: string;
   description: string | null;
@@ -37,25 +46,34 @@ export interface Activity {
   createdBy: string;
   createdAt: string;
   updatedAt: string;
-  hostClub: ActivityClubRef;
+  hostClub?: ActivityClubRef;
   coHostClubs?: ActivityClubRef[];
   goingCount?: number;
   myRsvp?: ActivityRsvp | null;
 }
 
+/** @deprecated ActivityListItem kullan — geriye dönük alias */
+export type Activity = ActivityListItem;
+
 /** GET /activities/:activityId */
-export interface ActivityDetail extends Activity {
+export interface ActivityDetail extends ActivityListItem {
   creator: SafeUser;
+  hostClub: ActivityClubRef;
   coHostClubs: ActivityClubRef[];
   goingCount: number;
   myRsvp: ActivityRsvp | null;
+}
+
+export interface ActivityRsvp {
+  status: RsvpStatus;
+  checkedInAt: string | null;
 }
 
 /** GET /users/me/activities satırı */
 export interface MyActivityRow {
   status: RsvpStatus;
   checkedInAt: string | null;
-  activity: Activity & { hostClub: ActivityClubRef };
+  activity: ActivityListItem & { hostClub: ActivityClubRef };
 }
 
 export type ActivityScope = "upcoming" | "past" | "all";
