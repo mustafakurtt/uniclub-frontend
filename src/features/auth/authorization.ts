@@ -24,6 +24,7 @@ export const UNIVERSITY_PERMISSIONS: GlobalPermission[] = [
   "university.department.create",
   "university.department.update",
   "university.department.delete",
+  "university.settings.manage",
 ];
 
 // Platform-seviyesi üniversite işleri (yalnızca super_admin) — tenant değil.

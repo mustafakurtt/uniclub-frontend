@@ -4,7 +4,7 @@ import {
   Landmark, Building2, Target, GraduationCap, BookOpen, Megaphone, Users,
   UserCog, Image, Link2, User, Hash, Calendar, Mail, Inbox,
   House, Compass, Search, SearchX, ArrowRight, ArrowLeft, ChevronRight, ChevronDown, LogOut,
-  Ticket, Wrench, Crown, Globe, Lock,
+  Ticket, Wrench, Crown, Globe, Lock, Settings,
   MessageCircle, Camera, Gamepad2, Send, AtSign,
   Rocket, Sparkles, PartyPopper, Hand, Handshake, Bell, Frown, RadioTower, Sprout, Palette,
   Music, Bot, Drama, Volleyball, Brain, BookText, Leaf, Mic, FlaskConical,
@@ -70,6 +70,7 @@ export const ICONS = {
   president: Crown,
   policyOpen: Globe,
   policyApproval: Lock,
+  settings: Settings,
 
   // İletişim platformları
   whatsapp: MessageCircle,

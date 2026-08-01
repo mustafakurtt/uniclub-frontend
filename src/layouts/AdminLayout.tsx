@@ -37,12 +37,14 @@ export default function AdminLayout() {
   const canManageRoles = hasPermission("role.manage");
   const canManagePermissions = hasPermission("permission.manage");
   const canViewAudit = hasPermission("audit.view");
+  const canManageSettings = hasPermission("university.settings.manage");
 
   const navItems: AdminNavItem[] = [
     { to: "/admin/users", label: "Kullanıcılar", icon: "members", visible: canViewUsers },
     { to: "/admin/clubs", label: "Kulüpler", icon: "club", visible: canViewClubs },
     { to: "/admin/moderation", label: "Moderasyon", icon: "moderation", visible: canModerate },
     { to: "/admin/universities", label: "Akademik Yapı", icon: "university", visible: canManageUniversities },
+    { to: "/admin/settings", label: "Tenant Ayarları", icon: "settings", visible: canManageSettings },
     { to: "/admin/roles", label: "Roller", icon: "role", visible: canManageRoles },
     { to: "/admin/permissions", label: "Yetkiler", icon: "lock", visible: canManagePermissions },
     { to: "/admin/audit", label: "Denetim İzi", icon: "audit", visible: canViewAudit },

@@ -1,6 +1,6 @@
 // Kulüp ve alt-kaynakları (FRONTEND_CLUBS.md §4–§10).
 // Katman B — kulüp içi rol; her kulüpte ayrı, global rolden bağımsızdır (§3.1).
-import type { RoleName, SafeUser } from "./user";
+import type { SafeUser } from "./user";
 
 export type ClubStatus = "pending" | "approved" | "rejected" | "archived";
 export type JoinPolicy = "open" | "approval_required";
@@ -129,14 +129,16 @@ export interface ClubApplication {
   updatedAt: string;
 }
 
-/** Genişletilebilir çok-adımlı onay zinciri satırı (§6.2 — şu an tek adım) */
+/** Çok kademeli onay zinciri satırı — admin listesinde gömülü (FRONTEND_YONETIM.md §5.2). */
 export interface ClubApplicationApproval {
   step: number;
-  approverRole: RoleName;
+  /** Global RBAC rol adı veya `club_approver` (club.approve yetkisi taşıyanlar). */
+  approverRole: string;
   status: ApplicationStatus;
   approverId: string | null;
   approver: SafeUser | null;
   reviewedAt: string | null;
+  note: string | null;
 }
 
 /** GET /clubs/applications/:applicationId — başvuru + onay adımları */

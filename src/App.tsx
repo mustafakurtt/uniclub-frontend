@@ -25,6 +25,7 @@ import AdminUsers from "@/features/admin/pages/AdminUsers";
 import AdminRoles from "@/features/admin/pages/AdminRoles";
 import AdminPermissions from "@/features/admin/pages/AdminPermissions";
 import AdminAudit from "@/features/admin/pages/AdminAudit";
+import AdminSettings from "@/features/admin/pages/AdminSettings";
 import Forbidden from "@/features/auth/pages/Forbidden";
 import NotFound from "@/shared/pages/NotFound";
 import PublicLayout from "@/layouts/PublicLayout";
@@ -106,6 +107,8 @@ function App() {
             <Route path="/admin/permissions" element={<AdminPermissions />} />
             {/* Denetim izi: korunan her yazma isteği (audit.view) */}
             <Route path="/admin/audit" element={<AdminAudit />} />
+            {/* Tenant politika ayarları (university.settings.manage) */}
+            <Route path="/admin/settings" element={<AdminSettings />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
