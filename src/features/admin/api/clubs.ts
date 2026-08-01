@@ -1,7 +1,22 @@
 // Kulüp yönetimi — okuma `club.view`, durum/profil `club.update`, silme `club.delete` (§5.3)
 import { apiClient } from "@/shared/api/client";
-import type { ApiEnvelope, Club, ClubStatus, JoinPolicy } from "@/shared/types";
+import type {
+  ActivityListItem,
+  AdminClubDetail,
+  Announcement,
+  ApiEnvelope,
+  Club,
+  ClubStatus,
+  GalleryImage,
+  JoinPolicy,
+  KeysetPage,
+} from "@/shared/types";
 import { adminBase } from "./_base";
+
+export interface AdminClubListParams {
+  limit?: number;
+  cursor?: string;
+}
 
 export interface AdminUpdateClubDto {
   // En az bir alan; durum ayrı uçtan yönetilir.
@@ -19,6 +34,53 @@ export const getAdminClubs = async (
   const response = await apiClient.get<ApiEnvelope<Club[]>>(`${adminBase(universityId)}/clubs`, {
     params: status ? { status } : undefined,
   });
+  return response.data.data;
+};
+
+/** Kulüp detayı + özet sayaçlar (M2.5 §5.6). */
+export const getAdminClub = async (
+  universityId: string,
+  clubId: string
+): Promise<AdminClubDetail> => {
+  const response = await apiClient.get<ApiEnvelope<AdminClubDetail>>(
+    `${adminBase(universityId)}/clubs/${clubId}`
+  );
+  return response.data.data;
+};
+
+export const getAdminClubActivities = async (
+  universityId: string,
+  clubId: string,
+  params?: AdminClubListParams
+): Promise<KeysetPage<ActivityListItem>> => {
+  const response = await apiClient.get<ApiEnvelope<KeysetPage<ActivityListItem>>>(
+    `${adminBase(universityId)}/clubs/${clubId}/activities`,
+    { params }
+  );
+  return response.data.data;
+};
+
+export const getAdminClubAnnouncements = async (
+  universityId: string,
+  clubId: string,
+  params?: AdminClubListParams
+): Promise<KeysetPage<Announcement>> => {
+  const response = await apiClient.get<ApiEnvelope<KeysetPage<Announcement>>>(
+    `${adminBase(universityId)}/clubs/${clubId}/announcements`,
+    { params }
+  );
+  return response.data.data;
+};
+
+export const getAdminClubGallery = async (
+  universityId: string,
+  clubId: string,
+  params?: AdminClubListParams
+): Promise<KeysetPage<GalleryImage>> => {
+  const response = await apiClient.get<ApiEnvelope<KeysetPage<GalleryImage>>>(
+    `${adminBase(universityId)}/clubs/${clubId}/gallery`,
+    { params }
+  );
   return response.data.data;
 };
 

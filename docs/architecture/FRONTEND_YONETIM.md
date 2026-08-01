@@ -1,4 +1,4 @@
-> **Senkron kopya** — Kaynak: ../uniclub-backend/docs/integration/admin-panel.md · Backend commit: 4a79a0a
+> **Senkron kopya** — Kaynak: ../uniclub-backend/docs/integration/admin-panel.md · Backend commit: 3ebc04e
 
 # Frontend — Yönetim Paneli Entegrasyon Dokümanı (v2)
 
@@ -321,6 +321,7 @@ Onay tamamlandığında `data`: `{ application, club }`. Zaten değerlendirilmi�
 | Method | Path | Yetki | Açıklama |
 |---|---|---|---|
 | GET | `/universities/:uid/clubs?status=` | `club.view` | Tüm durumlar (pending/approved/rejected/archived) |
+| GET | `/universities/:uid/clubs/:clubId` | `club.view` | Kulüp detayı + `counts` (üye, bekleyen istek, yaklaşan etkinlik, danışman) |
 | PATCH | `/universities/:uid/clubs/:clubId/status` | `club.update` | `{ status }` |
 | PATCH | `/universities/:uid/clubs/:clubId` | `club.update` | `{ name?, description?, logoUrl?, coverUrl?, joinPolicy? }` |
 | DELETE | `/universities/:uid/clubs/:clubId` | `club.delete` | Kalıcı silme — **önce archived/rejected olmalı** |
@@ -349,13 +350,30 @@ Kulüp-içi katman (officer/president/advisor) korunur; bunlar tenant yöneticis
 | Method | Path | Yetki | Açıklama |
 |---|---|---|---|
 | GET | `/universities/:uid/clubs/:clubId/members` | `club.view` | Üye listesi (bekleyenler dahil, `user` gömülü) |
+| GET | `/universities/:uid/clubs/:clubId/announcements?limit=&cursor=` | `club.view` | Duyuru listesi (taslaklar dahil, keyset) |
+| GET | `/universities/:uid/clubs/:clubId/gallery?limit=&cursor=` | `club.view` | Galeri listesi (keyset) |
+| GET | `/universities/:uid/clubs/:clubId/activities?limit=&cursor=` | `club.view` | Etkinlik listesi (taslaklar dahil, keyset) |
 | DELETE | `/universities/:uid/clubs/:clubId/members/:userId` | `club.member.manage` | Üyeyi çıkar |
 | DELETE | `/universities/:uid/clubs/:clubId/announcements/:announcementId` | `announcement.moderate` | Duyuruyu kaldır |
 | DELETE | `/universities/:uid/clubs/:clubId/gallery/:imageId` | `gallery.moderate` | Görseli kaldır |
 
 Çapraz-kulüp koruması: içerik gerçekten o kulübe ait değilse `404`.
-(Duyuru/galeri **listesini** okumak için kulüp public alt-kaynak endpoint'leri
-kullanılır: `GET /api/clubs/:clubId/announcements|gallery`.)
+
+### 5.6. M2.5 — Derin bağlanabilir detay rotaları
+
+| Frontend rota | API kaynakları |
+|---|---|
+| `/admin/clubs/:clubId?tab=` | Başlık/sayaçlar: `GET .../clubs/:clubId`; sekmeler: members, activities, announcements, advisors, gallery; denetim: `GET /api/audit/universities/:uid?targetId=:clubId` (`audit.view`) |
+| `/admin/users/:userId` | `GET .../users/:userId` — roller, kulüp üyelikleri, override'lar, effective permissions |
+| `/admin/applications/:applicationId` | `GET .../club-applications/:id` + `.../history` |
+| `/admin/proposals/:proposalId` | `GET .../formation-proposals/:id` |
+
+Sekme değişimi URL'de (`?tab=members`); açılmayan sekmenin verisi çekilmez.
+Liste uçları keyset: `cursor` = son öğenin `createdAt` (duyuru/galeri) veya `startsAt` (etkinlik); yanıt `{ items, nextCursor }`.
+
+`/admin` girişi **sert yönlendirme yapmaz** — rol önceliğine göre varsayılan özet:
+`university_admin` → kurum özeti; `student_affairs` → iş kuyruğu;
+`content_moderator` → moderasyon; `auditor` → denetim özeti. Çoklu rolde öncelik sırası kodda `resolveAdminHomeVariant`.
 
 ---
 
@@ -447,6 +465,8 @@ Frontend, effective `permissions`'a göre şu bölümleri göster/gizle:
 | **Kullanıcılar** sekmesi (liste/detay) | `user.view` |
 | Kullanıcı durum/bölüm değiştir | `user.manage` |
 | **Kulüpler** sekmesi | `club.view` |
+| Kulüp detay (`/admin/clubs/:clubId`) | `club.view` |
+| Kulüp denetim sekmesi | `audit.view` |
 | Kulüp durum/profil düzenle | `club.update` |
 | Kulüp sil | `club.delete` |
 | **Başvurular** sekmesi | `application.view` |

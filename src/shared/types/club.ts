@@ -48,6 +48,18 @@ export interface Club {
   updatedAt: string;
 }
 
+/** GET /admin/.../clubs/:clubId → başlık sayaçları (M2.5 §5.6). */
+export interface AdminClubCounts {
+  members: number;
+  pendingJoinRequests: number;
+  upcomingActivities: number;
+  advisors: number;
+}
+
+export interface AdminClubDetail extends Club {
+  counts: AdminClubCounts;
+}
+
 export interface ContactLink {
   id: string;
   clubId: string;

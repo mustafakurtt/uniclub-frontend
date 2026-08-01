@@ -1,12 +1,13 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import SelectField from "@/shared/ui/SelectField";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { adminUserDetailHref } from "@/features/admin/adminListNav";
 import { getAdminUsers } from "@/features/admin/api";
 import { getErrorMessage } from "@/shared/api/client";
 import EmptyState from "@/shared/ui/EmptyState";
 import { Icon } from "@/shared/ui/Icon";
-import UserDetailModal from "@/features/admin/components/user-detail/UserDetailModal";
 import RequireUniversity from "@/features/admin/components/RequireUniversity";
 import { useRankActor } from "@/features/admin/useRankActor";
 import { canManageUser, outrankedReason, rankOf, selfActionReason } from "@/features/admin/rank";
@@ -17,14 +18,6 @@ import {
 } from "@/features/admin/labels";
 import type { RoleName, UserStatus } from "@/shared/types";
 
-// Kullanıcı yönetimi (docs/FRONTEND_YONETIM.md §5.1) — okuma `user.view`.
-// Liste `?status=` ve `?role=` ile filtrelenir; satıra tıklayınca detay modalı
-// açılır (durum/bölüm/rol/claim — hepsi kendi granüler yetkisiyle).
-//
-// Rütbe (FRONTEND_RUTBE_VE_PLATFORM.md §4): aktör yalnızca KENDİNDEN DÜŞÜK
-// rütbeli kullanıcıya dokunabilir. Dokunamayacağı satırlar listede kilit
-// rozetiyle işaretlenir — satır yine açılır, çünkü görüntüleme serbesttir.
-
 const STATUS_FILTERS: { key: UserStatus | "all"; label: string }[] = [
   { key: "all", label: "Tümü" },
   { key: "active", label: "Aktif" },
@@ -32,8 +25,6 @@ const STATUS_FILTERS: { key: UserStatus | "all"; label: string }[] = [
   { key: "suspended", label: "Askıda" },
 ];
 
-// Filtre için sık kullanılan seed rolleri (backend serbest rol adı kabul eder;
-// bu yalnızca kolay filtreleme içindir).
 const ROLE_FILTERS: RoleName[] = [
   "university_admin",
   "student_affairs",
@@ -44,12 +35,45 @@ const ROLE_FILTERS: RoleName[] = [
   "student",
 ];
 
+function parseStatus(value: string | null): UserStatus | "all" {
+  if (value === "active" || value === "pending" || value === "suspended") return value;
+  return "all";
+}
+
 function UsersList({ universityId }: { universityId: string }) {
   const actor = useRankActor();
-  const [statusFilter, setStatusFilter] = useState<UserStatus | "all">("all");
-  const [roleFilter, setRoleFilter] = useState<RoleName | "">("");
-  const [search, setSearch] = useState("");
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const statusFilter = parseStatus(searchParams.get("status"));
+  const roleFilter = (searchParams.get("role") ?? "") as RoleName | "";
+  const search = searchParams.get("q") ?? "";
+
+  const setStatusFilter = (status: UserStatus | "all") => {
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev);
+      if (status === "all") params.delete("status");
+      else params.set("status", status);
+      return params;
+    });
+  };
+
+  const setRoleFilter = (role: RoleName | "") => {
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev);
+      if (!role) params.delete("role");
+      else params.set("role", role);
+      return params;
+    });
+  };
+
+  const setSearch = (value: string) => {
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev);
+      const trimmed = value.trim();
+      if (!trimmed) params.delete("q");
+      else params.set("q", trimmed);
+      return params;
+    });
+  };
 
   const usersQuery = useQuery({
     queryKey: ["admin", universityId, "users", { status: statusFilter, role: roleFilter }],
@@ -69,9 +93,10 @@ function UsersList({ universityId }: { universityId: string }) {
     );
   }, [usersQuery.data, query]);
 
+  const listParams = { status: statusFilter, role: roleFilter || null };
+
   return (
     <div className="space-y-6">
-      {/* Filtreler */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex flex-wrap gap-1.5">
           {STATUS_FILTERS.map((f) => (
@@ -109,7 +134,6 @@ function UsersList({ universityId }: { universityId: string }) {
         />
       </div>
 
-      {/* Liste */}
       {usersQuery.isLoading ? (
         <div className="space-y-3">
           <div className="skeleton h-16 w-full" />
@@ -128,9 +152,9 @@ function UsersList({ universityId }: { universityId: string }) {
               const manageable = canManageUser(actor, u);
               return (
                 <li key={u.id}>
-                  <button
-                    className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-brand-50/50"
-                    onClick={() => setSelectedUserId(u.id)}
+                  <Link
+                    to={adminUserDetailHref(u.id, listParams)}
+                    className="flex w-full items-center gap-3 px-4 py-3 transition-colors hover:bg-brand-50/50"
                   >
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-brand-600 to-accent-400 text-sm font-bold text-white">
                       {u.photoUrl ? (
@@ -151,7 +175,6 @@ function UsersList({ universityId }: { universityId: string }) {
                       <p className="truncate text-xs text-slate-400">{u.email}</p>
                     </div>
 
-                    {/* Rütbe engeli — aksiyonların neden kapalı olacağını önden söyler */}
                     {!manageable && (
                       <span
                         title={isSelf ? selfActionReason : outrankedReason}
@@ -185,20 +208,13 @@ function UsersList({ universityId }: { universityId: string }) {
                       #{rankOf(u.roles)}
                     </span>
                     <Icon name="chevronRight" size={16} className="shrink-0 text-slate-300" />
-                  </button>
+                  </Link>
                 </li>
               );
             })}
           </ul>
         </div>
       )}
-
-      <UserDetailModal
-        open={!!selectedUserId}
-        universityId={universityId}
-        userId={selectedUserId}
-        onClose={() => setSelectedUserId(null)}
-      />
     </div>
   );
 }

@@ -32,6 +32,8 @@ import AdminAudit from "@/features/admin/pages/AdminAudit";
 import AdminSettings from "@/features/admin/pages/AdminSettings";
 import AdminClubApplicationDetail from "@/features/admin/pages/AdminClubApplicationDetail";
 import AdminFormationProposalDetail from "@/features/admin/pages/AdminFormationProposalDetail";
+import AdminClubDetail from "@/features/admin/pages/AdminClubDetail";
+import AdminUserDetail from "@/features/admin/pages/AdminUserDetail";
 import AdminExports from "@/features/exports/pages/AdminExports";
 import Forbidden from "@/features/auth/pages/Forbidden";
 import NotFound from "@/shared/pages/NotFound";
@@ -103,10 +105,11 @@ function App() {
             }
           >
             <Route path="/admin" element={<AdminHome />} />
-            {/* Kullanıcılar: liste + durum/bölüm + rol atama + effective yetki */}
             <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/users/:userId" element={<AdminUserDetail />} />
             {/* Kulüp yönetimi: başvurular + kulüpler + danışmanlar (granüler club.*) */}
             <Route path="/admin/clubs" element={<AdminClubs />} />
+            <Route path="/admin/clubs/:clubId" element={<AdminClubDetail />} />
             <Route path="/admin/applications/:applicationId" element={<AdminClubApplicationDetail />} />
             <Route path="/admin/proposals/:proposalId" element={<AdminFormationProposalDetail />} />
             {/* Üye & içerik moderasyonu: tenant üstten müdahale (club.member.manage,
