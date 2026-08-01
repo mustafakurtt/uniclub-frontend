@@ -5,8 +5,10 @@ import type {
   Club,
   ClubApplication,
   ClubApplicationApproval,
+  ClubApplicationChecklist,
   ClubApplicationHistory,
   ClubApplicationRevisionRequest,
+  ClubApplicationReviewFields,
   SafeUser,
 } from "@/shared/types";
 import { adminBase } from "./_base";
@@ -21,7 +23,7 @@ export type AdminClubApplication = ClubApplication & {
 export type AdminClubApplicationDetail = AdminClubApplication & {
   approvals: ClubApplicationApproval[];
   revisionRequest?: ClubApplicationRevisionRequest | null;
-};
+} & ClubApplicationReviewFields;
 
 export const getClubApplications = async (
   universityId: string,
@@ -87,4 +89,38 @@ export const getClubApplicationHistory = async (
     `${adminBase(universityId)}/club-applications/${applicationId}/history`
   );
   return response.data.data;
+};
+
+export const getClubApplicationChecklist = async (
+  universityId: string,
+  applicationId: string
+): Promise<ClubApplicationChecklist> => {
+  const response = await apiClient.get<ApiEnvelope<ClubApplicationChecklist>>(
+    `${adminBase(universityId)}/club-applications/${applicationId}/checklist`
+  );
+  return response.data.data;
+};
+
+export const updateClubApplicationChecklistItem = async (
+  universityId: string,
+  applicationId: string,
+  itemKey: string,
+  body: { checked: boolean; note?: string }
+): Promise<ClubApplicationChecklist> => {
+  const response = await apiClient.patch<ApiEnvelope<ClubApplicationChecklist>>(
+    `${adminBase(universityId)}/club-applications/${applicationId}/checklist/${itemKey}`,
+    body
+  );
+  return response.data.data;
+};
+
+export const reviewClubApplicationAppeal = async (
+  universityId: string,
+  applicationId: string,
+  body: { decision: "upheld" | "dismissed"; note: string }
+): Promise<void> => {
+  await apiClient.patch(
+    `${adminBase(universityId)}/club-applications/${applicationId}/appeal/review`,
+    body
+  );
 };

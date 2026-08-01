@@ -10,7 +10,7 @@ import {
   type AdminClubApplication,
 } from "@/features/admin/api";
 import type { ApplicationDecisionState } from "@/features/admin/approvalChain";
-import { getErrorMessage } from "@/shared/api/client";
+import { getApplicationDecisionErrorMessage } from "@/features/admin/applicationDecisionErrors";
 
 type DecisionKind = "approve" | "reject" | "revision";
 
@@ -39,6 +39,9 @@ export default function ClubApplicationDecisionPanel({
     });
     queryClient.invalidateQueries({
       queryKey: ["admin", universityId, "club-application-history", application.id],
+    });
+    queryClient.invalidateQueries({
+      queryKey: ["admin", universityId, "club-application-checklist", application.id],
     });
     queryClient.invalidateQueries({ queryKey: ["admin", universityId, "clubs"] });
   };
@@ -116,7 +119,7 @@ export default function ClubApplicationDecisionPanel({
         loading={decideMutation.isPending}
         error={
           decideMutation.isError && decision?.kind === "approve"
-            ? getErrorMessage(decideMutation.error, "Karar kaydedilemedi.")
+            ? getApplicationDecisionErrorMessage(decideMutation.error, "Karar kaydedilemedi.")
             : null
         }
         onConfirm={() => decision?.kind === "approve" && decideMutation.mutate(decision)}

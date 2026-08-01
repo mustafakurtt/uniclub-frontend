@@ -5,6 +5,7 @@ import type {
   ApplicationStatus,
   ClubApplicationApproval,
   ClubApplicationRevisionRequest,
+  ClubApplicationReviewFields,
 } from "./clubApplication";
 
 export type {
@@ -156,7 +157,7 @@ export interface ClubApplication {
 }
 
 /** GET /clubs/applications/:applicationId — başvuru + onay adımları + revizyon talebi */
-export interface ClubApplicationDetail extends ClubApplication {
+export interface ClubApplicationDetail extends ClubApplication, ClubApplicationReviewFields {
   approvals: ClubApplicationApproval[];
   revisionRequest?: ClubApplicationRevisionRequest | null;
 }

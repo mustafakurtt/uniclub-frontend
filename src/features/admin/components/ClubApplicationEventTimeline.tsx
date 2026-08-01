@@ -5,11 +5,17 @@ import {
 } from "@/features/clubs/applicationLabels";
 import type { ClubApplicationEvent, ClubApplicationHistory } from "@/shared/types";
 
-const EVENT_ICON: Record<ClubApplicationEvent["eventType"], "edit" | "check" | "reject" | "arrowRight"> = {
+const EVENT_ICON: Record<
+  ClubApplicationEvent["eventType"],
+  "edit" | "check" | "reject" | "arrowRight" | "inbox"
+> = {
   revision_requested: "edit",
   resubmitted: "arrowRight",
   approved: "check",
   rejected: "reject",
+  appeal_submitted: "inbox",
+  appeal_upheld: "check",
+  appeal_dismissed: "reject",
 };
 
 function EventBody({ event }: { event: ClubApplicationEvent }) {

@@ -5,6 +5,7 @@ import {
   getMyClubApplication,
   resubmitClubApplication,
 } from "@/features/clubs/api/clubs";
+import ClubApplicationAppealSection from "@/features/clubs/components/ClubApplicationAppealSection";
 import ClubApplicationResubmitForm from "@/features/clubs/components/ClubApplicationResubmitForm";
 import ClubApplicationApprovalChain from "@/features/admin/components/ClubApplicationApprovalChain";
 import {
@@ -140,19 +141,22 @@ export default function ClubApplicationDetailPage() {
           }
         />
       ) : (
-        <section className="card p-5 space-y-3">
-          <h2 className="font-display text-base font-bold text-slate-900">Başvuru özeti</h2>
-          {application.description ? (
-            <p className="text-sm text-slate-600 whitespace-pre-wrap">{application.description}</p>
-          ) : (
-            <p className="text-sm text-slate-400 italic">Açıklama eklenmemiş.</p>
-          )}
-          {application.status === "pending" && (
-            <p className="text-xs text-slate-500">
-              Başvurun değerlendiriliyor. Karar verildiğinde bildirim alırsın.
-            </p>
-          )}
-        </section>
+        <>
+          <section className="card p-5 space-y-3">
+            <h2 className="font-display text-base font-bold text-slate-900">Başvuru özeti</h2>
+            {application.description ? (
+              <p className="text-sm text-slate-600 whitespace-pre-wrap">{application.description}</p>
+            ) : (
+              <p className="text-sm text-slate-400 italic">Açıklama eklenmemiş.</p>
+            )}
+            {application.status === "pending" && (
+              <p className="text-xs text-slate-500">
+                Başvurun değerlendiriliyor. Karar verildiğinde bildirim alırsın.
+              </p>
+            )}
+          </section>
+          <ClubApplicationAppealSection applicationId={applicationId} application={application} />
+        </>
       )}
 
       {application.approvals.length > 1 && (
