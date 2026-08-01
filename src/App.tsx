@@ -6,6 +6,7 @@ import VerifyEmail from "@/features/auth/pages/VerifyEmail";
 import Dashboard from "@/pages/Dashboard";
 import Clubs from "@/features/clubs/pages/Clubs";
 import ClubDetail from "@/features/clubs/pages/ClubDetail";
+import ClubApplicationDetailPage from "@/features/clubs/pages/ClubApplicationDetailPage";
 import Activities from "@/features/activities/pages/Activities";
 import ActivityDetail from "@/features/activities/pages/ActivityDetail";
 import ActivityCheckInPage from "@/features/activities/pages/ActivityCheckInPage";
@@ -25,6 +26,7 @@ import AdminUsers from "@/features/admin/pages/AdminUsers";
 import AdminRoles from "@/features/admin/pages/AdminRoles";
 import AdminPermissions from "@/features/admin/pages/AdminPermissions";
 import AdminAudit from "@/features/admin/pages/AdminAudit";
+import AdminSettings from "@/features/admin/pages/AdminSettings";
 import Forbidden from "@/features/auth/pages/Forbidden";
 import NotFound from "@/shared/pages/NotFound";
 import PublicLayout from "@/layouts/PublicLayout";
@@ -74,6 +76,7 @@ function App() {
             <Route path="/clubs" element={<Clubs />} />
             {/* Detay id ile çalışır — backend'de slug lookup ucu yok (FRONTEND_CLUBS.md §5.1) */}
             <Route path="/clubs/:clubId" element={<ClubDetail />} />
+            <Route path="/applications/:applicationId" element={<ClubApplicationDetailPage />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
 
@@ -106,6 +109,8 @@ function App() {
             <Route path="/admin/permissions" element={<AdminPermissions />} />
             {/* Denetim izi: korunan her yazma isteği (audit.view) */}
             <Route path="/admin/audit" element={<AdminAudit />} />
+            {/* Tenant politika ayarları (university.settings.manage) */}
+            <Route path="/admin/settings" element={<AdminSettings />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

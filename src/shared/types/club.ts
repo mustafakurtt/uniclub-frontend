@@ -1,11 +1,25 @@
 // Kulüp ve alt-kaynakları (FRONTEND_CLUBS.md §4–§10).
 // Katman B — kulüp içi rol; her kulüpte ayrı, global rolden bağımsızdır (§3.1).
-import type { RoleName, SafeUser } from "./user";
+import type { SafeUser } from "./user";
+import type {
+  ApplicationStatus,
+  ClubApplicationApproval,
+  ClubApplicationRevisionRequest,
+} from "./clubApplication";
+
+export type {
+  ApplicationStatus,
+  ApplicationApprovalStatus,
+  ClubApplicationApproval,
+  ClubApplicationEvent,
+  ClubApplicationEventType,
+  ClubApplicationHistory,
+  ClubApplicationRevisionRequest,
+} from "./clubApplication";
 
 export type ClubStatus = "pending" | "approved" | "rejected" | "archived";
 export type JoinPolicy = "open" | "approval_required";
 export type MembershipStatus = "pending" | "approved" | "rejected";
-export type ApplicationStatus = "pending" | "approved" | "rejected";
 export type ClubRole = "member" | "officer" | "president";
 export type ContactPlatform =
   | "whatsapp"
@@ -129,17 +143,8 @@ export interface ClubApplication {
   updatedAt: string;
 }
 
-/** Genişletilebilir çok-adımlı onay zinciri satırı (§6.2 — şu an tek adım) */
-export interface ClubApplicationApproval {
-  step: number;
-  approverRole: RoleName;
-  status: ApplicationStatus;
-  approverId: string | null;
-  approver: SafeUser | null;
-  reviewedAt: string | null;
-}
-
-/** GET /clubs/applications/:applicationId — başvuru + onay adımları */
+/** GET /clubs/applications/:applicationId — başvuru + onay adımları + revizyon talebi */
 export interface ClubApplicationDetail extends ClubApplication {
   approvals: ClubApplicationApproval[];
+  revisionRequest?: ClubApplicationRevisionRequest | null;
 }
