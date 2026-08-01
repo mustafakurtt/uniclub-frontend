@@ -10,6 +10,7 @@ export type KnownNotificationType =
   | "account.verified"
   | "account.suspended"
   | "club.application.decided"
+  | "club.application.committee_pending"
   | "club.membership.decided"
   | "role.assigned";
 

@@ -122,7 +122,7 @@ function ApprovalCommitteesBody({ universityId }: { universityId: string }) {
         <EmptyState
           icon="members"
           title="Henüz onay kurulu yok"
-          description="İlk kurulu oluşturarak başvuru zincirinde kullanmaya başlayın."
+          description="Kurul oluşturup üyeleri atayın; başvuru onay zincirinde salt çoğunlukla karar vermek için Politikalar'dan zincire ekleyin."
           action={
             <button type="button" className="btn-primary text-sm" onClick={openCreate}>
               Kurul oluştur

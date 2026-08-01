@@ -3,6 +3,10 @@ import {
   APPROVAL_STATUS_LABELS,
   isCommitteeApprovalStep,
 } from "@/features/admin/approvalChain";
+import {
+  committeeApprovalThreshold,
+  formatCommitteeApprovalProgress,
+} from "@/features/admin/committeeTallyDisplay";
 import { Icon } from "@/shared/ui/Icon";
 import type { IconName } from "@/shared/ui/Icon";
 import type { ClubApplicationApproval, CommitteeApprovalTallyStudent } from "@/shared/types";
@@ -29,7 +33,7 @@ function committeeStepSubtitle(
   row: ClubApplicationApproval,
   tally: CommitteeApprovalTallyStudent | undefined,
   studentView: boolean
-): string {
+): string | null {
   if (studentView) {
     const name = tally?.committeeName ?? "Kurul";
     if (row.status === "pending") return `${name} incelemesinde`;
@@ -38,22 +42,78 @@ function committeeStepSubtitle(
     if (row.status === "revision_requested") return `${name} revizyon istedi`;
     return `${name} kademesi`;
   }
+  return null;
+}
 
-  if (tally) {
-    return `${tally.approveCount} / ${tally.threshold} onay · ${tally.notVotedCount} üye henüz oy vermedi`;
-  }
-  return "Salt çoğunluk oylaması";
+function CommitteeVoteProgress({
+  tally,
+  status,
+}: {
+  tally: CommitteeApprovalTallyStudent;
+  status: ClubApplicationApproval["status"];
+}) {
+  const threshold = committeeApprovalThreshold(tally);
+  const progressLabel = formatCommitteeApprovalProgress(tally.approveCount, threshold);
+  const pct =
+    threshold != null && threshold > 0
+      ? Math.min(100, Math.round((tally.approveCount / threshold) * 100))
+      : 0;
+  const isComplete =
+    status === "approved" || (threshold != null && tally.approveCount >= threshold);
+  const isRejected = status === "rejected";
+
+  return (
+    <div className="mt-2 space-y-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-[11px]">
+        <span className="font-semibold text-slate-700">Onay ilerlemesi: {progressLabel}</span>
+        {status === "pending" && tally.notVotedCount > 0 && (
+          <span className="chip text-[10px] bg-amber-50 text-amber-700 border-amber-100">
+            {tally.notVotedCount} üye oy vermedi
+          </span>
+        )}
+      </div>
+      {threshold != null && (
+        <div
+          className="h-2 overflow-hidden rounded-full bg-slate-200/80"
+          role="progressbar"
+          aria-valuenow={tally.approveCount}
+          aria-valuemin={0}
+          aria-valuemax={threshold}
+          aria-label={progressLabel}
+        >
+          <div
+            className={`h-full rounded-full transition-all ${
+              isRejected ? "bg-red-500" : isComplete ? "bg-green-500" : "bg-brand-500"
+            }`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      )}
+      {status === "pending" && (
+        <p className="text-[11px] text-slate-500">
+          {threshold != null ? (
+            <>
+              Karar için {threshold} onay gerekir; {tally.notVotedCount} üye henüz oy vermedi — oy
+              vermeyenler çoğunluğu engeller.
+            </>
+          ) : (
+            <>
+              Gerekli onay sayısı henüz bildirilmedi. {tally.notVotedCount} üye henüz oy vermedi — oy
+              vermeyenler çoğunluğu engeller.
+            </>
+          )}
+        </p>
+      )}
+    </div>
+  );
 }
 
 interface ClubApplicationApprovalChainProps {
   approvals: ClubApplicationApproval[];
-  /** Detay sayfasında tek kademeli zinciri de göster. */
   showAllSteps?: boolean;
-  /** Öğrenci yüzeyi — kurul oyu detayı gösterilmez. */
   studentView?: boolean;
 }
 
-/** Çok kademeli zincir görünümü — listede tek adımda gizlenir. */
 export default function ClubApplicationApprovalChain({
   approvals,
   showAllSteps = false,
@@ -94,6 +154,9 @@ export default function ClubApplicationApprovalChain({
               </div>
               <p className="mt-1 text-xs font-semibold text-slate-700">{title}</p>
               {subtitle && <p className="mt-1 text-[11px] text-slate-500">{subtitle}</p>}
+              {isCommittee && !studentView && tally && (
+                <CommitteeVoteProgress tally={tally} status={row.status} />
+              )}
               {!isCommittee && row.reviewedAt && (
                 <p className="mt-1 text-[11px] text-slate-500">
                   {row.approver
