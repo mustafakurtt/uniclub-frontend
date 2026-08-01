@@ -193,7 +193,11 @@ export default function ClubApplicationDetailPage() {
         <>
           <section className="card p-5 space-y-3">
             <h2 className="font-display text-base font-bold text-slate-900">Onay süreci</h2>
-            <ClubApplicationApprovalChain approvals={application.approvals} showAllSteps />
+            <ClubApplicationApprovalChain
+              approvals={application.approvals}
+              showAllSteps
+              studentView
+            />
           </section>
 
           <ClubApplicationAppealSection applicationId={applicationId} application={application} />

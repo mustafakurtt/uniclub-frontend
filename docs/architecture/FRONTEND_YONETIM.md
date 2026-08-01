@@ -1,4 +1,4 @@
-> **Senkron kopya** — Kaynak: ../uniclub-backend/docs/integration/admin-panel.md · Backend commit: `3701dfdf37fb81da939cb6aeee6d22f5bbcc1696`
+> **Senkron kopya** — Kaynak: ../uniclub-backend/docs/integration/admin-panel.md · Backend commit: `db78c76`
 
 # Frontend — Yönetim Paneli Entegrasyon Dokümanı (v2)
 
@@ -230,7 +230,9 @@ tenant'ı hedefler; diğerleri yalnızca kendi tenant'ını.
 
 Onay **çok kademeli zincir** ile çalışır. Kademe sayısı ve her kademedeki karar
 verici rol tenant ayarı `club.application.approval_chain` ile yapılandırılır
-(bkz. [tenant-settings.md](tenant-settings.md)). Varsayılan: tek kademe
+(bkz. [tenant-settings.md](tenant-settings.md)). Zincir iki kademe tipi taşır:
+`role_sequential` (tek rol adı, örn. `student_affairs`) ve `committee_majority`
+(`{ type, committeeId }` — salt çoğunluk oylaması). Varsayılan: tek kademe
 `["club_approver"]` — `club.approve` yetkisini taşıyanlar (ör. `university_admin`,
 `student_affairs`).
 
@@ -245,6 +247,24 @@ verici rol tenant ayarı `club.application.approval_chain` ile yapılandırılı
 | GET | `/universities/:uid/club-applications/:id/checklist` | `application.view` | İnceleme kontrol listesi (tenant kataloğu + işaret durumu) |
 | PATCH | `/universities/:uid/club-applications/:id/checklist/:itemKey` | `application.view` | Madde işaretle (`checked`, opsiyonel `note`) |
 | PATCH | `/universities/:uid/club-applications/:id/appeal/review` | `application.view` | İtiraz incele (`decision`: `upheld` \| `dismissed`, `note` zorunlu) |
+| PATCH | `/universities/:uid/club-applications/:id/committee-vote` | kurul üyesi | Kurul kademesinde oy (`vote`: `approve` \| `reject`; ret için `reason` zorunlu). Yanıt: `{ finalized, decision?, tally }` |
+
+**Kurul kademesi kuralları:**
+- Salt çoğunluk eşiği `floor(n/2)+1` (üye tam sayısı üzerinden); `tally.threshold` backend'den gelir.
+- Oy vermeyen üye fiilen onayı engeller — çoğunluğa ulaşılamaz.
+- Oy karar kesinleşmeden değiştirilebilir; kesinleşince değişmez.
+- Kurul kademesinde doğrudan `approve`/`reject` → `400` + `admin.committeeStepUseVoteEndpoint`.
+- Revizyon kurul üyesi tarafından mevcut `request-revision` ucu ile istenir (`committee-vote` yalnızca onay/ret).
+
+**Onay kurulları** (`university.settings.manage`):
+
+| Method | Path | Yetki | Açıklama |
+|---|---|---|---|
+| GET | `/universities/:uid/approval-committees` | `university.settings.manage` | Kurul listesi (üyeler gömülü) |
+| POST | `/universities/:uid/approval-committees` | `university.settings.manage` | Kurul oluştur (`name`, `memberUserIds[]`, opsiyonel `isActive`) |
+| PATCH | `/universities/:uid/approval-committees/:committeeId` | `university.settings.manage` | Kurul düzenle (ad, üyeler, aktiflik) |
+
+`approvals[]` satırında kurul kademesi: `stepKind: "committee_majority"`, `committeeId`, `approverRole: null`.
 
 **Kontrol listesi:** Maddeler tenant ayarından gelir (`club.application.review_checklist`). Zorunlu maddeler işaretlenmeden onay `400` + `admin.checklistRequiredIncomplete` (tenant'ta `require_checklist_for_approval` açıksa). UI ayarı okumaz — onay butonu aktif kalır, backend mesajı gösterilir.
 

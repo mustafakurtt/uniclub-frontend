@@ -76,6 +76,7 @@ export default function AdminLayout() {
         { to: "/admin/users", label: "Kullanıcılar", icon: "members", visible: canViewUsers },
         { to: "/admin/universities", label: "Akademik Yapı", icon: "university", visible: canManageUniversities },
         { to: "/admin/academic-terms", label: "Akademik Dönemler", icon: "calendar", visible: canManageAcademicTerms },
+        { to: "/admin/approval-committees", label: "Onay Kurulları", icon: "members", visible: canManageSettings },
         { to: "/admin/settings", label: "Politikalar", icon: "settings", visible: canManageSettings },
       ],
     },

@@ -58,8 +58,10 @@ export interface ClubApplicationRevisionRequest {
 
 export interface ClubApplicationApproval {
   step: number;
-  /** Global RBAC rol adı veya `club_approver` (club.approve yetkisi taşıyanlar). */
-  approverRole: string;
+  stepKind?: "role_sequential" | "committee_majority";
+  committeeId?: string | null;
+  /** Global RBAC rol adı veya `club_approver`; kurul kademesinde null olabilir. */
+  approverRole: string | null;
   status: ApplicationApprovalStatus;
   approverId: string | null;
   approver: SafeUser | null;
