@@ -2,11 +2,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useCountUp } from "@/shared/hooks/useCountUp";
-import { useStreak } from "@/shared/hooks/useStreak";
-import { AchievementsCard } from "@/pages/dashboard/AchievementsCard";
-import { ProfileStrengthCard, profileCompletion } from "@/pages/dashboard/ProfileStrengthCard";
 import { AdvisedClubCard, MembershipCard } from "@/pages/dashboard/ClubCards";
 import ActiveProcessesCard from "@/pages/dashboard/ActiveProcessesCard";
+import CampusFeed from "@/pages/dashboard/CampusFeed";
 import { getAvailableClubs } from "@/features/clubs/api/clubs";
 import PageLoader from "@/shared/ui/PageLoader";
 import Reveal from "@/shared/ui/Reveal";
@@ -62,8 +60,7 @@ function StatCard({ icon, value, label, delay }: { icon: IconName; value: number
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { user, roleNames, status, clubMemberships, advisedClubs, isLoading } = useAuth();
-  const streak = useStreak();
+  const { user, roleNames, clubMemberships, advisedClubs, isLoading } = useAuth();
 
   // Üyelik satırları logo/kapak taşımaz (ClubSummary); görselleri kulüp
   // listesinden eşleriz. Clubs sayfasıyla aynı anahtar — cache paylaşılır.
@@ -97,12 +94,24 @@ export default function Dashboard() {
   const pending = clubMemberships.filter((m) => m.status === "pending");
   const leadership = approved.filter((m) => m.role !== "member");
 
-  const quickActions: { icon: IconName; title: string; desc: string; to: string | null }[] = [
+  // Hepsi gerçek hedefe gider — "Çok yakında" yer tutucusu bırakılmaz.
+  const quickActions: { icon: IconName; title: string; desc: string; to: string }[] = [
     { icon: "explore", title: "Kulüpleri Keşfet", desc: "Yeni topluluklar bul", to: "/clubs" },
+    { icon: "calendar", title: "Etkinlikler", desc: "Yaklaşanları gör", to: "/activities" },
     { icon: "profile", title: "Profilim", desc: "Bilgilerini düzenle", to: "/profile" },
-    { icon: "member", title: "Etkinlikler", desc: "Çok yakında", to: null },
-    { icon: "announcement", title: "Duyurular", desc: "Çok yakında", to: null },
   ];
+
+  // Küpün yüzleri: önce kendi kulüplerin, boş kalan yüzler keşif havuzundan.
+  // Böylece üyeliği olmayan kullanıcıda da küp işlevsel kalır.
+  const cubeItems = [
+    ...approved
+      .map((m) => clubById.get(m.clubId))
+      .filter((c): c is NonNullable<typeof c> => !!c)
+      .map((c) => ({ id: c.id, name: c.name, slug: c.slug, logoUrl: c.logoUrl })),
+    ...(allClubs ?? [])
+      .filter((c) => !approved.some((m) => m.clubId === c.id))
+      .map((c) => ({ id: c.id, name: c.name, slug: c.slug, logoUrl: c.logoUrl })),
+  ].slice(0, 6);
 
   return (
     <div className="space-y-10">
@@ -122,14 +131,6 @@ export default function Dashboard() {
                 )}
                 <span className="glass-dark rounded-full px-4 py-1.5 text-xs font-bold text-white capitalize inline-flex items-center gap-1.5">
                   <Icon name="role" size={13} /> {roleNames.join(", ") || "student"}
-                </span>
-                {/* Günlük seri — bugün girişle uzadıysa küçük bir kutlama sallanışı */}
-                <span
-                  className="glass-dark rounded-full px-4 py-1.5 text-xs font-bold text-amber-300 inline-flex items-center gap-1.5"
-                  title="Üst üste her gün girdikçe serin uzar"
-                >
-                  <Icon name="flame" size={13} className={streak.extendedToday ? "animate-wiggle" : ""} />
-                  {streak.count} günlük seri
                 </span>
               </div>
 
@@ -156,9 +157,14 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="hidden lg:flex flex-col items-center gap-6 pr-6">
-              <Cube3D size={130} />
-              <p className="text-xs font-bold text-blue-200/60 tracking-widest uppercase">UniClub</p>
+            {/* Küp artık dekor değil: yüzler gerçek kulüpler, tıklanınca oraya
+                gider; "zar at" rastgele bir topluluk önerir. */}
+            <div className="hidden lg:flex flex-col items-center gap-5 pr-6">
+              <Cube3D
+                size={130}
+                items={cubeItems}
+                onPick={(club) => navigate(`/clubs/${club.id}`)}
+              />
             </div>
           </div>
         </div>
@@ -174,33 +180,18 @@ export default function Dashboard() {
       </div>
 
       {/* ====== HIZLI AKSİYONLAR ====== */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {quickActions.map((action, i) => (
           <Reveal key={action.title} delay={i * 80}>
-            {action.to ? (
-              <Link
-                to={action.to}
-                className="card-hover p-5 flex items-center gap-4 group h-full"
-              >
-                <div className="icon-tile group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300 ease-bounce-soft">
-                  <Icon name={action.icon} size={24} className="text-brand-600" />
-                </div>
-                <div className="min-w-0">
-                  <p className="font-display font-bold text-slate-900 text-sm truncate">{action.title}</p>
-                  <p className="text-xs text-slate-500 truncate">{action.desc}</p>
-                </div>
-              </Link>
-            ) : (
-              <div className="card p-5 flex items-center gap-4 opacity-60 cursor-not-allowed h-full">
-                <div className="icon-tile grayscale">
-                  <Icon name={action.icon} size={24} className="text-slate-400" />
-                </div>
-                <div className="min-w-0">
-                  <p className="font-display font-bold text-slate-500 text-sm truncate">{action.title}</p>
-                  <p className="text-xs text-slate-400 truncate">{action.desc}</p>
-                </div>
+            <Link to={action.to} className="card-hover p-5 flex items-center gap-4 group h-full">
+              <div className="icon-tile group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300 ease-bounce-soft">
+                <Icon name={action.icon} size={24} className="text-brand-600" />
               </div>
-            )}
+              <div className="min-w-0">
+                <p className="font-display font-bold text-slate-900 text-sm truncate">{action.title}</p>
+                <p className="text-xs text-slate-500 truncate">{action.desc}</p>
+              </div>
+            </Link>
           </Reveal>
         ))}
       </div>
@@ -302,19 +293,15 @@ export default function Dashboard() {
           </div>
         </Reveal>
 
-        <Reveal delay={300}>
-          <ProfileStrengthCard user={user} />
-        </Reveal>
-
-        <Reveal delay={400}>
-          <AchievementsCard
-            memberships={clubMemberships}
-            status={status}
-            profilePercent={profileCompletion(user).percent}
-          />
-        </Reveal>
         </div>
       </div>
+
+      {/* ====== KAMPÜS AKIŞI ======
+          Backend /api/feed uzun süre bağlanmamıştı; dashboard yerine
+          "Çok yakında" yer tutucuları duruyordu. Artık gerçek veri. */}
+      <Reveal>
+        <CampusFeed />
+      </Reveal>
     </div>
   );
 }
