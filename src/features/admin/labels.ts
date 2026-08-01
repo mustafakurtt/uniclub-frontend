@@ -50,6 +50,7 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "audit.view": "Denetim izini görüntüle",
   "poster_qr.university.manage": "Okul geneli afiş QR yönetimi",
   "university.settings.manage": "Tenant politika ayarları",
+  "university.export.generate": "Kurumsal rapor dışa aktarma",
 };
 
 /** Onay zincirindeki `approverRole` belirteçleri — ham token UI'da gösterilmez. */
