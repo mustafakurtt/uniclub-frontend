@@ -7,6 +7,7 @@ import AdvisorsTab from "@/features/admin/components/club-detail/AdvisorsTab";
 import AnnouncementsTab from "@/features/admin/components/club-detail/AnnouncementsTab";
 import AuditTab from "@/features/admin/components/club-detail/AuditTab";
 import GalleryTab from "@/features/admin/components/club-detail/GalleryTab";
+import GeneralMeetingsTab from "@/features/admin/components/club-detail/GeneralMeetingsTab";
 import MembersTab from "@/features/admin/components/club-detail/MembersTab";
 import MembershipHistoryTab from "@/features/admin/components/club-detail/MembershipHistoryTab";
 import {
@@ -15,6 +16,7 @@ import {
   type ClubDetailTab,
 } from "@/features/admin/components/club-detail/clubDetailTabs";
 import ClubAdvisorsModal from "@/features/admin/components/ClubAdvisorsModal";
+import ClubManagementBoardSummary from "@/features/clubs/components/ClubManagementBoardSummary";
 import RequireUniversity from "@/features/admin/components/RequireUniversity";
 import { getAdminClub } from "@/features/admin/api";
 import RequirePermission from "@/features/auth/guards/RequirePermission";
@@ -45,7 +47,7 @@ function ClubDetailBody({
   club: AdminClubDetail;
 }) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { hasPermission, isClubStaff } = useAuth();
+  const { hasPermission, isClubStaff, clubRoleOf } = useAuth();
   const [advisorsOpen, setAdvisorsOpen] = useState(false);
 
   const clubStatus = searchParams.get("clubStatus");
@@ -65,6 +67,10 @@ function ClubDetailBody({
 
   const canManageMembers = hasPermission("club.member.manage");
   const canViewMembershipHistory = canManageMembers || isClubStaff(clubId);
+  const canViewGeneralMeetings = canViewMembershipHistory;
+  const clubRole = clubRoleOf(clubId);
+  const canCreateGeneralMeeting =
+    isClubStaff(clubId) && (clubRole === "officer" || clubRole === "president");
   const canManageAdvisors = hasPermission("club.advisor.manage");
   const canModerateAnnouncements = hasPermission("announcement.moderate");
   const canModerateGallery = hasPermission("gallery.moderate");
@@ -73,6 +79,7 @@ function ClubDetailBody({
   const visibleTabs = CLUB_DETAIL_TABS.filter((t) => {
     if (t.key === "audit") return hasPermission("audit.view");
     if (t.key === "membership-history") return canViewMembershipHistory;
+    if (t.key === "general-meetings") return canViewGeneralMeetings;
     return true;
   });
 
@@ -120,6 +127,9 @@ function ClubDetailBody({
           <CountBadge label="Yaklaşan etkinlik" value={club.counts.upcomingActivities} />
           <CountBadge label="Danışman" value={club.counts.advisors} />
         </div>
+        {canViewGeneralMeetings && (
+          <ClubManagementBoardSummary clubId={clubId} enabled={canViewGeneralMeetings} />
+        )}
       </div>
 
       <div className="flex flex-wrap gap-2 border-b border-slate-100 pb-1">
@@ -158,6 +168,14 @@ function ClubDetailBody({
             universityId={universityId}
             clubId={clubId}
             enabled={tab === "membership-history"}
+          />
+        )}
+        {tab === "general-meetings" && canViewGeneralMeetings && (
+          <GeneralMeetingsTab
+            universityId={universityId}
+            clubId={clubId}
+            enabled={tab === "general-meetings"}
+            canCreate={canCreateGeneralMeeting}
           />
         )}
         {tab === "activities" && (

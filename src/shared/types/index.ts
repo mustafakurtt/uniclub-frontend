@@ -22,3 +22,4 @@ export type * from "./public"; // kamuya açık DTO
 export type * from "./academicTerm"; // akademik dönemler
 export type * from "./membershipHistory"; // kulüp üyelik tarihçesi
 export type * from "./advisorInvitation"; // danışman davet akışı
+export type * from "./generalMeeting"; // genel kurul
