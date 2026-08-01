@@ -1,4 +1,4 @@
-> **Senkron kopya** — Kaynak: ../uniclub-backend/docs/integration/admin-panel.md · Backend commit: 3ebc04e
+> **Senkron kopya** — Kaynak: ../uniclub-backend/docs/integration/admin-panel.md · Backend commit: `3701dfdf37fb81da939cb6aeee6d22f5bbcc1696`
 
 # Frontend — Yönetim Paneli Entegrasyon Dokümanı (v2)
 
@@ -112,7 +112,7 @@ Seed ile gelen anahtarlar. **DB asıl kaynaktır** (runtime'da eklenebilir).
 | `application.view` | Başvuruları görüntüleme | Tenant |
 | `club.approve` | Başvuru onay/red | Tenant |
 | `club.update` | Kulüp durum + profil | Tenant |
-| `club.advisor.manage` | Danışman ata/kaldır | Tenant |
+| `club.advisor.manage` | Danışman davet et/iptal/kaldır | Tenant |
 | `club.member.manage` | Üye çıkarma/rol düzeltme (herhangi kulüp) | Tenant |
 | `club.delete` | Kulüp silme | Tenant |
 | `announcement.moderate` | Herhangi kulübün duyurusunu kaldır | Tenant |
@@ -339,15 +339,19 @@ bağlı içeriği (üye/danışman/link/duyuru/galeri) tek transaction'da temizl
 
 ### 5.4. Danışmanlar
 
+Danışman ataması artık **davet** ile yapılır; akademisyen kabul edene kadar aktif danışman sayılmaz. Davet süresi tenant ayarı `club.advisor.invitation_expiry_days` (varsayılan 14).
+
 | Method | Path | Yetki | Açıklama |
 |---|---|---|---|
-| GET | `/universities/:uid/clubs/:clubId/advisors` | `club.view` | Danışman listesi (`user` gömülü) |
-| POST | `/universities/:uid/clubs/:clubId/advisors` | `club.advisor.manage` | `{ userId }` |
-| DELETE | `/universities/:uid/clubs/:clubId/advisors/:userId` | `club.advisor.manage` | Kaldır |
+| GET | `/universities/:uid/clubs/:clubId/advisors` | `club.view` | Aktif danışman listesi (`user` gömülü) |
+| POST | `/universities/:uid/clubs/:clubId/advisors` | `club.advisor.manage` | Davet gönder (`{ userId, message? }`) |
+| GET | `/universities/:uid/clubs/:clubId/advisor-invitations` | `club.advisor.manage` | Bekleyen davetler |
+| DELETE | `/universities/:uid/clubs/:clubId/advisor-invitations/:invitationId` | `club.advisor.manage` | Daveti iptal |
+| DELETE | `/universities/:uid/clubs/:clubId/advisors/:userId` | `club.advisor.manage` | Danışmanı zorla kaldır |
 
 Danışman adayı **`advisor` rolünde** olmalı, aksi halde
 `400 "Danışman olarak yalnızca 'advisor' rolündeki personel atanabilir."` ve aynı
-tenant'ta olmalı.
+tenant'ta olmalı. Süresi dolmuş davet üzerinde işlem → `400` (mesajı göster).
 
 ### 5.5. Üyeler & İçerik Moderasyonu (tenant override)
 
@@ -478,7 +482,7 @@ Frontend, effective `permissions`'a göre şu bölümleri göster/gizle:
 | Kulüp sil | `club.delete` |
 | **Başvurular** sekmesi | `application.view` |
 | Başvuru onayla/reddet | `club.approve` |
-| Danışman ata/kaldır | `club.advisor.manage` |
+| Danışman davet et/iptal/kaldır | `club.advisor.manage` |
 | Üye çıkar | `club.member.manage` |
 | Duyuru/galeri kaldır (moderasyon) | `announcement.moderate` / `gallery.moderate` |
 | **Akademik yapı** (fakülte/bölüm/domain) | `university.faculty.*` / `university.department.*` / `university.domain.*` |

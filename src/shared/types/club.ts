@@ -82,6 +82,8 @@ export interface ClubMemberRow {
 /** GET /clubs/:clubId — kulüp + danışmanlar + onaylı üyeler + iletişim linkleri (§5.1) */
 export interface ClubDetail extends Club {
   advisors: SafeUser[];
+  /** Aktif danışman yoksa true (§10). */
+  advisorVacant?: boolean;
   clubMembers: ClubMemberRow[];
   contactLinks: ContactLink[];
 }

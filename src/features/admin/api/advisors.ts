@@ -1,6 +1,11 @@
-// Danışman yönetimi — okuma `club.view`, yazma `club.advisor.manage` (§5.4)
+// Danışman davet yönetimi — admin (FRONTEND_YONETIM.md §5.4, FRONTEND_CLUBS.md §10)
 import { apiClient } from "@/shared/api/client";
-import type { ApiEnvelope, SafeUser } from "@/shared/types";
+import type {
+  ApiEnvelope,
+  ClubAdvisorInvitation,
+  InviteClubAdvisorDto,
+  SafeUser,
+} from "@/shared/types";
 import { adminBase } from "./_base";
 
 export const getClubAdvisors = async (
@@ -13,15 +18,40 @@ export const getClubAdvisors = async (
   return response.data.data;
 };
 
-/** Hedef aynı üniversiteden ve global `advisor` rolünde olmalı (§5.4). */
-export const assignClubAdvisor = async (
+export const getClubAdvisorInvitations = async (
   universityId: string,
-  clubId: string,
-  userId: string
-): Promise<void> => {
-  await apiClient.post(`${adminBase(universityId)}/clubs/${clubId}/advisors`, { userId });
+  clubId: string
+): Promise<ClubAdvisorInvitation[]> => {
+  const response = await apiClient.get<ApiEnvelope<ClubAdvisorInvitation[]>>(
+    `${adminBase(universityId)}/clubs/${clubId}/advisor-invitations`
+  );
+  return response.data.data;
 };
 
+/** Davet oluşturur — kabul edilene kadar aktif danışman sayılmaz. */
+export const inviteClubAdvisor = async (
+  universityId: string,
+  clubId: string,
+  body: InviteClubAdvisorDto
+): Promise<ClubAdvisorInvitation> => {
+  const response = await apiClient.post<ApiEnvelope<ClubAdvisorInvitation>>(
+    `${adminBase(universityId)}/clubs/${clubId}/advisors`,
+    body
+  );
+  return response.data.data;
+};
+
+export const cancelClubAdvisorInvitation = async (
+  universityId: string,
+  clubId: string,
+  invitationId: string
+): Promise<void> => {
+  await apiClient.delete(
+    `${adminBase(universityId)}/clubs/${clubId}/advisor-invitations/${invitationId}`
+  );
+};
+
+/** Yönetici zorla kaldırma — davet akışından bağımsız. */
 export const removeClubAdvisor = async (
   universityId: string,
   clubId: string,
