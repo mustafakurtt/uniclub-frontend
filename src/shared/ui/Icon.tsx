@@ -8,7 +8,7 @@ import {
   MessageCircle, Camera, Gamepad2, Send, AtSign,
   Rocket, Sparkles, PartyPopper, Hand, Handshake, Bell, Frown, RadioTower, Sprout, Palette,
   Music, Bot, Drama, Volleyball, Brain, BookText, Leaf, Mic, FlaskConical,
-  Eye, EyeOff, Flame, Trophy, Star, ScrollText,
+  Eye, EyeOff, Flame, Trophy, Star, ScrollText, ShieldCheck, Pin,
 } from "lucide-react";
 
 /**
@@ -47,6 +47,7 @@ export const ICONS = {
   profile: User,
   role: GraduationCap,
   audit: ScrollText,
+  moderation: ShieldCheck,
   studentNumber: Hash,
   calendar: Calendar,
   email: Mail,
@@ -97,6 +98,7 @@ export const ICONS = {
   flame: Flame,
   trophy: Trophy,
   star: Star,
+  pin: Pin,
 
   // Landing kategori etiketleri
   music: Music,

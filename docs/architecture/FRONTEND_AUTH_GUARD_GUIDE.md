@@ -1,6 +1,8 @@
+> **Senkron kopya** — Kaynak: `../uniclub-backend/docs/integration/auth-guards.md` · Backend commit: `806f82a`
+
 # Auth & Guard Rehberi — Frontend (React) İçin
 
-Bu doküman, frontend ekibinin **route/UI guard altyapısını** nasıl kuracağına dair somut bir mimari önerisi ve backend'in şu an neyi verip neyi vermediğinin net dökümüdür. Endpoint detayları ve request/response şemaları için `docs/FRONTEND_AUTH_RBAC.md` (auth/RBAC + ilk 3 feature, örnekli) ve `docs/API.md` (tüm endpoint kataloğu) dokümanlarına bakın.
+Bu doküman, frontend ekibinin **route/UI guard altyapısını** nasıl kuracağına dair somut bir mimari önerisi ve backend'in şu an neyi verip neyi vermediğinin net dökümüdür. Endpoint detayları için [auth.md](auth.md) ve [reference/api.md](../reference/api.md).
 
 ## İçindekiler
 

@@ -1,6 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { CLUB_PERMISSIONS, UNIVERSITY_PERMISSIONS } from "@/features/auth/authorization";
+import { CLUB_PERMISSIONS, MODERATION_PERMISSIONS, UNIVERSITY_PERMISSIONS } from "@/features/auth/authorization";
 import Forbidden from "@/features/auth/pages/Forbidden";
 
 // /admin girişi — kullanıcının GÖREBİLDİĞİ ilk yönetim bölümüne yönlendirir
@@ -13,6 +13,8 @@ export default function AdminHome() {
   if (hasPermission("user.view")) return <Navigate to="/admin/users" replace />;
   if (CLUB_PERMISSIONS.some((p) => hasPermission(p)))
     return <Navigate to="/admin/clubs" replace />;
+  if (hasPermission("club.view") && MODERATION_PERMISSIONS.some((p) => hasPermission(p)))
+    return <Navigate to="/admin/moderation" replace />;
   if (UNIVERSITY_PERMISSIONS.some((p) => hasPermission(p)))
     return <Navigate to="/admin/universities" replace />;
   if (hasPermission("role.manage")) return <Navigate to="/admin/roles" replace />;

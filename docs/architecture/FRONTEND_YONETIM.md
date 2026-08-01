@@ -1,3 +1,5 @@
+> **Senkron kopya** — Kaynak: `../uniclub-backend/docs/integration/admin-panel.md` · Backend commit: `806f82a`
+
 # Frontend — Yönetim Paneli Entegrasyon Dokümanı (v2)
 
 **Kapsam:** Yönetim (admin/sistem) tarafının **tam** endpoint referansı — kullanıcı
@@ -8,14 +10,12 @@ RBAC modeline göre yazıldı.
 > Kod tabanından birebir doğrulanmış (Temmuz 2026). Mesajlar **isteğin diline**
 > göre döner (`Accept-Language: tr|en`, varsayılan `tr`) ve UI'da doğrudan
 > gösterilebilir; kalıcı mantık için mesaj metnine değil `code`/HTTP status'a
-> bakın (bkz. `docs/DENETIM_VE_HATA.md`). Tasarım gerekçeleri için:
-> [docs/yonetim/](yonetim/) (özellikle `06-rol-mimarisi-yeniden-tasarim.md`).
-> Auth/kayıt/self-service temeli için: [FRONTEND_AUTH_RBAC.md](FRONTEND_AUTH_RBAC.md)
-> (dikkat: o doküman eski 4-rollük modele göre yazıldı; roller/permission'lar için
-> bu doküman esas alınmalıdır).
+> bakın (bkz. `docs/reference/error-and-audit.md`). Tasarım gerekçeleri için:
+> [docs/design/](../design/) (özellikle `06-rol-mimarisi-yeniden-tasarim.md`).
+> Auth/kayıt/self-service temeli: [auth.md](auth.md). Roller/permission'lar için bu doküman esas alınmalıdır.
 
 > 🚨 **KIRICI DEĞİŞİKLİKLER — önce bunu okuyun:**
-> [FRONTEND_RUTBE_VE_PLATFORM.md](FRONTEND_RUTBE_VE_PLATFORM.md)
+> [rank-and-platform.md](rank-and-platform.md)
 >
 > - `universityId` artık **`string | null`** olabilir (tenant'sız platform hesapları).
 > - Rollere **`rank`** (yetki derecesi) eklendi; `me/permissions` artık **`maxRank`** döner.
@@ -201,7 +201,7 @@ tenant'ı hedefler; diğerleri yalnızca kendi tenant'ını.
 | GET | `/universities/:uid/users/:userId/effective-permissions` | `user.view` | `{ roles, permissions, status }` |
 | PATCH | `/universities/:uid/users/:userId/department` | `user.manage` | `{ departmentId: "<uuid>" \| null }` |
 
-> ⚠️ **Kullanıcı durumu (ban/unban), şifre sıfırlama ve aktivite artık `/api/moderation` altında** — eski `PATCH .../users/:userId/status` **kaldırıldı**. Sebepli ban, moderasyon geçmişi ve şifre sıfırlama için bkz. `docs/frontend/FRONTEND_MODERASYON.md`.
+> ⚠️ **Kullanıcı durumu (ban/unban), şifre sıfırlama ve aktivite artık `/api/moderation` altında** — eski `PATCH .../users/:userId/status` **kaldırıldı**. Sebepli ban, moderasyon geçmişi ve şifre sıfırlama için bkz. `docs/integration/moderation.md`.
 
 - **Liste filtreleri:** `?status=` (pending/active/suspended), `?role=` (örn.
   `?role=advisor`). İkisi birlikte kullanılabilir.
@@ -221,7 +221,7 @@ tenant'ı hedefler; diğerleri yalnızca kendi tenant'ını.
 - **Durum kuralları (artık moderation'da):** ban/unban `/api/moderation/.../ban|unban`
   ile yapılır (sebep zorunlu, geçmiş tutulur). `suspended` → hedefin oturumu **anında**
   kesilir (§1). Kendini banlama engellidir (`400 moderation.cannotModerateSelf`);
-  zaten askıdaysa `400 moderation.alreadyBanned`. Bkz. `FRONTEND_MODERASYON.md`.
+  zaten askıdaysa `400 moderation.alreadyBanned`. Bkz. [moderation.md](moderation.md).
 - **Bölüm doğrulaması:** hedef bölüm başka tenant'a aitse
   `400 "Bölüm bu üniversiteye ait değil."` (fakülte→üniversite zinciri).
 - Kullanıcı **silme yoktur** (kasıtlı, FK ağı) → askıya alın.

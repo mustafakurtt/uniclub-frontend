@@ -1,22 +1,13 @@
-# University Club — Frontend Entegrasyon Dokümanı (v1)
+> **Senkron kopya** — Kaynak: `../uniclub-backend/docs/integration/auth.md` · Backend commit: `806f82a`
 
-**Kapsam:** Auth yapılanması, RBAC (yetkilendirme) yapılanması ve ilk 3 feature'ın tam endpoint referansı:
+# Auth ve Self-Service Entegrasyonu
 
-1. **Auth** — `/api/auth` (kayıt, giriş, e-posta doğrulama, rol/yetki yönetimi)
-2. **Users** — `/api/users` (self-service profil işlemleri)
-3. **University** — `/api/universities` (public üniversite/fakülte/bölüm listeleri)
+**Kapsam:** Kayıt, giriş, e-posta doğrulama, profil ve public üniversite listeleri.
 
-Clubs, Admin, Announcements ve Gallery feature'ları bu dokümanın sonraki sürümlerinde eklenecektir.
+- RBAC ve yönetim paneli → [admin-panel.md](admin-panel.md)
+- Kulüpler, etkinlikler, dashboard → [README.md](../README.md) indeksinden ilgili rehber
 
-> Bu doküman kod tabanından birebir doğrulanmıştır (Temmuz 2026). `message` alanları **isteğin diline** göre döner (`Accept-Language: tr|en`, varsayılan `tr`) ve UI'da doğrudan gösterilebilir; kalıcı mantık için mesaj metni yerine `code`/HTTP status kullanın (bkz. `docs/DENETIM_VE_HATA.md`).
-
-> ⚠️ **GÜNCELLEME (Temmuz 2026 — v2 model):** Bu doküman **auth temeli + self-service** (kayıt, giriş, doğrulama, profil, public üniversite listeleri) için hâlâ geçerlidir. Ancak **rol/yetki modeli ve tüm yönetim endpoint'leri güncellendi:**
-> - Roller artık **9** (4 değil): `admin` → **`university_admin`** olarak yeniden adlandırıldı; ayrıca `platform_support`, `student_affairs`, `academic_affairs`, `content_moderator`, `auditor` eklendi.
-> - Yetkiler granülerleşti (okuma/yazma ayrı: `user.view`/`user.manage`, `club.view`/`club.update`, `application.view`, `club.member.manage`, `announcement.moderate`, `gallery.moderate`, `university.*`).
-> - **Effective yetki endpoint'i artık VAR:** `GET /api/users/me/permissions`.
-> - Askıya alma **anında** erişimi keser.
->
-> **Yönetim (admin/RBAC) tarafının güncel ve tam referansı için:** [FRONTEND_YONETIM.md](FRONTEND_YONETIM.md). Aşağıdaki §3.1/§3.5/§8'deki 4-rollük ve 6-yetkilik listeler **eskidir** — güncel model için o dokümanı esas alın.
+> `message` alanları `Accept-Language: tr|en` ile döner. Kalıcı mantık için `code`/HTTP status kullanın ([error-and-audit.md](../reference/error-and-audit.md)).
 
 ---
 
@@ -24,14 +15,13 @@ Clubs, Admin, Announcements ve Gallery feature'ları bu dokümanın sonraki sür
 
 - [1. Genel Kurallar](#1-genel-kurallar)
 - [2. Auth Yapılanması](#2-auth-yapılanması)
-- [3. RBAC Yapılanması](#3-rbac-yapılanması)
+- [3. RBAC — nereye bakılır](#3-rbac--nereye-bakılır)
 - [4. Feature Referansı 1 — Auth (`/api/auth`)](#4-feature-referansı-1--auth-apiauth)
 - [5. Feature Referansı 2 — Users (`/api/users`)](#5-feature-referansı-2--users-apiusers)
 - [6. Feature Referansı 3 — University (`/api/universities`)](#6-feature-referansı-3--university-apiuniversities)
 - [7. React Tarafı İçin Öneriler](#7-react-tarafı-için-öneriler)
-- [8. Enum Referansı](#8-enum-referansı)
-- [9. Test Hesapları (Seed)](#9-test-hesapları-seed)
-- [10. Bilinen Kısıtlar / Backend'e Notlar](#10-bilinen-kısıtlar--backende-notlar)
+- [8. Test Hesapları (Seed)](#8-test-hesapları-seed)
+- [9. Bilinen Kısıtlar](#9-bilinen-kısıtlar)
 
 ---
 
@@ -137,89 +127,21 @@ ali@std.antalya.edu.tr → "std.antalya.edu.tr" domain tablosunda aranır
 
 ---
 
-## 3. RBAC Yapılanması
+## 3. RBAC — nereye bakılır
 
-### 3.1. İki Bağımsız Yetki Katmanı
+Global RBAC (9 rol, granüler permission) ve yönetim endpoint'leri bu dosyada **değil**:
 
-Sistemde birbirinden **tamamen bağımsız** iki yetki katmanı vardır; frontend'de de ayrı ayrı ele alınmalıdır:
+| Konu | Belge |
+|---|---|
+| Yönetim paneli endpoint'leri | [admin-panel.md](admin-panel.md) |
+| Rütbe, platform hesapları | [rank-and-platform.md](rank-and-platform.md) |
+| Tasarım kararları | [design/README.md](../design/README.md) |
+| Etkin permission listesi | `GET /api/users/me/permissions` |
 
-```
-┌────────────────────────────────────────────────────────────┐
-│ KATMAN A — Global RBAC (üniversite/sistem geneli)          │
-│                                                            │
-│   Roller     : super_admin, platform_support,              │
-│                university_admin, student_affairs,          │
-│                academic_affairs, content_moderator,        │
-│                auditor, advisor, student   (9 rol)         │
-│   Permission : granüler resource.action —                  │
-│                user.view/manage, club.view/approve/…,      │
-│                announcement.moderate, university.*,        │
-│                role.manage, permission.manage              │
-│   Kaynak     : userRoles + rolePermissions                 │
-│                + userPermissions (kişiye özel override)    │
-│   Kullanım   : /api/auth'un yönetim rotaları,              │
-│                /api/universities'in yazma rotaları,        │
-│                /api/admin/* (sonraki dokümanda)            │
-└────────────────────────────────────────────────────────────┘
-
-┌────────────────────────────────────────────────────────────┐
-│ KATMAN B — Kulüp içi roller (her kulüpte ayrı)             │
-│                                                            │
-│   Roller  : member, officer, president                     │
-│   Kaynak  : clubMembers.role (üyelik status: approved)     │
-│   Kullanım: /api/clubs/* (sonraki dokümanda)               │
-└────────────────────────────────────────────────────────────┘
-```
-
-Bir kullanıcı aynı anda global `student` + bir kulüpte `president` olabilir. Bu iki bilgi birbirinden türetilemez.
-
-### 3.2. Global Katmanın Çalışma Şekli
-
-- Kullanıcı **birden fazla role** sahip olabilir (`userRoles`).
-- Roller permission taşır (`rolePermissions`). Backend her korumalı istekte kullanıcının **etkin (effective) permission setini** hesaplar: rollerinden gelen tüm permission'lar + kişiye özel `userPermissions` kayıtları. `userPermissions.granted: false` olan bir kayıt, rolden gelen o permission'ı **iptal eder** (override).
-- Yetki kontrolü **rol adına değil permission key'ine** bakar. Örn. bir endpoint `admin` rolünü değil `user.manage` permission'ını arar. Rollerin permission listesi runtime'da değiştirilebildiği için frontend'de "admin ise şunu göster" yerine mümkünse permission bazlı düşünün (mevcut kısıt için bkz. §3.4).
-- Permission ve roller **kapalı bir liste değildir** — `role.manage`/`permission.manage` yetkisine sahip biri runtime'da yeni rol/permission tanımlayabilir. Seed'le gelen 9 rol ve granüler permission kataloğu başlangıç durumudur (güncel liste: FRONTEND_YONETIM §2/§3).
-
-### 3.3. Guard Zinciri ve Tenant Scope
-
-Korumalı her endpoint backend'de şu zincirden geçer:
-
-```
-authMiddleware → attachAuthz → requirePermission("<key>") [→ enforceTenantScope()]
-```
-
-1. **authMiddleware** — Bearer token doğrulanır; yoksa/geçersizse `401`.
-2. **attachAuthz** — kullanıcının etkin rol+permission'ları çözülür. Bu hesap **Redis'te 5 dakika cache'lenir**; rol/izin değiştiren endpoint'ler ilgili kullanıcıların cache'ini anında temizler (yani promote/demote ve role permission ekleme/çıkarma işlemleri **hemen** etkili olur).
-3. **requirePermission** — permission yoksa `403` + `"Bu işlem için yetkiniz bulunmamaktadır."`
-4. **enforceTenantScope** (yalnızca path'inde `:universityId` olan yönetim rotalarında) — path'teki üniversite, kullanıcının kendi `universityId`'siyle eşleşmiyorsa `403` + `"Bu üniversiteye ait kaynaklara erişim yetkiniz bulunmamaktadır."` **İstisna: `super_admin` ve `platform_support` rolleri bu kontrolü bypass eder** — herhangi bir üniversiteyi hedefleyebilir (`platform_support` yalnızca okuma). Frontend'de bu rollere üniversite seçici koyulabilir; `university_admin` ve diğer tenant rolleri yalnızca kendi üniversitesini yönetir.
-
-### 3.4. Frontend Rol/İzin Bilgisine Nereden Ulaşır?
-
-| Bilgi | Kaynak | Durum |
-|---|---|---|
-| `userId`, `universityId` | JWT payload + `GET /api/auth/me` | ✅ Var |
-| Global **rol adları** (`["student"]`, `["admin"]`…) | `GET /api/users/me` → `data.roles[].name` | ✅ Var |
-| Global **etkin permission listesi** (`["user.view", ...]`, override'lar uygulanmış) | `GET /api/users/me/permissions` → `data.permissions` | ✅ **Var (yeni)** |
-| Kulüp içi rol | `GET /api/users/me/clubs` → her satırda `role`, `status` | ✅ Var |
-
-**Pratik sonuç (GÜNCEL):** Etkin permission listesi artık `GET /api/users/me/permissions` ile dışarı veriliyor (`{ roles, permissions, status }`). UI göster/gizle kararlarını **rol adı yerine permission'a** göre verin — `permissions.includes("<key>")`. Tenant seçici gibi az sayıda karar için `roles`'e bakılır (`super_admin`/`platform_support` → çapraz-tenant). Detaylı guard stratejisi ve panel görünürlük matrisi için [FRONTEND_YONETIM.md §4/§7](FRONTEND_YONETIM.md).
-
-### 3.5. Seed'e Göre Rol → Permission Matrisi
-
-> ⚠️ **ESKİ (4-rollük model).** Güncel **9-rollük** matris için
-> [FRONTEND_YONETIM.md §3](FRONTEND_YONETIM.md). Aşağıdaki tablo yalnızca tarihsel
-> referanstır; `admin` artık `university_admin` ve yetkiler granülerdir.
-
-| Global rol | Permission'ları | Not |
-|---|---|---|
-| `student` | (yok) | `student` domain'li e-postayla kayıtta otomatik atanır |
-| `advisor` | (yok) | `staff` domain'li e-postayla kayıtta otomatik atanır; kulüp danışmanlığı ayrı bir ilişkidir, bu role bağlı değildir |
-| `admin` | `user.manage`, `club.approve`, `club.manage` | Kendi üniversitesiyle sınırlı (tenant scope) |
-| `super_admin` | 6 permission'ın tamamı | Tenant scope bypass |
-
-> Bu matris başlangıç durumudur ve runtime'da değişebilir — frontend'de **hardcode edilmemeli**, yalnızca geçici rol-adı-bazlı guard'da (§3.4) referans olarak kullanılmalıdır.
+UI göster/gizle için `permissions.includes("<key>")` kullanın; rol adına göre hardcode etmeyin.
 
 ---
+
 
 ## 4. Feature Referansı 1 — Auth (`/api/auth`)
 
@@ -256,7 +178,7 @@ authMiddleware → attachAuthz → requirePermission("<key>") [→ enforceTenant
   "lastName": "Veli",            // zorunlu, 2-100 karakter
   "email": "ali@std.antalya.edu.tr", // zorunlu, geçerli e-posta; domain sistemde kayıtlı olmalı
   "studentNumber": "250803999",  // opsiyonel
-  "password": "gizli123"         // zorunlu, min 6 karakter
+  "password": "gizliParola123"   // zorunlu, min 8 karakter (self-service)
 }
 ```
 
@@ -306,7 +228,7 @@ authMiddleware → attachAuthz → requirePermission("<key>") [→ enforceTenant
 
 `user` objesi **rol içermez** — login sonrası hemen `GET /api/users/me` çağırıp rolleri alın (bkz. §5.1, §7.1).
 
-> **`user.mustChangePassword`**: Bir yönetici şifreyi sıfırladıysa `true` döner. Bu durumda kullanıcıyı zorunlu **şifre değiştirme** ekranına yönlendirin; `PATCH /api/users/me/password` ile yeni şifre belirlenince bayrak otomatik `false` olur. (Şifre sıfırlama yönetici tarafı: `docs/frontend/FRONTEND_MODERASYON.md`.)
+> **`user.mustChangePassword`**: Bir yönetici şifreyi sıfırladıysa `true` döner. Bu durumda kullanıcıyı zorunlu **şifre değiştirme** ekranına yönlendirin; `PATCH /api/users/me/password` ile yeni şifre belirlenince bayrak otomatik `false` olur. (Şifre sıfırlama yönetici tarafı: `docs/integration/moderation.md`.)
 
 **Hatalar (401):** `"E-posta adresi veya şifre hatalı."` (e-posta/şifre ayrımı yapılmaz), askıya alınmış hesap reddedilir. (Mesajlar i18n — metne göre eşleştirmeyin.)
 
@@ -441,7 +363,7 @@ Response `data`: güncellenmiş safe user (ilişkiler olmadan, düz kolonlar).
 ### 5.3. `PATCH /api/users/me/password`
 
 ```jsonc
-{ "currentPassword": "eski", "newPassword": "yeni (min 6)" }
+{ "currentPassword": "eski", "newPassword": "yeni (min 8)" }
 ```
 
 `200` `"Şifre güncellendi."` — Hata (400): `"Mevcut şifre yanlış."` Şifre değişince mevcut token'lar **geçersiz kılınmaz** (JWT stateless'tır); frontend isterse başarı sonrası yeniden login isteyebilir ama zorunlu değildir.
@@ -567,23 +489,8 @@ Frontend guard'ları yalnızca **UX** içindir (buton gizleme, erken yönlendirm
 
 ---
 
-## 8. Enum Referansı
 
-| Enum | Değerler | Kullanıldığı yer |
-|---|---|---|
-| `user.status` | `pending`, `active`, `suspended` | Kullanıcı hesap durumu |
-| `domain_type` | `student`, `staff` | Kayıt anındaki otomatik rol ataması (§2.2) |
-| `club_role` (Katman B) | `member`, `officer`, `president` | `clubMembers.role` |
-| `membership_status` | `pending`, `approved`, `rejected` | `clubMembers.status` |
-| `application_status` | `pending`, `approved`, `rejected` | Kulüp kurma başvuruları |
-| `club.status` | `pending`, `approved`, `rejected`, `archived` | Kulüp durumu |
-| `join_policy` | `open`, `approval_required` | Kulübe katılım politikası |
-| Global roller (seed) | `student`, `advisor`, `university_admin`, `super_admin`, `platform_support`, `student_affairs`, `academic_affairs`, `content_moderator`, `auditor` | Katman A (bkz. FRONTEND_YONETIM §2) |
-| Global permission'lar (seed) | granüler `resource.action`: `user.view`/`user.manage`, `club.view`/`club.approve`/`club.update`/`club.advisor.manage`/`club.member.manage`/`club.delete`, `application.view`, `announcement.moderate`, `gallery.moderate`, `university.*`, `role.manage`, `permission.manage` | Katman A (tam liste: FRONTEND_YONETIM §3) |
-
----
-
-## 9. Test Hesapları (Seed)
+## 8. Test Hesapları (Seed)
 
 `bun run db:seed` sonrası tüm hesapların şifresi **`Password123!`**. Üniversite: Antalya Bilim Üniversitesi (domainler: `std.antalya.edu.tr` → student, `antalya.edu.tr` → staff).
 
@@ -601,17 +508,14 @@ Frontend guard'ları yalnızca **UX** içindir (buton gizleme, erken yönlendirm
 
 ---
 
-## 10. Bilinen Kısıtlar / Backend'e Notlar
+## 9. Bilinen Kısıtlar
 
 Frontend planlamasını etkileyen, backend tarafında bilinen konular:
 
-1. ~~**Etkin permission endpoint'i yok**~~ — ✅ **ÇÖZÜLDÜ:** `GET /api/users/me/permissions` (`{ roles, permissions, status }`) eklendi. UI artık permission bazlı guard yapabilir (§3.4).
+1. **Etkin permission:** `GET /api/users/me/permissions`.
 2. **Refresh token yok** — 7 günlük token dolunca yeniden login gerekir.
 3. **`pending` kullanıcılar login olabilir** (§2.3) — engel bilinçli olarak sonraya bırakıldı; UI banner'la yönetmeli.
 4. **E-posta gönderimi simüle** — dev'de doğrulama linki backend konsolunda.
-5. **Dosya upload endpoint'i yok** — `photoUrl` (ve ileride kulüp görselleri) düz URL string alır; upload çözümü (S3/Cloudinary vb.) ayrıca kararlaştırılacak.
+5. **Dosya upload:** [media.md](media.md) — `POST /api/uploads`.
 6. **Şifre değişimi mevcut token'ları geçersiz kılmaz** (JWT stateless).
 
----
-
-**Sonraki doküman sürümünde eklenecekler:** Clubs (`/api/clubs` — üyelik, katılım istekleri, iletişim linkleri), Announcements & Gallery (kulüp alt-kaynakları) ve Admin (`/api/admin` — kullanıcı/kulüp/başvuru yönetimi).

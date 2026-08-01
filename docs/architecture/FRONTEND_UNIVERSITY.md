@@ -1,8 +1,10 @@
+> **Senkron kopya** — Kaynak: `../uniclub-backend/docs/integration/university.md` · Backend commit: `806f82a`
+
 # University Katmanı — Frontend Entegrasyon Dokümanı
 
 **Kapsam:** `university` feature'ının (`/api/universities`) tam referansı — public okuma rotaları (kayıt formu akışı) ve sistem yönetim paneli için üniversite / e-posta domaini / fakülte / bölüm yönetimi (CRUD).
 
-> Bu doküman kod tabanından birebir doğrulanmıştır. `message` alanları **isteğin diline** göre döner (`Accept-Language: tr|en`, varsayılan `tr`). Hata/doğrulama zarfı için `docs/DENETIM_VE_HATA.md`, özet katalog için `docs/API.md §3`, genel Auth/RBAC için `docs/FRONTEND_AUTH_RBAC.md`.
+> Hata zarfı: [error-and-audit.md](../reference/error-and-audit.md). Katalog: [reference/api.md](../reference/api.md). Auth: [auth.md](auth.md).
 
 ---
 
@@ -53,7 +55,7 @@ Eski tek `university.manage` yetkisi kaldırıldı. Yerine **kaynak + aksiyon** 
 | Fakülte | `university.faculty.create` | `university.faculty.update` | `university.faculty.delete` |
 | Bölüm | `university.department.create` | `university.department.update` | `university.department.delete` |
 
-- Seed'de bu 12 yetkinin **tamamı `super_admin` rolüne** atanır. Okul yöneticisi (`admin`) rolüne varsayılan olarak atanmaz — istenirse `POST /api/auth/roles/:roleId/permissions` ile tek tek eklenebilir (bkz. `FRONTEND_AUTH_RBAC.md §4`).
+- Seed'de bu 12 yetkinin **tamamı `super_admin` rolüne** atanır. Okul yöneticisi (`university_admin`) rolüne varsayılan olarak atanmaz — istenirse `POST /api/auth/roles/:roleId/permissions` ile eklenir (bkz. [auth.md §4](auth.md)).
 - **Okuma (GET) rotaları hiçbir permission gerektirmez** — bu yüzden bir `university.view` anahtarı yoktur.
 - Yetki eksikse backend `403` + `{ success: false, message: "Bu işlem için yetkiniz bulunmamaktadır." }` döner.
 
@@ -105,6 +107,8 @@ Hafif kolon seti döner (domain/fakülte içermez). `search` opsiyonel (1-256 ka
   "message": "Üniversite bulundu.",
   "data": {
     "id": "uuid", "name": "Antalya Bilim Üniversitesi", "slug": "antalya-bilim",
+    "timezone": "Europe/Istanbul", "defaultLocale": "tr",
+    "logoUrl": null, "primaryColor": null,
     "createdAt": "...", "updatedAt": "...",
     "domains": [
       { "id": "uuid", "universityId": "uuid", "domain": "std.antalya.edu.tr", "domainType": "student", "createdAt": "...", "updatedAt": "..." },
@@ -146,12 +150,25 @@ Bulunamazsa `404` + `"Üniversite bulunamadı."`.
 
 ### 4.4 Üniversite güncelle — `PATCH /api/universities/:universityId`  · `university.update` · tenantScoped
 
+Tenant profili (C2): `timezone` (IANA, geçersiz → `400`), `defaultLocale` (`tr`|`en`), `logoUrl`, `primaryColor` (`#RGB` / `#RRGGBB`). **`university_admin`** kendi tenant'ında düzenler (`tenant_settings` tenant-editör anahtarlarıyla aynı mantık — operasyonel politika platformda, okul kimliği tenant'ta).
+
 ```jsonc
 // Body — en az bir alan
-{ "name": "Yeni Ad", "slug": "yeni-slug" }
+{
+  "name": "Yeni Ad",
+  "slug": "yeni-slug",
+  "timezone": "Europe/Istanbul",
+  "defaultLocale": "tr",
+  "logoUrl": "https://cdn.example/logo.png",
+  "primaryColor": "#2563eb"
+}
 ```
 
-Yanıt: güncel üniversite satırı. Hatalar: `404 "Üniversite bulunamadı."`, `400 "Bu slug zaten kullanılıyor."`.
+`logoUrl` / `primaryColor` sıfırlamak için `null` gönderin.
+
+Yanıt: güncel üniversite satırı. Hatalar: `404 "Üniversite bulunamadı."`, `400 "Bu slug zaten kullanılıyor."`, doğrulama `400` (geçersiz saat dilimi / renk).
+
+**Dil önceliği (API mesajları):** kullanıcı `preferredLanguage` → `Accept-Language` → tenant `defaultLocale` → `tr`. Mail/kuyruk: kullanıcı tercihi → tenant `defaultLocale` → `tr` (başlık yok).
 
 ### 4.5 Üniversite sil — `DELETE /api/universities/:universityId`  · `university.delete` · tenantScoped
 
@@ -312,7 +329,7 @@ Panel açılışında kullanıcının rolünü `GET /api/users/me` (`data.roles[
       └── Bölümler (CRUD)
 ```
 
-Her yazma butonunun görünürlüğünü ilgili granüler yetkiye bağla (örn. "Fakülte Ekle" butonu yalnızca `university.faculty.create` varsa). **Not:** backend şu an flatten edilmiş etkin permission listesini bir endpoint'ten döndürmüyor (bkz. `FRONTEND_AUTH_GUARD_GUIDE.md §3`); o ekleneceği güne kadar butonları rol adına (`super_admin`) göre gösterebilirsin.
+Her yazma butonunun görünürlüğünü ilgili granüler yetkiye bağla (`GET /api/users/me/permissions` → `permissions.includes("<key>")`). Bkz. [auth-guards.md](auth-guards.md).
 
 ### 8.3 Silme sırası (FK güvenliği)
 
