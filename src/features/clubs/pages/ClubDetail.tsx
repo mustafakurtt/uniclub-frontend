@@ -14,6 +14,8 @@ import ClubAnnouncementsSection from "@/features/clubs/components/ClubAnnounceme
 import ClubActivitiesSection from "@/features/activities/components/ClubActivitiesSection";
 import ClubGallerySection from "@/features/clubs/components/ClubGallerySection";
 import ClubContactLinksSection from "@/features/clubs/components/ClubContactLinksSection";
+import ClubGeneralMeetingsSection from "@/features/clubs/components/ClubGeneralMeetingsSection";
+import ClubManagementBoardSummary from "@/features/clubs/components/ClubManagementBoardSummary";
 import PosterQrManageSection from "@/features/poster-qr/components/PosterQrManageSection";
 import { Icon } from "@/shared/ui/Icon";
 import { CLUB_ROLE_ICONS, CLUB_ROLE_LABELS, JOIN_POLICY_ICONS, JOIN_POLICY_LABELS } from "@/features/clubs/labels";
@@ -211,6 +213,7 @@ export default function ClubDetail() {
                 ))}
               </div>
             )}
+            {isStaff && <ClubManagementBoardSummary clubId={clubId} enabled={isStaff} />}
           </div>
         </div>
       </Reveal>
@@ -222,6 +225,16 @@ export default function ClubDetail() {
           {isStaff && <ClubJoinRequestsSection clubId={clubId} canDecide={isOfficer} />}
           <ClubActivitiesSection clubId={clubId} canManage={isStaff} />
           {isStaff && <PosterQrManageSection scope="club" clubId={clubId} />}
+          {isStaff && user?.universityId && (
+            <ClubGeneralMeetingsSection
+              universityId={user.universityId}
+              clubId={clubId}
+              enabled={isStaff}
+              canCreate={isOfficer}
+              approvedMembers={club.clubMembers}
+              variant="section"
+            />
+          )}
           <ClubAnnouncementsSection clubId={clubId} canManage={isStaff} />
           <ClubGallerySection clubId={clubId} canManage={isStaff} />
         </div>

@@ -1,4 +1,4 @@
-> **Senkron kopya** — Kaynak: ../uniclub-backend/docs/integration/clubs.md · Backend commit: `3701dfdf37fb81da939cb6aeee6d22f5bbcc1696`
+> **Senkron kopya** — Kaynak: ../uniclub-backend/docs/integration/clubs.md · Backend commit: `9748ea07aad38eec4ad1ca1e36794b212d8b4cc8`
 
 # Clubs Katmanı — Frontend Entegrasyon Dokümanı
 
@@ -225,6 +225,10 @@ Yetki **global RBAC'tan değil kulüpteki rolden** gelir (`club.middleware`). Mi
 | DELETE | `/api/clubs/:clubId/members/:userId` | officer / başkan |
 | PATCH | `/api/clubs/:clubId/members/:userId/role` | **yalnızca başkan** |
 | POST | `/api/clubs/:clubId/transfer-presidency` | **yalnızca başkan** |
+| GET | `/api/clubs/:clubId/membership-history` | **staff** (keyset + `academicTermId`) |
+| GET | `/api/clubs/:clubId/general-meetings` | **staff** |
+| GET | `/api/clubs/:clubId/general-meetings/:meetingId` | **staff** |
+| POST | `/api/clubs/:clubId/general-meetings` | officer / başkan |
 
 ### 7.1 Bekleyen istekler — `GET /:clubId/join-requests`
 
@@ -266,6 +270,36 @@ Query: `limit` (varsayılan 50, max 100), `cursor` (ISO `occurredAt` — keyset)
 `data.items[]`: `eventType` (`joined` | `role_changed` | `removed` | `left` | `join_rejected`), `role`, `previousRole`, `occurredAt`, `academicTerm` (`{ id, name }` veya `null` → UI'da "Dönem dışı"), `user`, `actor`.
 
 Frontend: `/admin/clubs/:clubId?tab=membership-history` sekmesi. Dönem filtresi `GET /api/universities/:universityId/academic-terms` listesinden beslenir.
+
+### 7.7 Genel kurul — `GET/POST /:clubId/general-meetings` (T1.6)
+
+Karar organı kaydı: akademik dönem, tür (`ordinary` | `extraordinary`), tarih/saat (`heldAt` ISO offset), yer, alınan kararlar (serbest metin), katılımcı üyeler ve isteğe bağlı kurul seçimi.
+
+`POST` body:
+
+```jsonc
+{
+  "academicTermId": "uuid",
+  "meetingType": "ordinary",
+  "heldAt": "2026-03-15T14:00:00+03:00",
+  "location": "Salon A",
+  "decisions": "Yönetim ve denetleme kurulu seçildi.",
+  "attendeeUserIds": ["uuid"],
+  "boardMembers": [
+    { "userId": "uuid", "boardType": "management", "seatType": "principal", "title": "president" }
+  ]
+}
+```
+
+Kurul unvanları (`title`): `president`, `vice_president`, `secretary`, `treasurer`, `member`. `boardType`: `management` | `audit`. `seatType`: `principal` (asil) | `alternate` (yedek).
+
+Liste yanıtı (özet): `id`, `meetingType`, `heldAt`, `location`, `academicTerm`, `quorumPercent`, `memberCount`.
+
+Detay yanıtı ekler: `decisions`, `recordedBy`, `attendeeCount`, `quorumRequired`, `quorumMet`, `attendees[]`, `boardMembers[]` (`endedAt` ile aktif/pasif ayrımı).
+
+Yeter sayı tenant ayarı `club.general_meeting.quorum_percent` (varsayılan 50); katılımcı sayısı altında `400 generalMeeting.quorumNotMet`. Çoğunluk ayarı `club.general_meeting.majority_percent` bu turda kullanılmaz (oylama yok).
+
+Frontend: `/admin/clubs/:clubId?tab=general-meetings` sekmesi; kulüp künyesinde güncel yönetim kurulu özeti (asil üyeler, staff erişimi).
 
 ---
 
