@@ -6,6 +6,8 @@ import { CLUB_PERMISSIONS, MODERATION_PERMISSIONS, UNIVERSITY_PERMISSIONS } from
 import { roleLabel } from "@/features/admin/labels";
 import { AdminScopeProvider } from "@/features/admin/context/AdminScopeContext";
 import UniversityScopeSelector from "@/features/admin/components/UniversityScopeSelector";
+import CommitteeTasksNavItem from "@/features/admin/components/CommitteeTasksNavItem";
+import { useShowCommitteeTasksNav } from "@/features/admin/hooks/useMyCommitteePending";
 import ExportsNavItem from "@/features/exports/components/ExportsNavItem";
 import NotificationBell from "@/features/notifications/components/NotificationBell";
 import LanguageSwitcher from "@/shared/ui/LanguageSwitcher";
@@ -58,13 +60,14 @@ export default function AdminLayout() {
   const canManageSettings = hasPermission("university.settings.manage");
   const canManageAcademicTerms = hasPermission("university.academic_term.manage");
   const canExport = hasPermission("university.export.generate");
+  const showCommitteeTasks = useShowCommitteeTasksNav();
 
   const dailyWorkItems = [
     { to: "/admin/clubs", label: "Kulüpler", icon: "club", visible: canViewClubs },
     { to: "/admin/moderation", label: "Moderasyon", icon: "moderation", visible: canModerate },
   ].filter((item) => item.visible) as AdminNavItem[];
 
-  const showDailyWork = dailyWorkItems.length > 0 || canExport;
+  const showDailyWork = dailyWorkItems.length > 0 || canExport || showCommitteeTasks;
 
   const navGroups: AdminNavGroup[] = [
     ...(showDailyWork
@@ -142,6 +145,9 @@ export default function AdminLayout() {
                       {item.label}
                     </NavLink>
                   ))}
+                  {group.title === "Günlük iş" && (
+                    <CommitteeTasksNavItem navLinkClass={navLinkClass} />
+                  )}
                   {group.title === "Günlük iş" && canExport && (
                     <ExportsNavItem navLinkClass={navLinkClass} />
                   )}

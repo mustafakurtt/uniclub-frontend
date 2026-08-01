@@ -4,6 +4,9 @@ export function adminClubsListHref(params: {
   status?: string | null;
   clubStatus?: string | null;
 }): string {
+  if (params.from === "committee-tasks") {
+    return "/admin/committee-tasks";
+  }
   const qs = new URLSearchParams();
   qs.set("tab", params.from === "formation" ? "formation" : "applications");
   if (params.status) qs.set("status", params.status);

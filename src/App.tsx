@@ -33,6 +33,7 @@ import AdminAudit from "@/features/admin/pages/AdminAudit";
 import AdminApprovalCommittees from "@/features/admin/pages/AdminApprovalCommittees";
 import AdminSettings from "@/features/admin/pages/AdminSettings";
 import AdminClubApplicationDetail from "@/features/admin/pages/AdminClubApplicationDetail";
+import AdminCommitteeTasks from "@/features/admin/pages/AdminCommitteeTasks";
 import AdminFormationProposalDetail from "@/features/admin/pages/AdminFormationProposalDetail";
 import AdminClubDetail from "@/features/admin/pages/AdminClubDetail";
 import AdminUserDetail from "@/features/admin/pages/AdminUserDetail";
@@ -112,6 +113,7 @@ function App() {
             {/* Kulüp yönetimi: başvurular + kulüpler + danışmanlar (granüler club.*) */}
             <Route path="/admin/clubs" element={<AdminClubs />} />
             <Route path="/admin/clubs/:clubId" element={<AdminClubDetail />} />
+            <Route path="/admin/committee-tasks" element={<AdminCommitteeTasks />} />
             <Route path="/admin/applications/:applicationId" element={<AdminClubApplicationDetail />} />
             <Route path="/admin/proposals/:proposalId" element={<AdminFormationProposalDetail />} />
             {/* Üye & içerik moderasyonu: tenant üstten müdahale (club.member.manage,

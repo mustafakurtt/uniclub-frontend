@@ -88,3 +88,16 @@ export interface ClubApplicationHistory {
   revisionRequestCount: number;
   events: ClubApplicationEvent[];
 }
+
+/** GET .../club-applications/my-committee-pending satırı (kurul üyeliği tabanlı). */
+export interface MyCommitteePendingApplication {
+  id: string;
+  proposedName: string;
+  description: string | null;
+  status: ApplicationStatus;
+  createdAt: string;
+  applicant: SafeUser | null;
+  committeeStep: number;
+  committeeId: string;
+  committeeName: string;
+}

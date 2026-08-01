@@ -1,5 +1,6 @@
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 import { adminClubsListHref } from "@/features/admin/adminListNav";
 import {
   findCurrentApprovalStep,
@@ -19,7 +20,6 @@ import {
   APPLICATION_STATUS_CHIP,
   APPLICATION_STATUS_LABELS,
 } from "@/features/clubs/applicationLabels";
-import RequirePermission from "@/features/auth/guards/RequirePermission";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import Forbidden from "@/features/auth/pages/Forbidden";
 import { getErrorMessage } from "@/shared/api/client";
@@ -48,19 +48,25 @@ function ApplicationDetailBody({
   const [searchParams] = useSearchParams();
   const { roleNames, hasPermission } = useAuth();
   const hasClubApprove = hasPermission("club.approve");
+  const canViewApplicationExtras = hasPermission("application.view");
+  const fromCommitteeTasks = searchParams.get("from") === "committee-tasks";
   const backHref = adminClubsListHref({
     from: searchParams.get("from"),
     status: searchParams.get("status"),
   });
+  const backLabel = fromCommitteeTasks ? "Kurul görevlerine dön" : "Kulüp başvurularına dön";
 
   const detailQuery = useQuery({
     queryKey: ["admin", universityId, "club-application", applicationId],
     queryFn: () => getClubApplication(universityId, applicationId),
+    retry: false,
   });
 
   const historyQuery = useQuery({
     queryKey: ["admin", universityId, "club-application-history", applicationId],
     queryFn: () => getClubApplicationHistory(universityId, applicationId),
+    enabled: canViewApplicationExtras,
+    retry: false,
   });
 
   if (detailQuery.isLoading) {
@@ -68,6 +74,15 @@ function ApplicationDetailBody({
   }
 
   if (detailQuery.isError || !detailQuery.data) {
+    const isForbidden =
+      detailQuery.isError &&
+      axios.isAxiosError(detailQuery.error) &&
+      detailQuery.error.response?.status === 403;
+
+    if (isForbidden) {
+      return <Forbidden />;
+    }
+
     return (
       <div className="card p-8 text-center">
         <Icon name="notFound" size={40} className="mx-auto mb-3 text-slate-400" />
@@ -96,7 +111,7 @@ function ApplicationDetailBody({
     <div className="space-y-6">
       <div>
         <Link to={backHref} className="btn-ghost mb-4 px-0 text-sm">
-          <Icon name="arrowLeft" size={14} /> Kulüp başvurularına dön
+          <Icon name="arrowLeft" size={14} /> {backLabel}
         </Link>
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="font-display text-2xl font-extrabold text-slate-900">
@@ -169,11 +184,13 @@ function ApplicationDetailBody({
         </section>
       )}
 
-      <ClubApplicationChecklistSection
-        universityId={universityId}
-        applicationId={applicationId}
-        applicationStatus={application.status}
-      />
+      {canViewApplicationExtras && (
+        <ClubApplicationChecklistSection
+          universityId={universityId}
+          applicationId={applicationId}
+          applicationStatus={application.status}
+        />
+      )}
 
       {onCommitteeStep && committeeTally && currentStep && (
         <ClubApplicationCommitteeVoteSection
@@ -193,7 +210,9 @@ function ApplicationDetailBody({
         />
       )}
 
-      {(application.appeal || application.status === "rejected") && historyQuery.data && (
+      {canViewApplicationExtras &&
+        (application.appeal || application.status === "rejected") &&
+        historyQuery.data && (
         <ClubApplicationAppealReviewSection
           universityId={universityId}
           application={application}
@@ -201,6 +220,7 @@ function ApplicationDetailBody({
         />
       )}
 
+      {canViewApplicationExtras && (
       <section className="card p-5">
         <h2 className="mb-1 font-display text-base font-bold text-slate-900">Olay geçmişi</h2>
         <p className="mb-4 text-sm text-slate-500">
@@ -219,6 +239,7 @@ function ApplicationDetailBody({
           <ClubApplicationEventTimeline history={historyQuery.data} />
         ) : null}
       </section>
+      )}
     </div>
   );
 }
@@ -231,12 +252,10 @@ export default function AdminClubApplicationDetail() {
   }
 
   return (
-    <RequirePermission permission="application.view" fallback={<Forbidden />}>
-      <RequireUniversity>
-        {(universityId) => (
-          <ApplicationDetailBody universityId={universityId} applicationId={applicationId} />
-        )}
-      </RequireUniversity>
-    </RequirePermission>
+    <RequireUniversity>
+      {(universityId) => (
+        <ApplicationDetailBody universityId={universityId} applicationId={applicationId} />
+      )}
+    </RequireUniversity>
   );
 }
