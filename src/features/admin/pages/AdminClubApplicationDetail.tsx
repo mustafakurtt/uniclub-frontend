@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { adminClubsListHref } from "@/features/admin/adminListNav";
 import { getApplicationDecisionState } from "@/features/admin/approvalChain";
 import ClubApplicationApprovalChain from "@/features/admin/components/ClubApplicationApprovalChain";
+import ClubApplicationAppealReviewSection from "@/features/admin/components/ClubApplicationAppealReviewSection";
+import ClubApplicationChecklistSection from "@/features/admin/components/ClubApplicationChecklistSection";
 import ClubApplicationDecisionPanel from "@/features/admin/components/ClubApplicationDecisionPanel";
 import ClubApplicationEventTimeline from "@/features/admin/components/ClubApplicationEventTimeline";
 import RequireUniversity from "@/features/admin/components/RequireUniversity";
@@ -140,11 +142,25 @@ function ApplicationDetailBody({
         </section>
       )}
 
+      <ClubApplicationChecklistSection
+        universityId={universityId}
+        applicationId={applicationId}
+        applicationStatus={application.status}
+      />
+
       <ClubApplicationDecisionPanel
         universityId={universityId}
         application={application}
         decisionState={decisionState}
       />
+
+      {(application.appeal || application.status === "rejected") && historyQuery.data && (
+        <ClubApplicationAppealReviewSection
+          universityId={universityId}
+          application={application}
+          historyEvents={historyQuery.data.events}
+        />
+      )}
 
       <section className="card p-5">
         <h2 className="mb-1 font-display text-base font-bold text-slate-900">Olay geçmişi</h2>

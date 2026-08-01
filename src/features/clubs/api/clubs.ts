@@ -147,6 +147,18 @@ export const resubmitClubApplication = async (
   return response.data.data;
 };
 
+/** POST /clubs/applications/:id/appeal — reddedilen başvuruya bir kez itiraz (T4.1). */
+export const submitClubApplicationAppeal = async (
+  applicationId: string,
+  body: { note: string }
+): Promise<{ id: string; status: string }> => {
+  const response = await apiClient.post<ApiEnvelope<{ id: string; status: string }>>(
+    `/clubs/applications/${applicationId}/appeal`,
+    body
+  );
+  return response.data.data;
+};
+
 // ---------------------------------------------------------------------------
 // Kulüp-içi üyelik yönetimi — kulüp rolü gerektirir (§7)
 // ---------------------------------------------------------------------------

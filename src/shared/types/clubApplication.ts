@@ -10,7 +10,43 @@ export type ClubApplicationEventType =
   | "revision_requested"
   | "resubmitted"
   | "approved"
-  | "rejected";
+  | "rejected"
+  | "appeal_submitted"
+  | "appeal_upheld"
+  | "appeal_dismissed";
+
+export type ClubApplicationAppealStatus = "pending" | "upheld" | "dismissed";
+
+export interface ClubApplicationAppeal {
+  status: ClubApplicationAppealStatus;
+  note?: string;
+  createdAt?: string;
+  reviewedAt?: string | null;
+  reviewNote?: string | null;
+}
+
+export interface ClubApplicationChecklistItem {
+  key: string;
+  label: string;
+  required: boolean;
+  checked: boolean;
+  note: string | null;
+  checkedAt: string | null;
+  checkedBy: SafeUser | null;
+}
+
+export interface ClubApplicationChecklist {
+  items: ClubApplicationChecklistItem[];
+  requireChecklistForApproval: boolean;
+}
+
+/** Başvuru detayına eklenen inceleme/itiraz alanları (T4.1). */
+export interface ClubApplicationReviewFields {
+  rejectionReason: string | null;
+  appealDeadline: string | null;
+  canAppeal: boolean;
+  appeal: ClubApplicationAppeal | null;
+}
 
 export interface ClubApplicationRevisionRequest {
   step: number;

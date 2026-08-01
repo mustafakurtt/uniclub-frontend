@@ -242,6 +242,13 @@ verici rol tenant ayarı `club.application.approval_chain` ile yapılandırılı
 | PATCH | `/universities/:uid/club-applications/:id/reject` | `application.view` | Sıradaki kademeyi reddet (`note` zorunlu) |
 | PATCH | `/universities/:uid/club-applications/:id/request-revision` | `application.view` | Revizyon talep et (`note` zorunlu) — öğrenci düzeltip yeniden gönderir |
 | GET | `/universities/:uid/club-applications/:id/history` | `application.view` | Olay geçmişi (append-only `club_application_events`) |
+| GET | `/universities/:uid/club-applications/:id/checklist` | `application.view` | İnceleme kontrol listesi (tenant kataloğu + işaret durumu) |
+| PATCH | `/universities/:uid/club-applications/:id/checklist/:itemKey` | `application.view` | Madde işaretle (`checked`, opsiyonel `note`) |
+| PATCH | `/universities/:uid/club-applications/:id/appeal/review` | `application.view` | İtiraz incele (`decision`: `upheld` \| `dismissed`, `note` zorunlu) |
+
+**Kontrol listesi:** Maddeler tenant ayarından gelir (`club.application.review_checklist`). Zorunlu maddeler işaretlenmeden onay `400` + `admin.checklistRequiredIncomplete` (tenant'ta `require_checklist_for_approval` açıksa). UI ayarı okumaz — onay butonu aktif kalır, backend mesajı gösterilir.
+
+**İtiraz:** Reddedilen başvuruda detay yanıtı `rejectionReason`, `appeal`, `canAppeal` taşır. `upheld` → başvuru `pending`; `dismissed` → kapalı. Karar geri alınamaz. Ret kararını veren kişi itirazı inceleyemez (başka yetkili varsa) — UI taklit etmez, backend hatası gösterilir.
 
 **Özet durum** (`application.status`) onay adımlarından türetilir:
 - Herhangi bir adım `rejected` → `rejected`

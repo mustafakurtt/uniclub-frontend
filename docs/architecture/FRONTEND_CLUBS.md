@@ -1,4 +1,4 @@
-> **Senkron kopya** — Kaynak: ../uniclub-backend/docs/integration/clubs.md · Backend commit: e666b44
+> **Senkron kopya** — Kaynak: ../uniclub-backend/docs/integration/clubs.md · Backend commit: 3ebc04e
 
 # Clubs Katmanı — Frontend Entegrasyon Dokümanı
 
@@ -148,6 +148,7 @@ Bir öğrenci yeni bir kulüp kurmak için **başvuru** açar; okul yöneticisi 
 | POST | `/api/clubs/applications` | Yeni başvuru oluştur |
 | GET | `/api/clubs/applications/:applicationId` | Kendi başvurumun detayı (onay adımlarıyla) |
 | PATCH | `/api/clubs/applications/:applicationId/resubmit` | Revizyon sonrası yeniden gönder (aynı kayıt) |
+| POST | `/api/clubs/applications/:applicationId/appeal` | Reddedilen başvuruya **bir kez** itiraz (`note` 10–2000) |
 | DELETE | `/api/clubs/applications/:applicationId` | Bekleyen başvurumu geri çek |
 | GET | `/api/users/me/applications` | Tüm başvurularım (özet liste) |
 
@@ -173,20 +174,28 @@ Yalnızca **kendi** başvurunu görürsün (başkasınınki `404 "Başvuru bulun
       "note": "Evrak eksik — lütfen tüzük maddesini düzeltin.",
       "requestedAt": "2026-...",
       "requestedBy": { /* SafeUser — revizyon isteyen yetkili */ }
-    }
+    },
+    "rejectionReason": "Evraklar eksik…",       // yalnızca status=rejected
+    "appealDeadline": "2026-...",               // ISO — itiraz son tarihi
+    "canAppeal": true,                          // bir kez + süre içinde
+    "appeal": { "status": "pending" } | null    // gönderildiyse durum
   }
 }
 ```
 
-`approvals`, genişletilebilir çok-adımlı onay zinciridir. İleride SKS gibi 2. adım eklenirse burada `step:2` satırı görünür — şema değişmez.
+Reddedilen başvuruda `rejectionReason` görünür. `canAppeal === true` iken `POST .../appeal` ile itiraz edilir; süre dolmuşsa `canAppeal: false` ve form gösterilmez.
 
-### 6.3 Revizyon sonrası yeniden gönder — `PATCH /api/clubs/applications/:applicationId/resubmit`
+### 6.3 İtiraz — `POST /api/clubs/applications/:applicationId/appeal`
+
+Yalnızca `status: "rejected"`, süre içinde ve daha önce itiraz edilmemiş başvurular. Body: `{ "note": "10-2000 karakter" }`. `201` + `{ id, status: "pending" }`. İkinci itiraz `400`.
+
+### 6.4 Revizyon sonrası yeniden gönder — `PATCH /api/clubs/applications/:applicationId/resubmit`
 
 Yalnızca `status: "revision_requested"` başvurular. Body başvuru oluşturma ile aynı (`proposedName`, `description?`). Aynı `id` devam eder; zincir kaldığı yerden sürer (önceki kademe onayları korunur).
 
 `200` + güncellenen başvuru (`status: "pending"`). Hatalar: `404 "Başvuru bulunamadı."` (başkasının başvurusu), `400 "Yalnızca revizyon bekleyen başvuru yeniden gönderilebilir."`.
 
-### 6.4 Başvuruyu geri çek — `DELETE /api/clubs/applications/:applicationId`
+### 6.5 Başvuruyu geri çek — `DELETE /api/clubs/applications/:applicationId`
 
 Yalnızca **`pending`** başvuru geri çekilebilir. Hatalar: `404 "Başvuru bulunamadı."`, `400 "Yalnızca bekleyen bir başvuru geri çekilebilir."`.
 
