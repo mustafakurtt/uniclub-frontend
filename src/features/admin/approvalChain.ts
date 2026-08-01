@@ -2,6 +2,10 @@
 import { approverRoleLabel } from "@/features/admin/labels";
 import type { ClubApplicationApproval } from "@/shared/types";
 
+export function isCommitteeApprovalStep(row: ClubApplicationApproval): boolean {
+  return row.stepKind === "committee_majority" || (row.committeeId != null && !row.approverRole);
+}
+
 export function findCurrentApprovalStep(
   approvals: ClubApplicationApproval[]
 ): ClubApplicationApproval | null {
@@ -32,11 +36,12 @@ const KNOWN_CHAIN_TOKENS = new Set([
 ]);
 
 export function canActorDecideApprovalStep(
-  approverRole: string,
+  approverRole: string | null,
   approvalStepCount: number,
   roleNames: string[],
   hasClubApprove: boolean
 ): boolean {
+  if (!approverRole) return false;
   if (approverRole === "club_approver") return hasClubApprove;
   if (isLegacySingleStepAdvisorRole(approverRole, approvalStepCount)) return hasClubApprove;
   if (!KNOWN_CHAIN_TOKENS.has(approverRole)) return hasClubApprove;
@@ -72,7 +77,19 @@ export function getApplicationDecisionState(
   }
 
   const current = findCurrentApprovalStep(approvals);
-  if (!current?.approverRole) {
+  if (!current) {
+    return { currentStep: current, canDecide: false, disabledReason: null };
+  }
+
+  if (isCommitteeApprovalStep(current)) {
+    return {
+      currentStep: current,
+      canDecide: false,
+      disabledReason: "Bu kademe kurul oylaması ile ilerler — aşağıdaki kurul panelini kullanın.",
+    };
+  }
+
+  if (!current.approverRole) {
     return { currentStep: current, canDecide: false, disabledReason: null };
   }
 

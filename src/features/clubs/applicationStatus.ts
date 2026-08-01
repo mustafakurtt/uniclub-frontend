@@ -1,6 +1,6 @@
 // Öğrenci başvuru süreci — durum cümlesi (onay zinciri türetimi).
 import { approverRoleLabel } from "@/features/admin/labels";
-import { findCurrentApprovalStep } from "@/features/admin/approvalChain";
+import { findCurrentApprovalStep, isCommitteeApprovalStep } from "@/features/admin/approvalChain";
 import type { ClubApplication, ClubApplicationDetail } from "@/shared/types";
 
 function waitingAtRolePhrase(approverRole: string): string {
@@ -27,6 +27,9 @@ export function getStudentApplicationStatusLine(application: ClubApplicationDeta
   }
 
   const current = findCurrentApprovalStep(application.approvals);
+  if (current && isCommitteeApprovalStep(current)) {
+    return "Kurul incelemesinde";
+  }
   if (current?.approverRole) {
     return waitingAtRolePhrase(current.approverRole);
   }
@@ -35,7 +38,7 @@ export function getStudentApplicationStatusLine(application: ClubApplicationDeta
   const allApproved = sorted.length > 0 && sorted.every((a) => a.status === "approved");
   if (allApproved) return "Tüm onay kademeleri tamamlandı";
 
-  if (sorted.length === 1 && sorted[0].status === "pending") {
+  if (sorted.length === 1 && sorted[0].status === "pending" && sorted[0].approverRole) {
     return waitingAtRolePhrase(sorted[0].approverRole);
   }
 

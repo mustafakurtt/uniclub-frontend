@@ -30,6 +30,7 @@ import AdminUsers from "@/features/admin/pages/AdminUsers";
 import AdminRoles from "@/features/admin/pages/AdminRoles";
 import AdminPermissions from "@/features/admin/pages/AdminPermissions";
 import AdminAudit from "@/features/admin/pages/AdminAudit";
+import AdminApprovalCommittees from "@/features/admin/pages/AdminApprovalCommittees";
 import AdminSettings from "@/features/admin/pages/AdminSettings";
 import AdminClubApplicationDetail from "@/features/admin/pages/AdminClubApplicationDetail";
 import AdminFormationProposalDetail from "@/features/admin/pages/AdminFormationProposalDetail";
@@ -120,6 +121,7 @@ function App() {
             <Route path="/admin/universities" element={<AdminUniversities />} />
             <Route path="/admin/universities/:universityId" element={<AdminUniversityDetail />} />
             <Route path="/admin/academic-terms" element={<AdminAcademicTerms />} />
+            <Route path="/admin/approval-committees" element={<AdminApprovalCommittees />} />
             {/* RBAC: roller (role.manage) + yetki kataloğu (permission.manage) */}
             <Route path="/admin/roles" element={<AdminRoles />} />
             <Route path="/admin/permissions" element={<AdminPermissions />} />
