@@ -22,6 +22,8 @@ export default function AdminHome() {
   if (hasPermission("role.manage")) return <Navigate to="/admin/roles" replace />;
   if (hasPermission("permission.manage")) return <Navigate to="/admin/permissions" replace />;
   if (hasPermission("audit.view")) return <Navigate to="/admin/audit" replace />;
+  if (hasPermission("university.export.generate"))
+    return <Navigate to="/admin/exports" replace />;
 
   // RequireManagement zaten yetkisizi elemişti; buraya düşmek beklenmez.
   return <Forbidden />;

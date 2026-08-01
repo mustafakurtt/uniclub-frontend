@@ -30,6 +30,7 @@ import AdminRoles from "@/features/admin/pages/AdminRoles";
 import AdminPermissions from "@/features/admin/pages/AdminPermissions";
 import AdminAudit from "@/features/admin/pages/AdminAudit";
 import AdminSettings from "@/features/admin/pages/AdminSettings";
+import AdminExports from "@/features/exports/pages/AdminExports";
 import Forbidden from "@/features/auth/pages/Forbidden";
 import NotFound from "@/shared/pages/NotFound";
 import PublicLayout from "@/layouts/PublicLayout";
@@ -117,6 +118,8 @@ function App() {
             <Route path="/admin/audit" element={<AdminAudit />} />
             {/* Tenant politika ayarları (university.settings.manage) */}
             <Route path="/admin/settings" element={<AdminSettings />} />
+            {/* Kurumsal rapor dışa aktarma (university.export.generate) */}
+            <Route path="/admin/exports" element={<AdminExports />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

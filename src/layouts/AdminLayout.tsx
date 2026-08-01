@@ -5,6 +5,7 @@ import { CLUB_PERMISSIONS, MODERATION_PERMISSIONS, UNIVERSITY_PERMISSIONS } from
 import { roleLabel } from "@/features/admin/labels";
 import { AdminScopeProvider } from "@/features/admin/context/AdminScopeContext";
 import UniversityScopeSelector from "@/features/admin/components/UniversityScopeSelector";
+import ExportsNavItem from "@/features/exports/components/ExportsNavItem";
 import NotificationBell from "@/features/notifications/components/NotificationBell";
 import LanguageSwitcher from "@/shared/ui/LanguageSwitcher";
 
@@ -50,6 +51,8 @@ export default function AdminLayout() {
     { to: "/admin/audit", label: "Denetim İzi", icon: "audit", visible: canViewAudit },
   ];
 
+  const staticNav = navItems.filter((item) => item.visible);
+
   // Rozet: en yüksek öncelikli rolün Türkçe adı (sıralama = yetki genişliği).
   const primaryRole =
     ([
@@ -94,14 +97,13 @@ export default function AdminLayout() {
             </div>
 
             <nav className="flex flex-col gap-1">
-              {navItems
-                .filter((item) => item.visible)
-                .map((item) => (
-                  <NavLink key={item.to} to={item.to} className={navLinkClass}>
-                    <Icon name={item.icon} size={18} />
-                    {item.label}
-                  </NavLink>
-                ))}
+              {staticNav.map((item) => (
+                <NavLink key={item.to} to={item.to} className={navLinkClass}>
+                  <Icon name={item.icon} size={18} />
+                  {item.label}
+                </NavLink>
+              ))}
+              <ExportsNavItem navLinkClass={navLinkClass} />
             </nav>
 
             <div className="my-5 h-px bg-slate-200/70" />
