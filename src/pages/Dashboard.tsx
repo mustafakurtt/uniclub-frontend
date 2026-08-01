@@ -1,17 +1,15 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { useCountUp } from "@/shared/hooks/useCountUp";
-import { AdvisedClubCard, MembershipCard } from "@/pages/dashboard/ClubCards";
+import { AdvisedClubCard } from "@/pages/dashboard/ClubCards";
 import ActiveProcessesCard from "@/pages/dashboard/ActiveProcessesCard";
 import CampusFeed from "@/pages/dashboard/CampusFeed";
 import { getAvailableClubs } from "@/features/clubs/api/clubs";
 import PageLoader from "@/shared/ui/PageLoader";
 import Reveal from "@/shared/ui/Reveal";
-import TiltCard from "@/shared/ui/TiltCard";
 import AuroraBackground from "@/shared/ui/AuroraBackground";
 import Cube3D from "@/shared/ui/Cube3D";
-import { Icon, type IconName } from "@/shared/ui/Icon";
+import { Icon } from "@/shared/ui/Icon";
 
 function greetingByHour(hour: number): string {
   if (hour < 6) return "İyi geceler";
@@ -37,25 +35,6 @@ function dailyLine(date: Date): string {
   const startOfYear = new Date(date.getFullYear(), 0, 0);
   const dayOfYear = Math.floor((date.getTime() - startOfYear.getTime()) / 86_400_000);
   return DAILY_LINES[dayOfYear % DAILY_LINES.length];
-}
-
-function StatCard({ icon, value, label, delay }: { icon: IconName; value: number; label: string; delay: number }) {
-  const animated = useCountUp(value);
-  return (
-    <Reveal delay={delay}>
-      <TiltCard className="rounded-3xl h-full">
-        <div className="card-hover p-6 h-full flex items-center gap-4">
-          <div className="icon-tile w-14 h-14"><Icon name={icon} size={26} className="text-brand-600" /></div>
-          <div className="min-w-0">
-            <p className="font-display text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-brand-800 to-accent-600">
-              {animated}
-            </p>
-            <p className="text-sm text-slate-500 font-medium">{label}</p>
-          </div>
-        </div>
-      </TiltCard>
-    </Reveal>
-  );
 }
 
 export default function Dashboard() {
@@ -94,24 +73,6 @@ export default function Dashboard() {
   const pending = clubMemberships.filter((m) => m.status === "pending");
   const leadership = approved.filter((m) => m.role !== "member");
 
-  // Hepsi gerçek hedefe gider — "Çok yakında" yer tutucusu bırakılmaz.
-  const quickActions: { icon: IconName; title: string; desc: string; to: string }[] = [
-    { icon: "explore", title: "Kulüpleri Keşfet", desc: "Yeni topluluklar bul", to: "/clubs" },
-    { icon: "calendar", title: "Etkinlikler", desc: "Yaklaşanları gör", to: "/activities" },
-    { icon: "profile", title: "Profilim", desc: "Bilgilerini düzenle", to: "/profile" },
-  ];
-
-  // Küpün yüzleri: önce kendi kulüplerin, boş kalan yüzler keşif havuzundan.
-  // Böylece üyeliği olmayan kullanıcıda da küp işlevsel kalır.
-  const cubeItems = [
-    ...approved
-      .map((m) => clubById.get(m.clubId))
-      .filter((c): c is NonNullable<typeof c> => !!c)
-      .map((c) => ({ id: c.id, name: c.name, slug: c.slug, logoUrl: c.logoUrl })),
-    ...(allClubs ?? [])
-      .filter((c) => !approved.some((m) => m.clubId === c.id))
-      .map((c) => ({ id: c.id, name: c.name, slug: c.slug, logoUrl: c.logoUrl })),
-  ].slice(0, 6);
 
   return (
     <div className="space-y-10">
@@ -157,14 +118,9 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Küp artık dekor değil: yüzler gerçek kulüpler, tıklanınca oraya
-                gider; "zar at" rastgele bir topluluk önerir. */}
-            <div className="hidden lg:flex flex-col items-center gap-5 pr-6">
-              <Cube3D
-                size={130}
-                items={cubeItems}
-                onPick={(club) => navigate(`/clubs/${club.id}`)}
-              />
+            <div className="hidden lg:flex flex-col items-center gap-6 pr-6">
+              <Cube3D size={130} />
+              <p className="text-xs font-bold text-blue-200/60 tracking-widest uppercase">UniClub</p>
             </div>
           </div>
         </div>
@@ -172,136 +128,31 @@ export default function Dashboard() {
 
       <ActiveProcessesCard userId={user.id} />
 
-      {/* ====== SAYAÇLI İSTATİSTİKLER ====== */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <StatCard icon="university" value={approved.length} label="Aktif Kulüp Üyeliği" delay={0} />
-        <StatCard icon="president" value={leadership.length} label="Yönetici / Başkanlık" delay={100} />
-        <StatCard icon="pending" value={pending.length} label="Bekleyen İstek" delay={200} />
-      </div>
-
-      {/* ====== HIZLI AKSİYONLAR ====== */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {quickActions.map((action, i) => (
-          <Reveal key={action.title} delay={i * 80}>
-            <Link to={action.to} className="card-hover p-5 flex items-center gap-4 group h-full">
-              <div className="icon-tile group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300 ease-bounce-soft">
-                <Icon name={action.icon} size={24} className="text-brand-600" />
-              </div>
-              <div className="min-w-0">
-                <p className="font-display font-bold text-slate-900 text-sm truncate">{action.title}</p>
-                <p className="text-xs text-slate-500 truncate">{action.desc}</p>
-              </div>
-            </Link>
-          </Reveal>
-        ))}
-      </div>
-
-      {/* ====== KULÜPLERİM + HESAP ====== */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-
-        <div className="lg:col-span-2">
-          <Reveal>
-            <div className="flex items-end justify-between mb-6">
-              <div>
-                <span className="badge mb-2">Topluluğun</span>
-                <h2 className="font-display text-2xl font-extrabold text-slate-900">Kulüplerim</h2>
-              </div>
-              <Link to="/clubs" className="btn-ghost text-sm">Keşfet <Icon name="arrowRight" size={15} /></Link>
-            </div>
-          </Reveal>
-
-          {clubMemberships.length === 0 ? (
-            <Reveal delay={100}>
-              <div className="card-gradient p-12 text-center">
-                <Icon name="explore" size={56} className="mx-auto mb-5 animate-float text-brand-500" />
-                <h3 className="font-display text-xl font-bold text-slate-900 mb-2">Macera burada başlıyor</h3>
-                <p className="text-slate-500 text-sm mb-8 max-w-sm mx-auto">
-                  Kampüsteki 120'den fazla topluluktan biri kesin sana göre. Müzikten robotiğe, keşfetmeye başla.
-                </p>
-                <Link to="/clubs" className="btn-primary">Kulüpleri Keşfet</Link>
-              </div>
-            </Reveal>
-          ) : (
-            <div className="grid sm:grid-cols-2 gap-5">
-              {clubMemberships.map((m, i) => (
-                <Reveal key={m.clubId} delay={100 + i * 80}>
-                  <MembershipCard membership={m} club={clubById.get(m.clubId)} />
-                </Reveal>
-              ))}
-            </div>
-          )}
-
-          {/* Danışmanlıklar — yalnızca advisor rolünde dolu gelir (§10) */}
-          {advisedClubs.length > 0 && (
-            <>
-              <Reveal>
-                <div className="mt-10 mb-6">
-                  <span className="badge mb-2">Gözetimindeki topluluklar</span>
-                  <h2 className="font-display text-2xl font-extrabold text-slate-900">Danışmanlıklarım</h2>
-                </div>
-              </Reveal>
-              <div className="grid sm:grid-cols-2 gap-5">
-                {advisedClubs.map((a, i) => (
-                  <Reveal key={a.clubId} delay={100 + i * 80}>
-                    <AdvisedClubCard advised={a} club={clubById.get(a.clubId)} />
-                  </Reveal>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Hesap özeti + oyunlaştırma sütunu */}
-        <div className="space-y-6">
-        <Reveal delay={200}>
-          <div className="card-gradient p-8">
-            <div className="flex items-center gap-4 mb-8">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-600 to-accent-400 text-white flex items-center justify-center font-display text-xl font-extrabold shadow-glow overflow-hidden shrink-0">
-                {user.photoUrl ? (
-                  <img src={user.photoUrl} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  user.firstName.charAt(0).toUpperCase()
-                )}
-              </div>
-              <div className="min-w-0">
-                <p className="font-display font-bold text-slate-900 truncate">
-                  {user.firstName} {user.lastName}
-                </p>
-                <p className="text-xs text-slate-500 truncate">{user.email}</p>
-              </div>
-            </div>
-
-            <dl className="space-y-4 mb-8">
-              {([
-                ["campus", "Üniversite", user.university?.name ?? "Belirtilmemiş"],
-                ["department", "Bölüm", user.department?.name ?? "Belirtilmemiş"],
-                ["studentNumber", "Öğrenci No", user.studentNumber ?? "Belirtilmemiş"],
-              ] as [IconName, string, string][]).map(([icon, label, value]) => (
-                <div key={label} className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-500">
-                    <Icon name={icon} size={17} />
-                  </span>
-                  <div className="min-w-0">
-                    <dt className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">{label}</dt>
-                    <dd className="text-sm font-semibold text-slate-700 truncate">{value}</dd>
-                  </div>
-                </div>
-              ))}
-            </dl>
-
-            <Link to="/profile" className="btn-secondary w-full">Profili Düzenle</Link>
-          </div>
-        </Reveal>
-
-        </div>
-      </div>
-
-      {/* ====== KAMPÜS AKIŞI ======
-          Backend /api/feed uzun süre bağlanmamıştı; dashboard yerine
-          "Çok yakında" yer tutucuları duruyordu. Artık gerçek veri. */}
+      {/* ====== KAMPÜS AKIŞI — sayfanın merkezi ======
+          Sayaç kartları, hızlı eylem kutuları, profil özeti ve "Kulüplerim"
+          bloğu kaldırıldı: sayaçlar zaten hero'da yazılı, profil bilgisi
+          /profile'da, kulüpler /clubs sekmesinde ikiye bölünmüş halde. */}
       <Reveal>
         <CampusFeed />
       </Reveal>
+
+      {/* Danışmanlıklar — yalnızca advisor rolünde dolu gelir (§10) */}
+      {advisedClubs.length > 0 && (
+        <section>
+          <Reveal>
+            <h2 className="font-display text-2xl font-extrabold text-slate-900 mb-6">
+              Danışmanlıklarım
+            </h2>
+          </Reveal>
+          <div className="grid sm:grid-cols-2 gap-5">
+            {advisedClubs.map((a, i) => (
+              <Reveal key={a.clubId} delay={100 + i * 80}>
+                <AdvisedClubCard advised={a} club={clubById.get(a.clubId)} />
+              </Reveal>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

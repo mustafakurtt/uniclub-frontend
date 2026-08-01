@@ -28,21 +28,32 @@ function relativeTime(iso: string): string {
   return new Date(iso).toLocaleDateString("tr-TR", { day: "numeric", month: "long" });
 }
 
-/** Etkinlik satırında tarih; duyuruda içerik özeti. */
+/**
+ * Tek satırlık alt bilgi. Etkinlikte "kulüp · tarih · yer", duyuruda
+ * "kulüp · kaynak". İçerik özeti bilerek yok — üst üste iki uzun satır
+ * akışı okunmaz hale getiriyordu.
+ */
 function itemSubtitle(row: FeedItem): string {
-  if (row.type === "activity") {
-    const startsAt = row.item.startsAt;
-    if (!startsAt) return row.item.location ?? "";
-    const when = new Date(startsAt).toLocaleString("tr-TR", {
-      day: "numeric",
-      month: "long",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    return row.item.location ? `${when} · ${row.item.location}` : when;
+  const parts: string[] = [];
+  if (row.club) parts.push(row.club.name);
+
+  if (row.type === "activity" && row.item.startsAt) {
+    parts.push(
+      new Date(row.item.startsAt).toLocaleString("tr-TR", {
+        day: "numeric",
+        month: "long",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    );
+    if (row.item.location) parts.push(row.item.location);
+  } else if (row.type === "university_announcement") {
+    parts.push("Okul geneli duyuru");
+  } else if (row.type === "announcement") {
+    parts.push("Duyuru");
   }
-  const body = row.item.content ?? row.item.description ?? "";
-  return body.length > 140 ? `${body.slice(0, 140)}…` : body;
+
+  return parts.join(" · ");
 }
 
 function itemHref(row: FeedItem): string {
@@ -56,28 +67,23 @@ function FeedRow({ row }: { row: FeedItem }) {
   return (
     <Link
       to={itemHref(row)}
-      className="group flex gap-4 rounded-2xl p-4 transition-colors hover:bg-slate-50"
+      className="group flex items-center gap-4 py-4 transition-colors hover:bg-slate-50/70"
     >
-      <div className="icon-tile h-11 w-11 shrink-0">
-        <Icon name={meta.icon} size={20} className="text-brand-600" />
-      </div>
+      <span
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${meta.tone}`}
+        title={meta.label}
+      >
+        <Icon name={meta.icon} size={18} />
+      </span>
+
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${meta.tone}`}>
-            {meta.label}
-          </span>
-          {row.club && (
-            <span className="truncate text-xs font-semibold text-slate-500">{row.club.name}</span>
-          )}
-          <span className="text-xs text-slate-400">{relativeTime(row.at)}</span>
-        </div>
-        <p className="mt-1 truncate font-display font-bold text-slate-900 group-hover:text-brand-700">
+        <p className="truncate font-semibold text-slate-900 group-hover:text-brand-700">
           {row.item.title ?? "Başlıksız"}
         </p>
-        {itemSubtitle(row) && (
-          <p className="mt-0.5 line-clamp-2 text-sm text-slate-500">{itemSubtitle(row)}</p>
-        )}
+        <p className="mt-0.5 truncate text-sm text-slate-500">{itemSubtitle(row)}</p>
       </div>
+
+      <span className="hidden shrink-0 text-xs text-slate-400 sm:block">{relativeTime(row.at)}</span>
     </Link>
   );
 }

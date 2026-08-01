@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { getAvailableClubs } from "@/features/clubs/api/clubs";
@@ -85,6 +86,7 @@ function ClubCard({ club }: { club: Club }) {
 }
 
 export default function Clubs() {
+  const { clubMemberships } = useAuth();
   const [search, setSearch] = useState("");
   const [policyFilter, setPolicyFilter] = useState<PolicyFilter>("all");
 
@@ -107,6 +109,21 @@ export default function Clubs() {
       );
     });
   }, [clubs, search, policyFilter]);
+
+  // Liste ikiye ayrılır: üyesi olduğun kulüpler ve henüz olmadıkların.
+  // Dashboard'daki "Kulüplerim" bloğu kaldırıldı; kulüp yönetimi tek yerde.
+  const myClubIds = useMemo(
+    () => new Set(clubMemberships.filter((m) => m.status === "approved").map((m) => m.clubId)),
+    [clubMemberships]
+  );
+  const myClubs = useMemo(
+    () => filteredClubs.filter((c) => myClubIds.has(c.id)),
+    [filteredClubs, myClubIds]
+  );
+  const otherClubs = useMemo(
+    () => filteredClubs.filter((c) => !myClubIds.has(c.id)),
+    [filteredClubs, myClubIds]
+  );
 
   if (isError) {
     return (
@@ -209,12 +226,46 @@ export default function Clubs() {
           </p>
         </div>
       ) : (
-        <div className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filteredClubs.map((club, i) => (
-            <Reveal key={club.id} delay={Math.min(i, 5) * 60}>
-              <ClubCard club={club} />
-            </Reveal>
-          ))}
+        <div className="space-y-10">
+          {myClubs.length > 0 && (
+            <section>
+              <h2 className="mb-4 font-display text-xl font-extrabold text-slate-900">
+                Kulüplerim
+                <span className="ml-2 align-middle rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-bold text-brand-700">
+                  {myClubs.length}
+                </span>
+              </h2>
+              <div className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {myClubs.map((club, i) => (
+                  <Reveal key={club.id} delay={Math.min(i, 5) * 60}>
+                    <ClubCard club={club} />
+                  </Reveal>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <section>
+            <h2 className="mb-4 font-display text-xl font-extrabold text-slate-900">
+              {myClubs.length > 0 ? "Keşfet" : "Tüm kulüpler"}
+              <span className="ml-2 align-middle rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-bold text-slate-500">
+                {otherClubs.length}
+              </span>
+            </h2>
+            {otherClubs.length === 0 ? (
+              <p className="card p-8 text-center text-sm text-slate-500">
+                Bu filtreye uyan, henüz üyesi olmadığın kulüp yok.
+              </p>
+            ) : (
+              <div className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {otherClubs.map((club, i) => (
+                  <Reveal key={club.id} delay={Math.min(i, 5) * 60}>
+                    <ClubCard club={club} />
+                  </Reveal>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
       )}
     </div>
