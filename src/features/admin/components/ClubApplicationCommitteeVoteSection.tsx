@@ -1,20 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  castCommitteeVote,
-  requestClubApplicationRevision,
-} from "@/features/admin/api";
+import { castCommitteeVote, requestClubApplicationRevision } from "@/features/admin/api";
 import ClubApplicationNoteDialog from "@/features/admin/components/ClubApplicationNoteDialog";
 import { COMMITTEE_VOTE_LABELS } from "@/features/admin/committeeLabels";
-import { useAuth } from "@/features/auth/hooks/useAuth";
 import { getErrorMessage } from "@/shared/api/client";
 import { Icon } from "@/shared/ui/Icon";
 import type {
-  ApprovalCommittee,
   ClubApplicationApproval,
-  CommitteeVoteResult,
-  CommitteeVoteRow,
-  CommitteeVoteTally,
+  CommitteeApprovalTally,
   CommitteeVoteValue,
 } from "@/shared/types";
 
@@ -23,12 +16,17 @@ interface ClubApplicationCommitteeVoteSectionProps {
   applicationId: string;
   proposedName: string;
   step: ClubApplicationApproval;
-  committee: ApprovalCommittee;
+  tally: CommitteeApprovalTally;
 }
 
-function tallyStatusLine(tally: CommitteeVoteTally): string {
-  const abstaining = tally.memberCount - tally.votes;
-  return `${tally.approveCount} / ${tally.threshold} onay · ${abstaining} üye henüz oy vermedi`;
+function tallyStatusLine(tally: CommitteeApprovalTally): string {
+  return `${tally.approveCount} / ${tally.threshold} onay · ${tally.notVotedCount} üye henüz oy vermedi`;
+}
+
+function isCommitteeMemberTally(
+  tally: CommitteeApprovalTally
+): tally is CommitteeApprovalTally & { myVote?: CommitteeApprovalTally["myVote"] } {
+  return Object.prototype.hasOwnProperty.call(tally, "myVote");
 }
 
 export default function ClubApplicationCommitteeVoteSection({
@@ -36,21 +34,23 @@ export default function ClubApplicationCommitteeVoteSection({
   applicationId,
   proposedName,
   step,
-  committee,
+  tally,
 }: ClubApplicationCommitteeVoteSectionProps) {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
-  const [tally, setTally] = useState<CommitteeVoteTally | null>(null);
-  const [voteRows, setVoteRows] = useState<Record<string, CommitteeVoteRow>>({});
-  const [finalized, setFinalized] = useState(false);
   const [voteDraft, setVoteDraft] = useState<CommitteeVoteValue>("approve");
   const [reason, setReason] = useState("");
   const [revisionOpen, setRevisionOpen] = useState(false);
 
   const isPendingStep = step.status === "pending";
-  const isMember = committee.members.some((m) => m.userId === user?.id);
-  const myVote = user ? voteRows[user.id] : undefined;
-  const locked = !isPendingStep || finalized;
+  const isMember = isCommitteeMemberTally(tally);
+  const myVote = isMember ? tally.myVote : undefined;
+  const locked = !isPendingStep;
+
+  useEffect(() => {
+    if (!myVote) return;
+    setVoteDraft(myVote.vote);
+    setReason(myVote.reason ?? "");
+  }, [myVote]);
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["admin", universityId, "club-applications"] });
@@ -62,26 +62,10 @@ export default function ClubApplicationCommitteeVoteSection({
     });
   };
 
-  const applyVoteResult = (result: CommitteeVoteResult, row: CommitteeVoteRow) => {
-    setTally(result.tally);
-    setFinalized(result.finalized);
-    setVoteRows((prev) => ({ ...prev, [row.voterUserId]: row }));
-  };
-
   const voteMutation = useMutation({
     mutationFn: (body: { vote: CommitteeVoteValue; reason?: string }) =>
       castCommitteeVote(universityId, applicationId, body),
-    onSuccess: (result, variables) => {
-      if (!user) return;
-      applyVoteResult(result, {
-        voterUserId: user.id,
-        vote: variables.vote,
-        reason: variables.reason?.trim() || null,
-        votedAt: new Date().toISOString(),
-        voter: user,
-      });
-      invalidate();
-    },
+    onSuccess: invalidate,
   });
 
   const revisionMutation = useMutation({
@@ -102,72 +86,57 @@ export default function ClubApplicationCommitteeVoteSection({
     });
   };
 
-  const displayTally = tally;
-  const thresholdHint = displayTally
-    ? `Karar için ${displayTally.threshold} onay gerekiyor; oy vermeyen üyeler onayı engeller.`
-    : `${committee.members.length} üyeli kurul salt çoğunlukla karar verir; oy vermeyen üyeler çoğunluğa ulaşılmasını engeller.`;
+  const votesByUserId = new Map(tally.votes.map((row) => [row.voterUserId, row]));
 
   return (
     <section className="card border-violet-100 bg-violet-50/30 p-5">
       <h2 className="font-display text-base font-bold text-slate-900">Kurul oylaması</h2>
-      <p className="mt-1 text-sm font-semibold text-slate-700">{committee.name}</p>
+      <p className="mt-1 text-sm font-semibold text-slate-700">{tally.committeeName}</p>
       <p className="mt-1 text-sm text-slate-600">
-        {committee.members.length} üye
-        {displayTally && (
-          <>
-            {" "}
-            · {displayTally.threshold} onay gerekir · {tallyStatusLine(displayTally)}
-          </>
-        )}
+        {tally.memberCount} üye · {tally.threshold} onay gerekir · {tallyStatusLine(tally)}
       </p>
-      <p className="mt-2 text-xs text-slate-500">{thresholdHint}</p>
+      <p className="mt-2 text-xs text-slate-500">
+        Karar için {tally.threshold} onay gerekiyor; oy vermeyen üyeler onayı engeller.
+      </p>
 
       <div className="mt-4">
         <h3 className="text-xs font-bold uppercase tracking-wide text-slate-400">Üye oyları</h3>
         <ul className="mt-2 divide-y divide-slate-100 rounded-2xl border border-slate-100 bg-white">
-          {committee.members.map((m) => {
-            const row = voteRows[m.userId];
+          {tally.votes.map((row) => {
+            const voter = row.voter;
             return (
-              <li key={m.userId} className="px-4 py-3">
+              <li key={row.voterUserId} className="px-4 py-3">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <p className="text-sm font-semibold text-slate-800">
-                      {m.user.firstName} {m.user.lastName}
+                      {voter ? `${voter.firstName} ${voter.lastName}` : "Üye"}
                     </p>
-                    <p className="text-xs text-slate-400">{m.user.email}</p>
+                    {voter?.email && <p className="text-xs text-slate-400">{voter.email}</p>}
                   </div>
-                  {row ? (
-                    <span
-                      className={`chip text-[10px] ${
-                        row.vote === "approve"
-                          ? "bg-green-50 text-green-700 border-green-100"
-                          : "bg-red-50 text-red-700 border-red-100"
-                      }`}
-                    >
-                      {COMMITTEE_VOTE_LABELS[row.vote]}
-                    </span>
-                  ) : (
-                    <span className="chip text-[10px] bg-amber-50 text-amber-700 border-amber-100">
-                      Oy vermedi
-                    </span>
-                  )}
+                  <span
+                    className={`chip text-[10px] ${
+                      row.vote === "approve"
+                        ? "bg-green-50 text-green-700 border-green-100"
+                        : "bg-red-50 text-red-700 border-red-100"
+                    }`}
+                  >
+                    {COMMITTEE_VOTE_LABELS[row.vote]}
+                  </span>
                 </div>
-                {row && (
-                  <p className="mt-1 text-[11px] text-slate-500">
-                    {new Date(row.votedAt).toLocaleString("tr-TR")}
-                    {row.reason && <> · "{row.reason}"</>}
-                  </p>
-                )}
+                <p className="mt-1 text-[11px] text-slate-500">
+                  {new Date(row.votedAt).toLocaleString("tr-TR")}
+                  {row.reason && <> · "{row.reason}"</>}
+                </p>
               </li>
             );
           })}
+          {tally.notVotedCount > 0 && (
+            <li className="px-4 py-3 text-sm text-slate-500">
+              {tally.notVotedCount} üye henüz oy vermedi
+              {tally.votes.length > 0 && !votesByUserId.size && null}
+            </li>
+          )}
         </ul>
-        {Object.keys(voteRows).length === 0 && (
-          <p className="mt-2 text-xs text-slate-400">
-            Bireysel oylar yalnızca bu oturumda oy kullanıldıkça görünür; kalıcı okuma ucu
-            sözleşmede yok.
-          </p>
-        )}
       </div>
 
       {isMember && isPendingStep && (
@@ -175,9 +144,7 @@ export default function ClubApplicationCommitteeVoteSection({
           <h3 className="text-sm font-bold text-slate-900">Oyunuz</h3>
           {locked ? (
             <p className="mt-2 text-sm text-slate-500">
-              {step.status !== "pending"
-                ? "Bu kademe kararı kesinleşti — oy değiştirilemez."
-                : "Kurul kararı kesinleşti — oy değiştirilemez."}
+              Bu kademe kararı kesinleşti — oy değiştirilemez.
             </p>
           ) : (
             <>

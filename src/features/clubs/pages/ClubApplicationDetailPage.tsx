@@ -154,9 +154,13 @@ export default function ClubApplicationDetailPage() {
               <h2 className="font-display text-base font-bold text-slate-900">Düzeltme talebi</h2>
               <p className="mt-1 text-xs text-slate-500">
                 Kademe {revision.step} ·{" "}
-                {approverRoleLabel(
-                  application.approvals.find((a) => a.step === revision.step)?.approverRole ?? ""
-                )}{" "}
+                {(() => {
+                  const stepRow = application.approvals.find((a) => a.step === revision.step);
+                  if (stepRow?.committeeTally?.committeeName) {
+                    return stepRow.committeeTally.committeeName;
+                  }
+                  return approverRoleLabel(stepRow?.approverRole ?? "");
+                })()}{" "}
                 · {new Date(revision.requestedAt).toLocaleString("tr-TR")}
               </p>
               {revision.requestedBy && (

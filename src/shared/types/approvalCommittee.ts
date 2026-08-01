@@ -34,27 +34,41 @@ export interface CommitteeVoteDto {
   reason?: string;
 }
 
-/** PATCH committee-vote yanıtı — çoğunluk sayıları backend'den gelir. */
-export interface CommitteeVoteTally {
-  memberCount: number;
-  threshold: number;
-  approveCount: number;
-  rejectCount: number;
-  /** Oy kullanan üye sayısı (bilet sayısı). */
-  votes: number;
-}
-
-export interface CommitteeVoteResult {
-  finalized: boolean;
-  decision?: "approved" | "rejected";
-  tally: CommitteeVoteTally;
-}
-
-/** Oturum içi oy satırı — kalıcı GET ucu olmadığı için yalnızca oy verdikten sonra dolar. */
 export interface CommitteeVoteRow {
   voterUserId: string;
   vote: CommitteeVoteValue;
   reason: string | null;
   votedAt: string;
   voter?: SafeUser | null;
+}
+
+/** Başvuru detayında gömülü kurul oy durumu (admin — bireysel oylar dahil). */
+export interface CommitteeApprovalTally {
+  committeeId: string;
+  committeeName: string;
+  memberCount: number;
+  threshold: number;
+  approveCount: number;
+  rejectCount: number;
+  notVotedCount: number;
+  votes: CommitteeVoteRow[];
+  /** Kurul üyesi çağıran için mevcut oy; üye değilse alan yok. */
+  myVote?: CommitteeVoteRow | null;
+}
+
+/** Öğrenci yüzeyinde gömülü özet — bireysel oylar yok. */
+export interface CommitteeApprovalTallyStudent {
+  committeeId: string;
+  committeeName: string;
+  memberCount: number;
+  threshold: number;
+  approveCount: number;
+  rejectCount: number;
+  notVotedCount: number;
+}
+
+export interface CommitteeVoteResult {
+  finalized: boolean;
+  decision?: "approved" | "rejected";
+  tally: CommitteeApprovalTally;
 }

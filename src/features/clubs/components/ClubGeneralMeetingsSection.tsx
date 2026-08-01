@@ -113,7 +113,9 @@ export default function ClubGeneralMeetingsSection({
         </div>
       )}
 
-      {selectedId && detailQuery.data && <GeneralMeetingDetailPanel meeting={detailQuery.data} />}
+      {selectedId && detailQuery.data && (
+        <GeneralMeetingDetailPanel universityId={universityId} meeting={detailQuery.data} />
+      )}
 
       <CreateGeneralMeetingModal
         open={createOpen}

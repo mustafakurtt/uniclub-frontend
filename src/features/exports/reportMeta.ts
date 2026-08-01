@@ -6,6 +6,7 @@ const DESCRIPTIONS: Record<string, string> = {
   activities: "Kulüp etkinliklerinin takvim listesi.",
   "annual-activity-report": "Seçilen yıl için yıllık faaliyet raporu.",
   "application-decision-minutes": "Kulüp başvurusuna ait resmî karar tutanağı.",
+  "general-meeting-minutes": "Genel kurul toplantı tutanağı (PDF).",
 };
 
 export function reportDescription(report: ExportReportDefinition): string {

@@ -61,6 +61,14 @@ Parametre: `year` (`integer`, zorunlu).
 
 Parametre: `applicationId` (`string`/UUID, zorunlu).
 
+### `general-meeting-minutes` — genel kurul toplantı tutanağı
+
+```jsonc
+{ "meetingId": "uuid" }
+```
+
+Parametre: `meetingId` (`string`/UUID, zorunlu). Genel kurul detay ekranından indirilir; bayrak kapalı tenant'ta katalogda dönmez (404).
+
 ## Parametre şeması
 
 | `type` / `name` | UI |

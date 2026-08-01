@@ -1,5 +1,4 @@
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { adminClubsListHref } from "@/features/admin/adminListNav";
 import {
@@ -14,11 +13,7 @@ import ClubApplicationCommitteeVoteSection from "@/features/admin/components/Clu
 import ClubApplicationDecisionPanel from "@/features/admin/components/ClubApplicationDecisionPanel";
 import ClubApplicationEventTimeline from "@/features/clubs/components/ClubApplicationEventTimeline";
 import RequireUniversity from "@/features/admin/components/RequireUniversity";
-import {
-  getClubApplication,
-  getClubApplicationHistory,
-  listApprovalCommittees,
-} from "@/features/admin/api";
+import { getClubApplication, getClubApplicationHistory } from "@/features/admin/api";
 import { approverRoleLabel } from "@/features/admin/labels";
 import {
   APPLICATION_STATUS_CHIP,
@@ -30,7 +25,18 @@ import Forbidden from "@/features/auth/pages/Forbidden";
 import { getErrorMessage } from "@/shared/api/client";
 import PageLoader from "@/shared/ui/PageLoader";
 import { Icon } from "@/shared/ui/Icon";
-import type { ApprovalCommittee } from "@/shared/types";
+import type { CommitteeApprovalTally } from "@/shared/types";
+
+function isAdminCommitteeTally(
+  tally: unknown
+): tally is CommitteeApprovalTally {
+  return (
+    tally != null &&
+    typeof tally === "object" &&
+    "votes" in tally &&
+    Array.isArray((tally as CommitteeApprovalTally).votes)
+  );
+}
 
 function ApplicationDetailBody({
   universityId,
@@ -57,22 +63,6 @@ function ApplicationDetailBody({
     queryFn: () => getClubApplicationHistory(universityId, applicationId),
   });
 
-  const hasCommitteeStep = (detailQuery.data?.approvals ?? []).some((a) => a.committeeId != null);
-
-  const committeesQuery = useQuery({
-    queryKey: ["admin", universityId, "approval-committees"],
-    queryFn: () => listApprovalCommittees(universityId),
-    enabled: hasCommitteeStep,
-  });
-
-  const committeesById = useMemo(() => {
-    const map: Record<string, ApprovalCommittee> = {};
-    for (const c of committeesQuery.data ?? []) {
-      map[c.id] = c;
-    }
-    return map;
-  }, [committeesQuery.data]);
-
   if (detailQuery.isLoading) {
     return <PageLoader label="Başvuru yükleniyor…" />;
   }
@@ -93,10 +83,9 @@ function ApplicationDetailBody({
   const currentStep =
     application.status === "pending" ? findCurrentApprovalStep(application.approvals) : null;
   const onCommitteeStep = currentStep != null && isCommitteeApprovalStep(currentStep);
-  const activeCommittee =
-    onCommitteeStep && currentStep.committeeId
-      ? committeesById[currentStep.committeeId]
-      : null;
+  const committeeTally = isAdminCommitteeTally(currentStep?.committeeTally)
+    ? currentStep.committeeTally
+    : null;
 
   const decisionState =
     application.status === "pending" && !onCommitteeStep
@@ -153,13 +142,10 @@ function ApplicationDetailBody({
               const stepRow = application.approvals.find(
                 (a) => a.step === application.revisionRequest?.step
               );
-              if (stepRow && isCommitteeApprovalStep(stepRow)) {
-                const name =
-                  stepRow.committeeId && committeesById[stepRow.committeeId]
-                    ? committeesById[stepRow.committeeId].name
-                    : "Kurul";
-                return name;
+              if (stepRow?.committeeTally?.committeeName) {
+                return stepRow.committeeTally.committeeName;
               }
+              if (stepRow && isCommitteeApprovalStep(stepRow)) return "Kurul";
               return approverRoleLabel(stepRow?.approverRole ?? "");
             })()}{" "}
             · {new Date(application.revisionRequest.requestedAt).toLocaleString("tr-TR")}
@@ -179,11 +165,7 @@ function ApplicationDetailBody({
       {application.approvals.length > 0 && (
         <section className="card p-5">
           <h2 className="mb-3 font-display text-base font-bold text-slate-900">Onay zinciri</h2>
-          <ClubApplicationApprovalChain
-            approvals={application.approvals}
-            showAllSteps
-            committeesById={committeesById}
-          />
+          <ClubApplicationApprovalChain approvals={application.approvals} showAllSteps />
         </section>
       )}
 
@@ -193,19 +175,13 @@ function ApplicationDetailBody({
         applicationStatus={application.status}
       />
 
-      {onCommitteeStep && !activeCommittee && committeesQuery.isLoading && (
-        <section className="card p-5">
-          <div className="skeleton h-24 w-full" />
-        </section>
-      )}
-
-      {onCommitteeStep && activeCommittee && (
+      {onCommitteeStep && committeeTally && currentStep && (
         <ClubApplicationCommitteeVoteSection
           universityId={universityId}
           applicationId={applicationId}
           proposedName={application.proposedName}
           step={currentStep}
-          committee={activeCommittee}
+          tally={committeeTally}
         />
       )}
 
