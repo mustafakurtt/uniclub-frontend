@@ -11,8 +11,10 @@ import ClubFormModal from "@/features/clubs/components/ClubFormModal";
 import ClubMembersSection from "@/features/clubs/components/ClubMembersSection";
 import ClubJoinRequestsSection from "@/features/clubs/components/ClubJoinRequestsSection";
 import ClubAnnouncementsSection from "@/features/clubs/components/ClubAnnouncementsSection";
+import ClubActivitiesSection from "@/features/activities/components/ClubActivitiesSection";
 import ClubGallerySection from "@/features/clubs/components/ClubGallerySection";
 import ClubContactLinksSection from "@/features/clubs/components/ClubContactLinksSection";
+import PosterQrManageSection from "@/features/poster-qr/components/PosterQrManageSection";
 import { Icon } from "@/shared/ui/Icon";
 import { CLUB_ROLE_ICONS, CLUB_ROLE_LABELS, JOIN_POLICY_ICONS, JOIN_POLICY_LABELS } from "@/features/clubs/labels";
 
@@ -218,6 +220,8 @@ export default function ClubDetail() {
         <div className="space-y-6 lg:col-span-2">
           {/* İstek listesi staff'a görünür; kararı yalnızca officer/başkan verir (§7.1-7.2) */}
           {isStaff && <ClubJoinRequestsSection clubId={clubId} canDecide={isOfficer} />}
+          <ClubActivitiesSection clubId={clubId} canManage={isStaff} />
+          {isStaff && <PosterQrManageSection scope="club" clubId={clubId} />}
           <ClubAnnouncementsSection clubId={clubId} canManage={isStaff} />
           <ClubGallerySection clubId={clubId} canManage={isStaff} />
         </div>

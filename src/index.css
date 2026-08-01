@@ -397,6 +397,37 @@
   100% { transform: translateX(-50%); }
 }
 
+/* ---------- Afiş QR yazdırma ---------- */
+.poster-qr-print-sheet {
+  @apply rounded-2xl border border-slate-200 bg-white p-6;
+}
+.poster-qr-print-a4 {
+  max-width: 210mm;
+}
+.poster-qr-print-a5 {
+  max-width: 148mm;
+}
+
+@media print {
+  body.printing-poster-qr * {
+    visibility: hidden;
+  }
+  body.printing-poster-qr .poster-qr-print-only,
+  body.printing-poster-qr .poster-qr-print-only * {
+    visibility: visible;
+  }
+  body.printing-poster-qr .poster-qr-print-only {
+    position: fixed;
+    inset: 0;
+    display: flex !important;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12mm;
+    background: white;
+  }
+}
+
 /* ============================================================
    Erişilebilirlik: hareket azaltma tercihi
    ============================================================ */

@@ -4,11 +4,11 @@ import {
   Landmark, Building2, Target, GraduationCap, BookOpen, Megaphone, Users,
   UserCog, Image, Link2, User, Hash, Calendar, Mail, Inbox,
   House, Compass, Search, SearchX, ArrowRight, ArrowLeft, ChevronRight, ChevronDown, LogOut,
-  Ticket, Wrench, Crown, Globe, Lock,
+  Ticket, Wrench, Crown, Globe, Lock, Settings,
   MessageCircle, Camera, Gamepad2, Send, AtSign,
   Rocket, Sparkles, PartyPopper, Hand, Handshake, Bell, Frown, RadioTower, Sprout, Palette,
   Music, Bot, Drama, Volleyball, Brain, BookText, Leaf, Mic, FlaskConical,
-  Eye, EyeOff, Flame, Trophy, Star,
+  Eye, EyeOff, Flame, Trophy, Star, ScrollText, ShieldCheck, Pin,
 } from "lucide-react";
 
 /**
@@ -46,6 +46,8 @@ export const ICONS = {
   link: Link2,
   profile: User,
   role: GraduationCap,
+  audit: ScrollText,
+  moderation: ShieldCheck,
   studentNumber: Hash,
   calendar: Calendar,
   email: Mail,
@@ -68,6 +70,7 @@ export const ICONS = {
   president: Crown,
   policyOpen: Globe,
   policyApproval: Lock,
+  settings: Settings,
 
   // İletişim platformları
   whatsapp: MessageCircle,
@@ -96,6 +99,7 @@ export const ICONS = {
   flame: Flame,
   trophy: Trophy,
   star: Star,
+  pin: Pin,
 
   // Landing kategori etiketleri
   music: Music,
@@ -103,6 +107,7 @@ export const ICONS = {
   theatre: Drama,
   sports: Volleyball,
   photography: Camera,
+  scan: Camera,
   ai: Brain,
   erasmus: Globe,
   literature: BookText,

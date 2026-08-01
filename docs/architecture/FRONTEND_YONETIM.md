@@ -1,3 +1,5 @@
+> **Senkron kopya** — Kaynak: ../uniclub-backend/docs/integration/admin-panel.md · Backend commit: e666b44
+
 # Frontend — Yönetim Paneli Entegrasyon Dokümanı (v2)
 
 **Kapsam:** Yönetim (admin/sistem) tarafının **tam** endpoint referansı — kullanıcı
@@ -5,12 +7,22 @@ yönetimi, kulüp/başvuru/danışman yönetimi, içerik moderasyonu, rol yönet
 yetki (claim) yönetimi ve kişi bazlı yetki override'ları. Kurumsal **9 rollük**
 RBAC modeline göre yazıldı.
 
-> Kod tabanından birebir doğrulanmış (Temmuz 2026). Tüm mesajlar **Türkçe**,
-> UI'da doğrudan gösterilebilir. Tasarım gerekçeleri için:
-> [docs/yonetim/](yonetim/) (özellikle `06-rol-mimarisi-yeniden-tasarim.md`).
-> Auth/kayıt/self-service temeli için: [FRONTEND_AUTH_RBAC.md](FRONTEND_AUTH_RBAC.md)
-> (dikkat: o doküman eski 4-rollük modele göre yazıldı; roller/permission'lar için
-> bu doküman esas alınmalıdır).
+> Kod tabanından birebir doğrulanmış (Temmuz 2026). Mesajlar **isteğin diline**
+> göre döner (`Accept-Language: tr|en`, varsayılan `tr`) ve UI'da doğrudan
+> gösterilebilir; kalıcı mantık için mesaj metnine değil `code`/HTTP status'a
+> bakın (bkz. `docs/reference/error-and-audit.md`). Tasarım gerekçeleri için:
+> [docs/design/](../design/) (özellikle `06-rol-mimarisi-yeniden-tasarim.md`).
+> Auth/kayıt/self-service temeli: [auth.md](auth.md). Roller/permission'lar için bu doküman esas alınmalıdır.
+
+> 🚨 **KIRICI DEĞİŞİKLİKLER — önce bunu okuyun:**
+> [rank-and-platform.md](rank-and-platform.md)
+>
+> - `universityId` artık **`string | null`** olabilir (tenant'sız platform hesapları).
+> - Rollere **`rank`** (yetki derecesi) eklendi; `me/permissions` artık **`maxRank`** döner.
+> - Yeni **`GET /api/admin/universities`** — akademik/yönetim ekranları public
+>   `GET /api/universities` yerine bunu çağırmalı.
+> - Rütbe/hiyerarşi ihlalleri **400** döner (403 değil).
+> - Seed hesapları değişti: `superadmin@antalya.edu.tr` → **`superadmin@platform.local`**.
 
 ---
 
@@ -187,8 +199,9 @@ tenant'ı hedefler; diğerleri yalnızca kendi tenant'ını.
 | GET | `/universities/:uid/users?status=&role=` | `user.view` | Liste (filtreli). Her satırda `roles` gömülü |
 | GET | `/universities/:uid/users/:userId` | `user.view` | Zenginleştirilmiş detay (aşağıda) |
 | GET | `/universities/:uid/users/:userId/effective-permissions` | `user.view` | `{ roles, permissions, status }` |
-| PATCH | `/universities/:uid/users/:userId/status` | `user.manage` | `{ status: "pending\|active\|suspended" }` |
 | PATCH | `/universities/:uid/users/:userId/department` | `user.manage` | `{ departmentId: "<uuid>" \| null }` |
+
+> ⚠️ **Kullanıcı durumu (ban/unban), şifre sıfırlama ve aktivite artık `/api/moderation` altında** — eski `PATCH .../users/:userId/status` **kaldırıldı**. Sebepli ban, moderasyon geçmişi ve şifre sıfırlama için bkz. `docs/integration/moderation.md`.
 
 - **Liste filtreleri:** `?status=` (pending/active/suspended), `?role=` (örn.
   `?role=advisor`). İkisi birlikte kullanılabilir.
@@ -205,23 +218,102 @@ tenant'ı hedefler; diğerleri yalnızca kendi tenant'ını.
 }
 ```
 
-- **Durum kuralları:** `pending`/`active`/`suspended` arası serbest geçiş.
-  `suspended` → hedefin oturumu **anında** kesilir (§1). **Kendini askıya alma
-  engellidir:** `400 "Kendi hesabınızı askıya alamazsınız."`
+- **Durum kuralları (artık moderation'da):** ban/unban `/api/moderation/.../ban|unban`
+  ile yapılır (sebep zorunlu, geçmiş tutulur). `suspended` → hedefin oturumu **anında**
+  kesilir (§1). Kendini banlama engellidir (`400 moderation.cannotModerateSelf`);
+  zaten askıdaysa `400 moderation.alreadyBanned`. Bkz. [moderation.md](moderation.md).
 - **Bölüm doğrulaması:** hedef bölüm başka tenant'a aitse
   `400 "Bölüm bu üniversiteye ait değil."` (fakülte→üniversite zinciri).
 - Kullanıcı **silme yoktur** (kasıtlı, FK ağı) → askıya alın.
 
 ### 5.2. Kulüp Başvuruları
 
+Onay **çok kademeli zincir** ile çalışır. Kademe sayısı ve her kademedeki karar
+verici rol tenant ayarı `club.application.approval_chain` ile yapılandırılır
+(bkz. [tenant-settings.md](tenant-settings.md)). Varsayılan: tek kademe
+`["club_approver"]` — `club.approve` yetkisini taşıyanlar (ör. `university_admin`,
+`student_affairs`).
+
 | Method | Path | Yetki | Açıklama |
 |---|---|---|---|
-| GET | `/universities/:uid/club-applications?status=` | `application.view` | Başvuru listesi (`applicant` gömülü) |
-| PATCH | `/universities/:uid/club-applications/:id/approve` | `club.approve` | Onayla → **gerçek kulüp oluşur**, başvuran başkan olur |
-| PATCH | `/universities/:uid/club-applications/:id/reject` | `club.approve` | Reddet |
+| GET | `/universities/:uid/club-applications?status=` | `application.view` | Başvuru listesi (`applicant` + `approvals` gömülü); `status=revision_requested` revizyon kuyruğu |
+| PATCH | `/universities/:uid/club-applications/:id/approve` | `application.view` | Sıradaki kademeyi onayla — **tüm kademeler** onaylandığında gerçek kulüp oluşur |
+| PATCH | `/universities/:uid/club-applications/:id/reject` | `application.view` | Sıradaki kademeyi reddet (`note` zorunlu) |
+| PATCH | `/universities/:uid/club-applications/:id/request-revision` | `application.view` | Revizyon talep et (`note` zorunlu) — öğrenci düzeltip yeniden gönderir |
+| GET | `/universities/:uid/club-applications/:id/history` | `application.view` | Olay geçmişi (append-only `club_application_events`) |
 
-Onay `data`: `{ application, club }`. Zaten değerlendirilmişse
+**Özet durum** (`application.status`) onay adımlarından türetilir:
+- Herhangi bir adım `rejected` → `rejected`
+- Tüm adımlar `approved` → `approved` (+ kulüp oluşur)
+- Herhangi bir adım `revision_requested` → `revision_requested` (öğrenci bekleniyor; SKS `pending` kuyruğunda görünmez)
+- Aksi → `pending` (ara kademe onayında da `pending` kalır)
+
+**Revizyon ve yeniden gönderim:** Karar verici onay/ret yerine revizyon isteyebilir. Öğrenci **aynı başvuru kaydını** düzenleyip `PATCH /api/clubs/applications/:id/resubmit` ile yeniden gönderir. Zincir **kaldığı yerden** devam eder — önceki kademe onayları korunur; yalnızca revizyon istenen kademe `pending`'e döner. Aynı kademede birden çok revizyon turu olabilir; her tur `club_application_events` tablosunda saklanır (`unique(applicationId, step)` yalnızca güncel durum satırını sınırlar).
+
+**Geçmiş sözleşmesi** — `GET .../history` → `data`:
+
+```jsonc
+{
+  "applicationId": "uuid",
+  "revisionRequestCount": 2,
+  "events": [
+    {
+      "id": "uuid",
+      "step": 1,
+      "eventType": "approved",
+      "note": null,
+      "proposedName": null,
+      "description": null,
+      "createdAt": "2026-...",
+      "actor": { /* SafeUser */ }
+    },
+    {
+      "step": 2,
+      "eventType": "revision_requested",
+      "note": "Evrak eksik...",
+      "actor": { /* SafeUser */ }
+    },
+    {
+      "step": 2,
+      "eventType": "resubmitted",
+      "proposedName": "Yeni Ad",
+      "description": "...",
+      "actor": { /* başvuran SafeUser */ }
+    }
+  ]
+}
+```
+
+`eventType`: `revision_requested` | `resubmitted` | `approved` | `rejected`
+
+**Sıra:** Kademe N, kademe N−1 onaylanmadan karar verilemez. İlerideki kademede
+yetkili aktör erken karar vermeye çalışırsa `400` (`admin.approvalStepNotReady`).
+Zincirde hiç yetkisi olmayan aktör → `403` (`admin.approvalStepForbidden`).
+
+**Bildirim:** Başvuru sahibine yalnızca **nihai** kararda (`approved` veya
+`rejected`) `club.application.decided` bildirimi gider; ara kademe onaylarında
+bildirim yok (gürültü azaltma). **Revizyon talebinde** ayrıca
+`club.application.revision_requested` gider (tebligat — `optOutable: false`).
+
+Onay tamamlandığında `data`: `{ application, club }`. Zaten değerlendirilmişse
 `400 "Bu başvuru zaten değerlendirilmiş."`
+
+**GET yanıtı — `approvals` örneği (Ege, iki kademe):**
+
+```json
+{
+  "id": "...",
+  "status": "pending",
+  "proposedName": "Yapay Zeka Kulübü",
+  "approvals": [
+    { "step": 1, "approverRole": "advisor", "status": "pending", "approverId": null, "reviewedAt": null, "note": null },
+    { "step": 2, "approverRole": "student_affairs", "status": "pending", "approverId": null, "reviewedAt": null, "note": null }
+  ]
+}
+```
+
+`approverRole` değerleri: global RBAC rol adları veya `club_approver` (özel token —
+`club.approve` yetkisi taşıyan herkes).
 
 ### 5.3. Kulüpler
 
@@ -406,8 +498,11 @@ const canPromoteSuper = can("role.manage") && hasRole("super_admin");
 
 ### 8.3. Anlık askı / 403 interceptor
 
-Her yanıtın 403'ünde `message === "Hesabınız askıya alınmıştır..."` ise oturumu
-kapat ve `/login`'e yönlendir. Diğer 403'lerde yalnızca `message`'ı toast'la.
+Bir 403 alındığında (mesaj i18n olduğu için **metne göre eşleştirme yapmayın**):
+oturum sahibinin kendisi askıya alınmışsa hemen hemen tüm korunan istekler 403
+döner. Pratik yaklaşım: 403 alınca `GET /api/users/me` (veya `/me/permissions`)
+ile `status`'u teyit et; `status === "suspended"` ise oturumu kapatıp `/login`'e
+yönlendir ve `message`'ı göster. Diğer 403'lerde yalnızca `message`'ı toast'la.
 
 ### 8.4. Cache/state tazeleme
 

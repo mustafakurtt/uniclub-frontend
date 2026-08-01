@@ -37,6 +37,19 @@ _Coming soon._
   - **Per-club roles** — `member` / `officer` / `president`.
 - **Multi-tenant** — university-scoped admins plus tenantless **platform accounts**
   with a cross-tenant selector.
+- **Events** — discovery (upcoming/past, search, per-club), detail with capacity and
+  co-hosting clubs, RSVP; club staff can create, publish, cancel, manage attendees and
+  invite co-hosts (including clubs from other universities).
+- **Publishing** — announcements and events carry a draft → published lifecycle with
+  visibility scoping, pinning, and **scheduled publishing**. Scheduled times are sent as
+  the tenant's wall clock with no offset — the backend interprets them in the university's
+  own timezone, so "tomorrow 09:00" means campus time.
+- **Public surface** — club and event pages that need **no account**, for prospective
+  students and open-day visitors. Rendered outside the authenticated shell.
+- **QR** — poster QR codes with source labels ("cafeteria", "block A") so you can see
+  which printed poster actually worked, a retargetable destination so a reprint isn't
+  needed when an event changes, printable A4/A5 output, plus rotating check-in QR for
+  attendance.
 - **Admin panel** — users, clubs, universities, roles and permissions management, each
   section gated by a specific permission.
 - **Realtime notifications** — one WebSocket per session (single-use ticket auth,
@@ -70,17 +83,23 @@ no `../../` relative paths.
 src/
 ├── features/
 │   ├── auth/            # identity, RBAC guards, role-rank rules, self-service pages
-│   ├── clubs/           # club listing/detail, membership roles
+│   ├── clubs/           # club listing/detail, membership roles, announcements
+│   ├── activities/      # event discovery, RSVP, club-side management, check-in
+│   ├── poster-qr/       # poster QR management, analytics, printable output
+│   ├── public/          # unauthenticated club/event pages + QR resolution
 │   ├── admin/           # tenant management panel (users, clubs, roles, permissions)
 │   ├── universities/    # university management
 │   └── notifications/   # realtime WebSocket + notification bell
 ├── shared/              # api client, shared hooks, UI kit, domain types
-├── layouts/             # MainLayout, AdminLayout
+├── layouts/             # MainLayout, AdminLayout, PublicLayout
 ├── pages/               # Landing, Dashboard
 └── App.tsx              # routing
 ```
 
-The backend contract is documented in [`docs/architecture/`](docs/architecture/).
+The backend contract lives in [`docs/architecture/`](docs/architecture/) as **synced
+copies** — the source of truth is the backend repo's `docs/integration/`. Each file
+carries the source path and the backend commit it was synced from, so drift is visible.
+Re-sync before building against an endpoint you haven't touched in a while.
 
 ## Getting Started
 
@@ -165,9 +184,16 @@ and open a PR. Setup instructions, the branching model and code conventions are 
 
 ## Roadmap
 
-- [ ] Automated tests (component + e2e)
+- [ ] **Automated tests (component + e2e)** — this repo has no test runner today;
+      quality gates are `typecheck`, `lint` and `build`. The backend carries the
+      integration suite.
+- [ ] **Server-side rendering / prerender for public routes** — link preview bots
+      (WhatsApp, Instagram, Telegram) don't execute JavaScript, so the per-page
+      `og:*` tags set at runtime never reach them. Public pages currently share one
+      generic preview card.
+- [ ] Web Push (VAPID) for notifications while the app is closed — the backend
+      already supports it.
 - [x] Pull-based deployment (release-triggered, self-building agent — see [MAKINE_KURULUMU.md](docs/architecture/MAKINE_KURULUMU.md))
-- [ ] Web Push (VAPID) for notifications while the app is closed
 
 ## License
 

@@ -1,11 +1,12 @@
 import { Outlet, NavLink, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { Icon, type IconName } from "@/shared/ui/Icon";
-import { CLUB_PERMISSIONS, UNIVERSITY_PERMISSIONS } from "@/features/auth/authorization";
+import { CLUB_PERMISSIONS, MODERATION_PERMISSIONS, UNIVERSITY_PERMISSIONS } from "@/features/auth/authorization";
 import { roleLabel } from "@/features/admin/labels";
 import { AdminScopeProvider } from "@/features/admin/context/AdminScopeContext";
 import UniversityScopeSelector from "@/features/admin/components/UniversityScopeSelector";
 import NotificationBell from "@/features/notifications/components/NotificationBell";
+import LanguageSwitcher from "@/shared/ui/LanguageSwitcher";
 
 // Yönetim panelinin kabuğu (docs/FRONTEND_YONETIM.md §7). Üye arayüzünden
 // (MainLayout) ayrı, kendi sidebar'ı olan bir yönetim alanı. Kabuğa erişim
@@ -31,16 +32,22 @@ export default function AdminLayout() {
 
   const canViewUsers = hasPermission("user.view");
   const canViewClubs = CLUB_PERMISSIONS.some((p) => hasPermission(p));
+  const canModerate = hasPermission("club.view") && MODERATION_PERMISSIONS.some((p) => hasPermission(p));
   const canManageUniversities = UNIVERSITY_PERMISSIONS.some((p) => hasPermission(p));
   const canManageRoles = hasPermission("role.manage");
   const canManagePermissions = hasPermission("permission.manage");
+  const canViewAudit = hasPermission("audit.view");
+  const canManageSettings = hasPermission("university.settings.manage");
 
   const navItems: AdminNavItem[] = [
     { to: "/admin/users", label: "Kullanıcılar", icon: "members", visible: canViewUsers },
     { to: "/admin/clubs", label: "Kulüpler", icon: "club", visible: canViewClubs },
+    { to: "/admin/moderation", label: "Moderasyon", icon: "moderation", visible: canModerate },
     { to: "/admin/universities", label: "Akademik Yapı", icon: "university", visible: canManageUniversities },
+    { to: "/admin/settings", label: "Tenant Ayarları", icon: "settings", visible: canManageSettings },
     { to: "/admin/roles", label: "Roller", icon: "role", visible: canManageRoles },
     { to: "/admin/permissions", label: "Yetkiler", icon: "lock", visible: canManagePermissions },
+    { to: "/admin/audit", label: "Denetim İzi", icon: "audit", visible: canViewAudit },
   ];
 
   // Rozet: en yüksek öncelikli rolün Türkçe adı (sıralama = yetki genişliği).
@@ -75,6 +82,10 @@ export default function AdminLayout() {
               </span>
               <span className="badge">Yönetim</span>
             </Link>
+
+            <div className="mb-5 flex justify-end">
+              <LanguageSwitcher />
+            </div>
 
             {/* Hedef tenant — platform hesabında seçici, tenant yöneticisinde
                 sadece kendi üniversitesinin adı (FRONTEND_RUTBE_VE_PLATFORM.md §2). */}

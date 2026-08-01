@@ -2,44 +2,47 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 import EmptyState from "@/shared/ui/EmptyState";
-import RequirePermission from "@/features/auth/guards/RequirePermission";
 import { Icon } from "@/shared/ui/Icon";
 import {
   approveClubApplication,
   getClubApplications,
   rejectClubApplication,
+  requestClubApplicationRevision,
   type AdminClubApplication,
 } from "@/features/admin/api";
+import { getApplicationDecisionState } from "@/features/admin/approvalChain";
+import ClubApplicationHistoryModal from "@/features/admin/components/ClubApplicationHistoryModal";
+import ClubApplicationListItem from "@/features/admin/components/ClubApplicationListItem";
+import ClubApplicationNoteDialog from "@/features/admin/components/ClubApplicationNoteDialog";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import { getErrorMessage } from "@/shared/api/client";
 import type { ApplicationStatus } from "@/shared/types";
 
-// Kulüp kurma başvuruları (FRONTEND_CLUBS.md §11) — `club.approve` yetkisi.
-// Onay GERÇEK kulüp oluşturur ve başvuran otomatik BAŞKAN olur; bu yüzden
-// her iki karar da onay diyaloğundan geçer.
-
 const STATUS_FILTERS: { key: ApplicationStatus | "all"; label: string }[] = [
-  { key: "pending", label: "Bekleyen" },
+  { key: "pending", label: "Karar bekleyen" },
+  { key: "revision_requested", label: "Revizyon bekleyen" },
   { key: "approved", label: "Onaylanan" },
   { key: "rejected", label: "Reddedilen" },
   { key: "all", label: "Tümü" },
 ];
 
-const STATUS_CHIPS: Record<ApplicationStatus, string> = {
-  pending: "Bekliyor",
-  approved: "Onaylandı",
-  rejected: "Reddedildi",
-};
-
 interface ClubApplicationsSectionProps {
   universityId: string;
 }
 
-type PendingDecision = { kind: "approve" | "reject"; application: AdminClubApplication } | null;
+type DecisionKind = "approve" | "reject" | "revision";
+
+type PendingDecision =
+  | { kind: DecisionKind; application: AdminClubApplication }
+  | null;
 
 export default function ClubApplicationsSection({ universityId }: ClubApplicationsSectionProps) {
   const queryClient = useQueryClient();
+  const { roleNames, hasPermission } = useAuth();
+  const hasClubApprove = hasPermission("club.approve");
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | "all">("pending");
   const [decision, setDecision] = useState<PendingDecision>(null);
+  const [historyApp, setHistoryApp] = useState<AdminClubApplication | null>(null);
 
   const applicationsQuery = useQuery({
     queryKey: ["admin", universityId, "club-applications", statusFilter],
@@ -49,14 +52,20 @@ export default function ClubApplicationsSection({ universityId }: ClubApplicatio
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["admin", universityId, "club-applications"] });
-    // Onay yeni kulüp yaratır → kulüp listesi de bayatlar
+    queryClient.invalidateQueries({ queryKey: ["admin", universityId, "club-application-history"] });
     queryClient.invalidateQueries({ queryKey: ["admin", universityId, "clubs"] });
   };
 
   const decideMutation = useMutation({
-    mutationFn: async ({ kind, application }: NonNullable<PendingDecision>) => {
-      if (kind === "approve") await approveClubApplication(universityId, application.id);
-      else await rejectClubApplication(universityId, application.id);
+    mutationFn: async (payload: NonNullable<PendingDecision> & { note?: string }) => {
+      const { kind, application, note } = payload;
+      if (kind === "approve") {
+        await approveClubApplication(universityId, application.id);
+      } else if (kind === "reject") {
+        await rejectClubApplication(universityId, application.id, { note: note ?? "" });
+      } else {
+        await requestClubApplicationRevision(universityId, application.id, { note: note ?? "" });
+      }
     },
     onSuccess: () => {
       invalidate();
@@ -70,10 +79,14 @@ export default function ClubApplicationsSection({ universityId }: ClubApplicatio
     <section className="card p-6">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className="icon-tile"><Icon name="inbox" size={24} className="text-brand-600" /></span>
+          <span className="icon-tile">
+            <Icon name="inbox" size={24} className="text-brand-600" />
+          </span>
           <div>
             <h2 className="font-display text-lg font-bold text-slate-900">Kulüp Başvuruları</h2>
-            <p className="text-xs text-slate-500">Onay, gerçek bir kulüp oluşturur — başvuran başkan olur.</p>
+            <p className="text-xs text-slate-500">
+              Onay, gerçek bir kulüp oluşturur — başvuran başkan olur.
+            </p>
           </div>
         </div>
         <div className="flex flex-wrap gap-1.5">
@@ -107,75 +120,86 @@ export default function ClubApplicationsSection({ universityId }: ClubApplicatio
       ) : (
         <ul className="divide-y divide-slate-100">
           {applications.map((app) => (
-            <li key={app.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
-              <div className="min-w-0">
-                <p className="truncate font-display text-sm font-bold text-slate-900">
-                  {app.proposedName}
-                </p>
-                {app.description && (
-                  <p className="mt-0.5 line-clamp-2 max-w-xl text-xs text-slate-500">{app.description}</p>
-                )}
-                <p className="mt-1 text-[11px] font-semibold text-slate-400">
-                  {app.applicant
-                    ? `${app.applicant.firstName} ${app.applicant.lastName} · `
-                    : ""}
-                  {new Date(app.createdAt).toLocaleDateString("tr-TR")}
-                </p>
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                {app.status === "pending" ? (
-                  <RequirePermission
-                    permission="club.approve"
-                    fallback={<span className="chip">{STATUS_CHIPS.pending}</span>}
-                  >
-                    <button
-                      className="btn-secondary px-3 py-1.5 text-xs"
-                      onClick={() => setDecision({ kind: "approve", application: app })}
-                    >
-                      <Icon name="check" size={14} /> Onayla
-                    </button>
-                    <button
-                      className="btn-ghost px-3 py-1.5 text-xs text-slate-400 hover:text-red-600"
-                      onClick={() => setDecision({ kind: "reject", application: app })}
-                    >
-                      <Icon name="reject" size={14} /> Reddet
-                    </button>
-                  </RequirePermission>
-                ) : (
-                  <span className="chip">{STATUS_CHIPS[app.status]}</span>
-                )}
-              </div>
-            </li>
+            <ClubApplicationListItem
+              key={app.id}
+              application={app}
+              decisionState={
+                app.status === "pending"
+                  ? getApplicationDecisionState(app.approvals, roleNames, hasClubApprove)
+                  : null
+              }
+              decidePending={decideMutation.isPending}
+              onDecide={(kind, application) => setDecision({ kind, application })}
+              onShowHistory={setHistoryApp}
+            />
           ))}
         </ul>
       )}
 
       <ConfirmDialog
-        open={!!decision}
+        open={decision?.kind === "approve"}
         title={
           decision?.kind === "approve"
             ? `"${decision.application.proposedName}" onaylansın mı?`
-            : `"${decision?.application.proposedName}" reddedilsin mi?`
+            : ""
         }
-        description={
-          decision?.kind === "approve"
-            ? "Gerçek bir kulüp oluşturulur ve başvuran otomatik başkan olur."
-            : "Kulüp oluşturulmaz; başvuran daha sonra yeniden başvurabilir."
-        }
-        confirmLabel={decision?.kind === "approve" ? "Onayla ve Kulübü Oluştur" : "Reddet"}
-        tone={decision?.kind === "approve" ? "primary" : "danger"}
+        description="Gerçek bir kulüp oluşturulur ve başvuran otomatik başkan olur."
+        confirmLabel="Onayla ve Kulübü Oluştur"
+        tone="primary"
         loading={decideMutation.isPending}
         error={
-          decideMutation.isError
+          decideMutation.isError && decision?.kind === "approve"
             ? getErrorMessage(decideMutation.error, "Karar kaydedilemedi.")
             : null
         }
-        onConfirm={() => decision && decideMutation.mutate(decision)}
+        onConfirm={() => decision?.kind === "approve" && decideMutation.mutate(decision)}
         onClose={() => {
           setDecision(null);
           decideMutation.reset();
         }}
       />
+
+      <ClubApplicationNoteDialog
+        variant="reject"
+        open={decision?.kind === "reject"}
+        clubName={decision?.kind === "reject" ? decision.application.proposedName : ""}
+        loading={decideMutation.isPending}
+        error={decideMutation.isError && decision?.kind === "reject" ? decideMutation.error : null}
+        onConfirm={(note) =>
+          decision?.kind === "reject" && decideMutation.mutate({ ...decision, note })
+        }
+        onClose={() => {
+          setDecision(null);
+          decideMutation.reset();
+        }}
+      />
+
+      <ClubApplicationNoteDialog
+        variant="revision"
+        open={decision?.kind === "revision"}
+        clubName={decision?.kind === "revision" ? decision.application.proposedName : ""}
+        loading={decideMutation.isPending}
+        error={
+          decideMutation.isError && decision?.kind === "revision" ? decideMutation.error : null
+        }
+        onConfirm={(note) =>
+          decision?.kind === "revision" && decideMutation.mutate({ ...decision, note })
+        }
+        onClose={() => {
+          setDecision(null);
+          decideMutation.reset();
+        }}
+      />
+
+      {historyApp && (
+        <ClubApplicationHistoryModal
+          open
+          universityId={universityId}
+          applicationId={historyApp.id}
+          clubName={historyApp.proposedName}
+          onClose={() => setHistoryApp(null)}
+        />
+      )}
     </section>
   );
 }

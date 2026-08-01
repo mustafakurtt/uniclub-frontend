@@ -1,20 +1,15 @@
+import { useState } from "react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import ClubApplicationsSection from "@/features/admin/components/ClubApplicationsSection";
+import FormationProposalsSection from "@/features/admin/components/FormationProposalsSection";
 import AdminClubsSection from "@/features/admin/components/AdminClubsSection";
 import RequireUniversity from "@/features/admin/components/RequireUniversity";
 
-// Kulüp yönetimi (docs/FRONTEND_YONETIM.md §5.2/§5.3) — seçili üniversite
-// üzerinde çalışır (tenantScoped). Hedef tenant kullanıcıdan değil
-// AdminScope'tan gelir: platform hesabında user.universityId null'dır
-// (FRONTEND_RUTBE_VE_PLATFORM.md §1/§2).
-//
-// Okuma ve aksiyon yetkileri ayrıdır → salt-okunur roller (auditor) de görür:
-//  • başvurular  → görüntüleme `application.view`, karar `club.approve`
-//  • kulüpler    → görüntüleme `club.view`, durum/profil `club.update`,
-//                  danışman `club.advisor.manage`, silme `club.delete`
-// Bölüm içindeki aksiyon butonları ilgili yetkiye göre gizlenir.
+type AdminClubsTab = "applications" | "formation";
+
 export default function AdminClubs() {
   const { hasPermission } = useAuth();
+  const [tab, setTab] = useState<AdminClubsTab>("applications");
 
   const canViewApplications = hasPermission("application.view");
   const canViewClubs = hasPermission("club.view");
@@ -24,7 +19,7 @@ export default function AdminClubs() {
       <div>
         <h1 className="font-display text-2xl font-extrabold text-slate-900">Kulüp Yönetimi</h1>
         <p className="mt-1 text-sm text-slate-500">
-          Başvuruları değerlendir, kulüp durumlarını ve danışmanlarını yönet.
+          Başvuruları değerlendir, kuruluş önerilerini izle, kulüp durumlarını yönet.
         </p>
       </div>
 
@@ -34,7 +29,41 @@ export default function AdminClubs() {
         <RequireUniversity>
           {(universityId) => (
             <div className="space-y-6">
-              {canViewApplications && <ClubApplicationsSection universityId={universityId} />}
+              {canViewApplications && (
+                <>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setTab("applications")}
+                      className={`rounded-full px-4 py-2 text-xs font-bold transition-all ${
+                        tab === "applications"
+                          ? "bg-brand-600 text-white shadow-glow"
+                          : "bg-white text-slate-500 border border-slate-200"
+                      }`}
+                    >
+                      Kulüp Başvuruları
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTab("formation")}
+                      className={`rounded-full px-4 py-2 text-xs font-bold transition-all ${
+                        tab === "formation"
+                          ? "bg-brand-600 text-white shadow-glow"
+                          : "bg-white text-slate-500 border border-slate-200"
+                      }`}
+                    >
+                      Kuruluş Önerileri
+                    </button>
+                  </div>
+
+                  {tab === "applications" ? (
+                    <ClubApplicationsSection universityId={universityId} />
+                  ) : (
+                    <FormationProposalsSection universityId={universityId} />
+                  )}
+                </>
+              )}
+
               {canViewClubs && <AdminClubsSection universityId={universityId} />}
             </div>
           )}

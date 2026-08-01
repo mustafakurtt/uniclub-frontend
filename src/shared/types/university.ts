@@ -7,6 +7,9 @@ export interface University {
   id: string;
   name: string;
   slug: string;
+  /** IANA saat dilimi — tenant duvar saati (C2). */
+  timezone?: string;
+  defaultLocale?: string;
   // Liste/detay uçları döner; oturum içindeki University alt kümesinde bulunmaz (opsiyonel).
   createdAt?: string;
   updatedAt?: string;

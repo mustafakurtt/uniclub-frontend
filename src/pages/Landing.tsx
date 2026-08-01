@@ -6,6 +6,7 @@ import Cube3D from "@/shared/ui/Cube3D";
 import TiltCard from "@/shared/ui/TiltCard";
 import Reveal from "@/shared/ui/Reveal";
 import { Icon, type IconName } from "@/shared/ui/Icon";
+import LanguageSwitcher from "@/shared/ui/LanguageSwitcher";
 
 const CATEGORIES: { icon: IconName; label: string }[] = [
   { icon: "music", label: "Müzik" },
@@ -106,6 +107,7 @@ export default function Landing() {
             </div>
 
             <div className="flex items-center gap-3">
+              <LanguageSwitcher />
               {isAuthenticated ? (
                 <Link to="/dashboard" className="btn-primary px-5 py-2.5">Panele Git</Link>
               ) : (
