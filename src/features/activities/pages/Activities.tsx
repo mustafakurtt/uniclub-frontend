@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import SelectField from "@/shared/ui/SelectField";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { getActivities, getClubActivities } from "@/features/activities/api/activities";
@@ -185,7 +186,7 @@ export default function Activities() {
           ))}
         </div>
 
-        <select
+        <SelectField
           value={clubFilter}
           onChange={(e) => setClubFilter(e.target.value)}
           aria-label="Kulübe göre filtrele"
@@ -197,7 +198,7 @@ export default function Activities() {
               {c.name}
             </option>
           ))}
-        </select>
+        </SelectField>
       </div>
 
       {!activitiesQuery.isLoading && (

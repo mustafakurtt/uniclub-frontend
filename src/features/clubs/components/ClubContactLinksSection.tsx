@@ -1,4 +1,5 @@
 import { useState } from "react";
+import SelectField from "@/shared/ui/SelectField";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -173,13 +174,13 @@ function ContactLinkFormModal({ open, clubId, editing, onSaved, onClose }: Conta
       <form id="contact-link-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <label className="input-label">Platform</label>
-          <select {...register("platform")} className="select-field" disabled={!!editing}>
+          <SelectField {...register("platform")} className="select-field" disabled={!!editing}>
             {Object.entries(CONTACT_PLATFORM_LABELS).map(([value, meta]) => (
               <option key={value} value={value}>
                 {meta.label}
               </option>
             ))}
-          </select>
+          </SelectField>
         </div>
         <div>
           <label className="input-label">URL</label>

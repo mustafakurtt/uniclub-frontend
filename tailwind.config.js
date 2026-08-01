@@ -124,6 +124,10 @@ export default {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
         },
+        'dropdown-in': {
+          '0%': { opacity: '0', transform: 'translateY(-4px) scale(0.98)' },
+          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
         'scale-in': {
           '0%': { opacity: '0', transform: 'scale(0.92)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
@@ -152,6 +156,7 @@ export default {
         'marquee': 'marquee 32s linear infinite',
         'fade-up': 'fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both',
         'fade-in': 'fade-in 0.6s ease-out both',
+        'dropdown-in': 'dropdown-in 0.12s ease-out both',
         'scale-in': 'scale-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both',
         'spin-3d': 'spin-3d 16s linear infinite',
         'pulse-soft': 'pulse-soft 3s ease-in-out infinite',

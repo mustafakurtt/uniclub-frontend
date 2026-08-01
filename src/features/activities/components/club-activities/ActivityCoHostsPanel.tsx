@@ -1,4 +1,5 @@
 import { useState } from "react";
+import SelectField from "@/shared/ui/SelectField";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getActivityCoHosts,
@@ -64,7 +65,7 @@ export default function ActivityCoHostsPanel({ hostClubId, activityId }: Activit
       </p>
 
       <div className="flex flex-wrap gap-2">
-        <select
+        <SelectField
           value={targetClubId}
           onChange={(e) => setTargetClubId(e.target.value)}
           className="input-field min-w-[12rem] flex-1"
@@ -76,7 +77,7 @@ export default function ActivityCoHostsPanel({ hostClubId, activityId }: Activit
               {c.name}
             </option>
           ))}
-        </select>
+        </SelectField>
         <button
           type="button"
           className="btn-secondary text-xs"

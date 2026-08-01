@@ -1,4 +1,5 @@
 import { useState } from "react";
+import SelectField from "@/shared/ui/SelectField";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 import EmptyState from "@/shared/ui/EmptyState";
@@ -164,7 +165,7 @@ export default function AdminClubsSection({ universityId }: AdminClubsSectionPro
 
                 <div className="flex shrink-0 flex-wrap items-center gap-1.5">
                   {canUpdate ? (
-                    <select
+                    <SelectField
                       className="select-field w-auto py-1.5 pr-9 text-xs font-semibold text-slate-600"
                       value={club.status}
                       disabled={statusMutation.isPending}
@@ -178,7 +179,7 @@ export default function AdminClubsSection({ universityId }: AdminClubsSectionPro
                           {CLUB_STATUS_LABELS[s]}
                         </option>
                       ))}
-                    </select>
+                    </SelectField>
                   ) : (
                     <span
                       className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-bold ${STATUS_CHIP_CLASSES[club.status]}`}

@@ -1,4 +1,5 @@
 import { useAdminScope } from "@/features/admin/context/AdminScopeContext";
+import SelectField from "@/shared/ui/SelectField";
 import { Icon } from "@/shared/ui/Icon";
 
 /**
@@ -26,7 +27,7 @@ export default function UniversityScopeSelector() {
       <label htmlFor="admin-scope" className="input-label text-xs">
         Yönetilen Üniversite
       </label>
-      <select
+      <SelectField
         id="admin-scope"
         className="select-field py-2 text-sm"
         value={universityId ?? ""}
@@ -37,7 +38,7 @@ export default function UniversityScopeSelector() {
             {u.name}
           </option>
         ))}
-      </select>
+      </SelectField>
     </div>
   );
 }

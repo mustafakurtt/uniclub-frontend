@@ -1,4 +1,5 @@
 import { useState } from "react";
+import SelectField from "@/shared/ui/SelectField";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getRoles,
@@ -197,7 +198,7 @@ export default function AdminRoles() {
                 {/* Yetki ekle */}
                 {remaining.length > 0 && (
                   <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <select
+                    <SelectField
                       className="select-field w-auto text-sm"
                       value={selected}
                       onChange={(e) =>
@@ -211,7 +212,7 @@ export default function AdminRoles() {
                           {p.key}
                         </option>
                       ))}
-                    </select>
+                    </SelectField>
                     <button
                       className="btn-secondary px-3 py-1.5 text-xs"
                       disabled={!selected || addPermMutation.isPending}

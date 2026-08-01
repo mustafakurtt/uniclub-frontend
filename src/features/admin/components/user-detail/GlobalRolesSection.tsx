@@ -6,6 +6,7 @@
 //   • platform rolleri (super_admin/platform_support) yalnızca super_admin'de.
 // Hepsi backend'de de zorunlu; buradaki disable yalnızca 400'e çarpmayı önler.
 import { useState } from "react";
+import SelectField from "@/shared/ui/SelectField";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   assignUserRole,
@@ -120,7 +121,7 @@ export default function GlobalRolesSection({ universityId, user }: Props) {
 
       {canManageRoles && (
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <select
+          <SelectField
             className="select-field w-auto text-sm"
             value={addRoleId}
             onChange={(e) => setAddRoleId(e.target.value)}
@@ -135,7 +136,7 @@ export default function GlobalRolesSection({ universityId, user }: Props) {
                 {roleLabel(r.name)} · #{r.rank}
               </option>
             ))}
-          </select>
+          </SelectField>
           <button
             className="btn-secondary px-3 py-1.5 text-xs"
             disabled={!addRoleId || assignRoleMutation.isPending}

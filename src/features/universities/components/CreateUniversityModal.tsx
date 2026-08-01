@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import SelectField from "@/shared/ui/SelectField";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -124,10 +125,10 @@ export default function CreateUniversityModal({ open, onClose }: CreateUniversit
                     <p className="input-error">{errors.domains[index]?.domain?.message}</p>
                   )}
                 </div>
-                <select {...register(`domains.${index}.domainType`)} className="select-field w-32 shrink-0">
+                <SelectField {...register(`domains.${index}.domainType`)} className="select-field w-32 shrink-0">
                   <option value="student">Öğrenci</option>
                   <option value="staff">Personel</option>
-                </select>
+                </SelectField>
                 <button
                   type="button"
                   className="btn-ghost px-2.5 py-2.5 text-slate-400 hover:text-red-600 disabled:opacity-40"

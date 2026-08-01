@@ -1,5 +1,6 @@
 // Bölüm ataması — `user.manage`. Bölüm her zaman fakülte zinciriyle seçilir.
 import { useState } from "react";
+import SelectField from "@/shared/ui/SelectField";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { updateUserDepartment } from "@/features/admin/api";
 import { getDepartments, getFaculties } from "@/features/universities/api/universities";
@@ -50,7 +51,7 @@ export default function DepartmentSection({ universityId, user }: Props) {
         — fakülte ve bölüm seçerek güncelleyin.
       </p>
       <div className="flex flex-wrap items-center gap-2">
-        <select
+        <SelectField
           className="select-field w-auto text-sm"
           value={facultyId}
           onChange={(e) => {
@@ -65,8 +66,8 @@ export default function DepartmentSection({ universityId, user }: Props) {
               {f.name}
             </option>
           ))}
-        </select>
-        <select
+        </SelectField>
+        <SelectField
           className="select-field w-auto text-sm"
           value={pendingDept ?? ""}
           disabled={!facultyId || departmentsQuery.isLoading}
@@ -79,7 +80,7 @@ export default function DepartmentSection({ universityId, user }: Props) {
               {d.name}
             </option>
           ))}
-        </select>
+        </SelectField>
         <button
           className="btn-secondary px-3 py-1.5 text-xs"
           disabled={!pendingDept || deptMutation.isPending}

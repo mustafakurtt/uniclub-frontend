@@ -1,4 +1,5 @@
 import { useMemo, type ReactNode } from "react";
+import SelectField from "@/shared/ui/SelectField";
 import { useQuery } from "@tanstack/react-query";
 import { getClubApplications } from "@/features/admin/api/applications";
 import { getAdminClubs } from "@/features/admin/api/clubs";
@@ -64,7 +65,7 @@ function ClubSelect({
 
   return (
     <Field label={param.labelTr} required={param.required} error={error} htmlFor={param.name}>
-      <select
+      <SelectField
         id={param.name}
         className="select-field w-full"
         value={value}
@@ -77,7 +78,7 @@ function ClubSelect({
             {club.name}
           </option>
         ))}
-      </select>
+      </SelectField>
     </Field>
   );
 }
@@ -109,7 +110,7 @@ function ApplicationSelect({
 
   return (
     <Field label={param.labelTr} required={param.required} error={error} htmlFor={param.name}>
-      <select
+      <SelectField
         id={param.name}
         className="select-field w-full"
         value={value}
@@ -122,7 +123,7 @@ function ApplicationSelect({
             {app.proposedName} · {APPLICATION_STATUS_LABELS[app.status]}
           </option>
         ))}
-      </select>
+      </SelectField>
     </Field>
   );
 }
@@ -197,7 +198,7 @@ function ParamInput({
   if (param.type === "enum") {
     return (
       <Field label={param.labelTr} required={param.required} error={error} htmlFor={param.name}>
-        <select
+        <SelectField
           id={param.name}
           className="select-field w-full"
           value={value}
@@ -209,7 +210,7 @@ function ParamInput({
               {exportEnumLabel(report.id, param.name, opt)}
             </option>
           ))}
-        </select>
+        </SelectField>
       </Field>
     );
   }

@@ -1,4 +1,5 @@
 import { approverRoleLabel } from "@/features/admin/labels";
+import SelectField from "@/shared/ui/SelectField";
 import { Icon } from "@/shared/ui/Icon";
 import type { TenantSettingView } from "@/shared/types";
 
@@ -141,7 +142,7 @@ export function TenantRoleChainSettingField({
         {value.map((role, index) => (
           <li key={`${settingKey}-${index}`} className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-bold text-slate-400 w-16">Kademe {index + 1}</span>
-            <select
+            <SelectField
               className="select-field max-w-xs flex-1"
               value={role}
               disabled={readOnly}
@@ -152,7 +153,7 @@ export function TenantRoleChainSettingField({
                   {approverRoleLabel(token)}
                 </option>
               ))}
-            </select>
+            </SelectField>
             {!readOnly && value.length > minSteps && (
               <button
                 type="button"
