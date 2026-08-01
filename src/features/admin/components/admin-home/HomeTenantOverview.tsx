@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { isForbiddenAdminError } from "@/features/admin/adminQueryErrors";
 import { getAdminClubs } from "@/features/admin/api/clubs";
 import { getAdminUsers } from "@/features/admin/api/users";
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -28,27 +29,38 @@ function QuickLink({ to, label }: { to: string; label: string }) {
 
 export default function HomeTenantOverview({ universityId }: { universityId: string }) {
   const { hasPermission } = useAuth();
+  const canViewClubs = hasPermission("club.view");
+  const canViewUsers = hasPermission("user.view");
 
   const clubsQuery = useQuery({
     queryKey: ["admin", universityId, "clubs", "all"],
     queryFn: () => getAdminClubs(universityId),
-    enabled: hasPermission("club.view"),
+    enabled: canViewClubs,
+    retry: false,
   });
 
   const usersQuery = useQuery({
     queryKey: ["admin", universityId, "users", "all"],
     queryFn: () => getAdminUsers(universityId),
-    enabled: hasPermission("user.view"),
+    enabled: canViewUsers,
+    retry: false,
   });
 
   const approvedClubs = clubsQuery.data?.filter((c) => c.status === "approved").length;
   const pendingClubs = clubsQuery.data?.filter((c) => c.status === "pending").length;
   const activeUsers = usersQuery.data?.filter((u) => u.status === "active").length;
 
-  const error =
-    clubsQuery.isError || usersQuery.isError
-      ? getErrorMessage(clubsQuery.error ?? usersQuery.error, "Özet yüklenemedi.")
-      : null;
+  const systemError = [clubsQuery, usersQuery].find(
+    (query) => query.isError && !isForbiddenAdminError(query.error)
+  );
+  const error = systemError
+    ? getErrorMessage(systemError.error, "Özet yüklenemedi.")
+    : null;
+
+  const showClubStats =
+    canViewClubs && !(clubsQuery.isError && isForbiddenAdminError(clubsQuery.error));
+  const showUserStats =
+    canViewUsers && !(usersQuery.isError && isForbiddenAdminError(usersQuery.error));
 
   return (
     <div className="space-y-6">
@@ -61,23 +73,25 @@ export default function HomeTenantOverview({ universityId }: { universityId: str
 
       {error && <div className="alert-error">{error}</div>}
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {hasPermission("club.view") && (
-          <>
-            <StatCard label="Aktif kulüp" value={approvedClubs} loading={clubsQuery.isLoading} />
-            <StatCard label="Bekleyen kulüp" value={pendingClubs} loading={clubsQuery.isLoading} />
-          </>
-        )}
-        {hasPermission("user.view") && (
-          <StatCard label="Aktif kullanıcı" value={activeUsers} loading={usersQuery.isLoading} />
-        )}
-      </div>
+      {(showClubStats || showUserStats) && (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {showClubStats && (
+            <>
+              <StatCard label="Aktif kulüp" value={approvedClubs} loading={clubsQuery.isLoading} />
+              <StatCard label="Bekleyen kulüp" value={pendingClubs} loading={clubsQuery.isLoading} />
+            </>
+          )}
+          {showUserStats && (
+            <StatCard label="Aktif kullanıcı" value={activeUsers} loading={usersQuery.isLoading} />
+          )}
+        </div>
+      )}
 
       <section className="card p-5">
         <h3 className="mb-3 font-display text-sm font-bold text-slate-900">Hızlı erişim</h3>
         <div className="flex flex-col gap-1">
-          {hasPermission("club.view") && <QuickLink to="/admin/clubs" label="Kulüp yönetimi" />}
-          {hasPermission("user.view") && <QuickLink to="/admin/users" label="Kullanıcılar" />}
+          {canViewClubs && <QuickLink to="/admin/clubs" label="Kulüp yönetimi" />}
+          {canViewUsers && <QuickLink to="/admin/users" label="Kullanıcılar" />}
           {hasPermission("university.settings.manage") && (
             <QuickLink to="/admin/settings" label="Üniversite ayarları" />
           )}

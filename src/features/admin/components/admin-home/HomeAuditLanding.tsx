@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { isForbiddenAdminError } from "@/features/admin/adminQueryErrors";
 import { getAuditLogs } from "@/features/admin/api/audit";
 import { permissionLabel } from "@/features/admin/labels";
 import { getErrorMessage } from "@/shared/api/client";
@@ -9,9 +10,17 @@ export default function HomeAuditLanding({ universityId }: { universityId: strin
   const logsQuery = useQuery({
     queryKey: ["admin", universityId, "audit", "home-preview"],
     queryFn: () => getAuditLogs(universityId, { limit: 5 }),
+    retry: false,
   });
 
   const logs = logsQuery.data?.items ?? [];
+  const forbidden = logsQuery.isError && isForbiddenAdminError(logsQuery.error);
+  const systemError =
+    logsQuery.isError && !isForbiddenAdminError(logsQuery.error)
+      ? getErrorMessage(logsQuery.error, "Denetim özeti yüklenemedi.")
+      : null;
+
+  if (forbidden) return null;
 
   return (
     <div className="space-y-6">
@@ -25,9 +34,7 @@ export default function HomeAuditLanding({ universityId }: { universityId: strin
         </Link>
       </div>
 
-      {logsQuery.isError && (
-        <div className="alert-error">{getErrorMessage(logsQuery.error, "Denetim özeti yüklenemedi.")}</div>
-      )}
+      {systemError && <div className="alert-error">{systemError}</div>}
 
       <section className="card overflow-hidden p-0">
         {logsQuery.isLoading ? (
