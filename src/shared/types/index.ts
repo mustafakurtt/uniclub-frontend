@@ -16,4 +16,5 @@ export type * from "./notification"; // gerçek zamanlı bildirimler (WS + REST)
 export type * from "./audit"; // denetim izi (audit log)
 export type * from "./posterQr"; // afiş QR
 export type * from "./posterQrAnalytics"; // afiş QR tarama analitiği
+export type * from "./formationProposal"; // kuruluş önerisi + dijital destek (T1.1)
 export type * from "./public"; // kamuya açık DTO
