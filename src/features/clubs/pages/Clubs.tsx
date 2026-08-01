@@ -124,10 +124,20 @@ export default function Clubs() {
   return (
     <div className="space-y-6">
       {/* ====== Kompakt başlık — tek satır mesaj, okuma yükü yok ====== */}
-      <div>
-        <h1 className="font-display text-3xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-4xl">
-          Topluluğunu <span className="text-gradient">bul.</span>
-        </h1>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-3xl font-extrabold leading-tight tracking-tight text-slate-900 sm:text-4xl">
+            Topluluğunu <span className="text-gradient">bul.</span>
+          </h1>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link to="/clubs/proposals" className="btn-secondary text-sm">
+            <Icon name="seedling" size={16} /> Kuruluş Önerileri
+          </Link>
+          <Link to="/clubs/new" className="btn-primary text-sm">
+            <Icon name="add" size={16} /> Kulüp Kur
+          </Link>
+        </div>
       </div>
 
       {/* ====== Arama — büyük dokunma hedefi, temizleme butonlu ====== */}

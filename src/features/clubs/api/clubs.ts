@@ -16,6 +16,7 @@ import type {
   ClubApplication,
   ClubApplicationDetail,
   ClubDetail,
+  CreateClubApplicationResult,
   ClubMemberRow,
   ClubRole,
   ContactLink,
@@ -108,11 +109,14 @@ export const leaveClub = async (clubId: string): Promise<void> => {
 // Kulüp kurma başvuruları — başvuran self-service (§6)
 // ---------------------------------------------------------------------------
 
-/** POST /clubs/applications — aynı anda tek pending başvuru (§6.1). */
+/** POST /clubs/applications — tenant eşiğine göre başvuru veya kuruluş önerisi (§6.1 / §6A). */
 export const createClubApplication = async (
   dto: CreateClubApplicationDto
-): Promise<ClubApplication> => {
-  const response = await apiClient.post<ApiEnvelope<ClubApplication>>("/clubs/applications", dto);
+): Promise<CreateClubApplicationResult> => {
+  const response = await apiClient.post<ApiEnvelope<CreateClubApplicationResult>>(
+    "/clubs/applications",
+    dto
+  );
   return response.data.data;
 };
 

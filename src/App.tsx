@@ -7,6 +7,9 @@ import Dashboard from "@/pages/Dashboard";
 import Clubs from "@/features/clubs/pages/Clubs";
 import ClubDetail from "@/features/clubs/pages/ClubDetail";
 import ClubApplicationDetailPage from "@/features/clubs/pages/ClubApplicationDetailPage";
+import FormationProposalsPage from "@/features/clubs/pages/FormationProposalsPage";
+import FormationProposalDetailPage from "@/features/clubs/pages/FormationProposalDetailPage";
+import CreateClubApplicationPage from "@/features/clubs/pages/CreateClubApplicationPage";
 import Activities from "@/features/activities/pages/Activities";
 import ActivityDetail from "@/features/activities/pages/ActivityDetail";
 import ActivityCheckInPage from "@/features/activities/pages/ActivityCheckInPage";
@@ -74,6 +77,9 @@ function App() {
               element={<ActivityCheckInDisplayPage />}
             />
             <Route path="/clubs" element={<Clubs />} />
+            <Route path="/clubs/proposals" element={<FormationProposalsPage />} />
+            <Route path="/clubs/proposals/:proposalId" element={<FormationProposalDetailPage />} />
+            <Route path="/clubs/new" element={<CreateClubApplicationPage />} />
             {/* Detay id ile çalışır — backend'de slug lookup ucu yok (FRONTEND_CLUBS.md §5.1) */}
             <Route path="/clubs/:clubId" element={<ClubDetail />} />
             <Route path="/applications/:applicationId" element={<ClubApplicationDetailPage />} />
