@@ -8,13 +8,7 @@
 // Gösterim UX'tir; gerçek kontrol her zaman backend'dedir.
 import { getErrorMessage } from "@/shared/api/client";
 import Modal from "@/shared/ui/Modal";
-import { useAuth } from "@/features/auth/hooks/useAuth";
-import AccountStatusSection from "./AccountStatusSection";
-import ClubMembershipsSection from "./ClubMembershipsSection";
-import DepartmentSection from "./DepartmentSection";
-import EffectivePermissionsSection from "./EffectivePermissionsSection";
-import GlobalRolesSection from "./GlobalRolesSection";
-import PermissionOverridesSection from "./PermissionOverridesSection";
+import UserDetailContent from "./UserDetailContent";
 import { useUserDetailQuery } from "./useUserDetail";
 
 interface UserDetailModalProps {
@@ -30,7 +24,6 @@ export default function UserDetailModal({
   userId,
   onClose,
 }: UserDetailModalProps) {
-  const { hasPermission } = useAuth();
   const detailQuery = useUserDetailQuery(universityId, userId, open);
   const user = detailQuery.data;
 
@@ -57,18 +50,7 @@ export default function UserDetailModal({
           {getErrorMessage(detailQuery.error, "Kullanıcı yüklenemedi.")}
         </div>
       ) : (
-        <div className="space-y-6">
-          <AccountStatusSection universityId={universityId} user={user} />
-          {hasPermission("user.manage") && (
-            <DepartmentSection universityId={universityId} user={user} />
-          )}
-          <GlobalRolesSection universityId={universityId} user={user} />
-          <ClubMembershipsSection memberships={user.clubMemberships} />
-          {hasPermission("permission.manage") && (
-            <PermissionOverridesSection universityId={universityId} user={user} />
-          )}
-          <EffectivePermissionsSection permissions={user.effectivePermissions} />
-        </div>
+        <UserDetailContent universityId={universityId} user={user} />
       )}
     </Modal>
   );

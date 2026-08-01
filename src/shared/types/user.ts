@@ -39,6 +39,8 @@ export interface SafeUser {
   photoUrl: string | null;
   preferredLanguage: string;
   status: UserStatus;
+  /** KVKK anonimleştirme sonrası dolu — kimlik alanları maskelenir. */
+  deletedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }

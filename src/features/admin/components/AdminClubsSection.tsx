@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import SelectField from "@/shared/ui/SelectField";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
@@ -16,6 +17,7 @@ import {
   updateClubStatus,
   type AdminUpdateClubDto,
 } from "@/features/admin/api";
+import { adminClubDetailHref } from "@/features/admin/adminListNav";
 import { getErrorMessage } from "@/shared/api/client";
 import { CLUB_STATUS_LABELS, JOIN_POLICY_LABELS } from "@/features/clubs/labels";
 import type { Club, ClubStatus } from "@/shared/types";
@@ -41,6 +43,13 @@ const STATUS_CHIP_CLASSES: Record<ClubStatus, string> = {
   rejected: "bg-red-50 text-red-700 border-red-100",
 };
 
+function parseClubStatus(value: string | null): ClubStatus | "all" {
+  if (value === "approved" || value === "pending" || value === "archived" || value === "rejected") {
+    return value;
+  }
+  return "all";
+}
+
 interface AdminClubsSectionProps {
   universityId: string;
 }
@@ -48,12 +57,25 @@ interface AdminClubsSectionProps {
 export default function AdminClubsSection({ universityId }: AdminClubsSectionProps) {
   const queryClient = useQueryClient();
   const { hasPermission } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const statusFilter = parseClubStatus(searchParams.get("clubStatus"));
   const canUpdate = hasPermission("club.update");
-  const [statusFilter, setStatusFilter] = useState<ClubStatus | "all">("all");
   const [editTarget, setEditTarget] = useState<Club | null>(null);
   const [advisorsTarget, setAdvisorsTarget] = useState<Club | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Club | null>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
+
+  const setStatusFilter = useCallback(
+    (status: ClubStatus | "all") => {
+      setSearchParams((prev) => {
+        const params = new URLSearchParams(prev);
+        if (status === "all") params.delete("clubStatus");
+        else params.set("clubStatus", status);
+        return params;
+      });
+    },
+    [setSearchParams]
+  );
 
   const clubsQuery = useQuery({
     queryKey: ["admin", universityId, "clubs", statusFilter],
@@ -140,7 +162,12 @@ export default function AdminClubsSection({ universityId }: AdminClubsSectionPro
             const deletable = club.status === "archived" || club.status === "rejected";
             return (
               <li key={club.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
-                <div className="flex min-w-0 items-center gap-3">
+                <Link
+                  to={adminClubDetailHref(club.id, {
+                    clubStatus: statusFilter === "all" ? null : statusFilter,
+                  })}
+                  className="flex min-w-0 flex-1 items-center gap-3 transition-colors hover:opacity-80"
+                >
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-brand-600 to-accent-400 font-display text-sm font-extrabold text-white">
                     {club.logoUrl ? (
                       <img src={club.logoUrl} alt="" className="h-full w-full object-cover" />
@@ -161,7 +188,8 @@ export default function AdminClubsSection({ universityId }: AdminClubsSectionPro
                       </span>
                     </div>
                   </div>
-                </div>
+                  <Icon name="chevronRight" size={16} className="shrink-0 text-slate-300" />
+                </Link>
 
                 <div className="flex shrink-0 flex-wrap items-center gap-1.5">
                   {canUpdate ? (

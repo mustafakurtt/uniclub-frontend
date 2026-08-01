@@ -24,3 +24,9 @@ export interface ApiErrorEnvelope {
   details?: ApiErrorDetail[];
   requestId?: string;
 }
+
+/** Keyset (cursor) sayfalama — OFFSET değil. */
+export interface KeysetPage<T> {
+  items: T[];
+  nextCursor: string | null;
+}
