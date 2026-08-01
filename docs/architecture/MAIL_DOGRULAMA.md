@@ -1,3 +1,5 @@
+> **Senkron kopya** — Kaynak: `../uniclub-backend/docs/architecture/mail-verification.md` · Backend commit: `806f82a`
+
 # E-posta Doğrulama — Geliştirme Kurulumu
 
 Kayıt olan kullanıcı `status: "pending"` ile oluşturulur ve okul e-postasına bir
@@ -36,7 +38,7 @@ Ulaşamazsa uygulama **çökmez**, sadece uyarır (kuyruk gönderimi yeniden den
 POST /api/auth/register
    │  e-posta domain'i universityDomains'te aranır → tenant + rol otomatik atanır
    │  kullanıcı status: "pending" ile yaratılır
-   ├─ emailVerifications satırı (tek kullanımlık UUID token, 24 saat geçerli)
+   ├─ emailVerifications satırı (tek kullanımlık UUID token'ın SHA-256 ÖZETİ, 24 saat)
    └─ BullMQ kuyruğuna iş atılır ────────────────┐
                                                   │ (arka planda, 3 deneme,
                                                   │  exponential backoff)
@@ -79,6 +81,23 @@ kayıtlı mı?"* sorgusuna (**user enumeration**) dönüşürdü. Mail yalnızca
 **Yeniden gönderim eski linki öldürür.** Kullanıcının kullanılmamış tüm token'ları
 `usedAt` ile tüketilmiş sayılır, sonra yenisi üretilir → aynı anda yalnızca **bir**
 geçerli link dolaşır.
+
+### Token nasıl saklanır
+
+`email_verifications` tablosunda token'ın **kendisi değil, SHA-256 özeti**
+(`token_hash`, 64 hex karakter) durur. Düz token yalnızca kullanıcıya giden
+linkte yaşar; doğrulamada gelen token aynı özetten geçirilip eşitlik aranır
+(`core/auth/token.ts` → `generateOneTimeToken` / `hashToken`).
+
+Gerekçe şifredekiyle aynı: token bir **kimlik bilgisidir**. Düz saklanırsa bir DB
+dump'ı ya da salt-okunur bir erişim, dolaşımdaki bütün doğrulama linklerini
+kullanılabilir hale getirir. bcrypt yerine SHA-256 yeterli çünkü token yüksek
+entropili (128 bit) ve kısa ömürlü — tahmin edilemez, dolayısıyla yavaşlatmaya
+(key stretching) gerek yok; ayrıca doğrulama tek indeksli bir eşitlik sorgusu
+olarak kalıyor.
+
+**Sonuç:** token geri okunamaz. Kaybolan link "hatırlatılamaz", yalnızca yeniden
+üretilir — yukarıdaki resend akışı bunun için var.
 
 > Bu endpoint bir çıkmazı kapatıyor: link 24 saatte doluyor, ama e-posta zaten
 > kullanımda olduğu için kullanıcı yeniden kayıt da olamıyordu.
@@ -198,7 +217,7 @@ ve "maili yeniden gönder" akışının çalışabilmesi için kullanıcının o
 `invalidateUserPermissions` çağırır — `status` RBAC cache'ine gömülü olduğu için
 (300s TTL) bu olmadan kullanıcı doğruladıktan sonra 5 dakika daha `pending`
 görünürdü. Ayrıca `account.verified` bildirimi bağlı tüm cihazlara push'lanır
-(bkz. [BILDIRIMLER.md](BILDIRIMLER.md)).
+(bkz. [BILDIRIMLER.md](notifications.md)).
 
 ## Bilinen eksikler
 

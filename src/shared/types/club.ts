@@ -60,14 +60,23 @@ export interface ClubDetail extends Club {
 
 // --- Alt-kaynaklar: duyurular ve galeri (§9) -------------------------------
 
+export type AnnouncementStatus = "draft" | "published";
+export type AnnouncementVisibility = "university" | "members";
+
 export interface Announcement {
   id: string;
   clubId: string;
   title: string;
   content: string;
   authorId: string;
+  status: AnnouncementStatus;
+  publishedAt: string | null;
+  pinned: boolean;
+  visibility: AnnouncementVisibility;
   createdAt: string;
   author?: SafeUser;
+  /** UTC — yalnızca zamanlanmış taslaklarda dolu. */
+  scheduledPublishAt?: string | null;
 }
 
 export interface GalleryImage {

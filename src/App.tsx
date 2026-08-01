@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Landing from "@/pages/Landing";
 import Register from "@/features/auth/pages/Register";
 import Login from "@/features/auth/pages/Login";
@@ -6,6 +6,8 @@ import VerifyEmail from "@/features/auth/pages/VerifyEmail";
 import Dashboard from "@/pages/Dashboard";
 import Clubs from "@/features/clubs/pages/Clubs";
 import ClubDetail from "@/features/clubs/pages/ClubDetail";
+import Activities from "@/features/activities/pages/Activities";
+import ActivityDetail from "@/features/activities/pages/ActivityDetail";
 import Profile from "@/features/auth/pages/Profile";
 import ProtectedRoute from "@/features/auth/guards/ProtectedRoute";
 import RequireManagement from "@/features/auth/guards/RequireManagement";
@@ -15,11 +17,13 @@ import AdminLayout from "@/layouts/AdminLayout";
 import AdminUniversities from "@/features/universities/pages/AdminUniversities";
 import AdminUniversityDetail from "@/features/universities/pages/AdminUniversityDetail";
 import AdminClubs from "@/features/admin/pages/AdminClubs";
+import AdminModeration from "@/features/admin/pages/AdminModeration";
 import AdminHome from "@/features/admin/pages/AdminHome";
 import AdminUsers from "@/features/admin/pages/AdminUsers";
 import AdminRoles from "@/features/admin/pages/AdminRoles";
 import AdminPermissions from "@/features/admin/pages/AdminPermissions";
 import Forbidden from "@/features/auth/pages/Forbidden";
+import NotFound from "@/shared/pages/NotFound";
 
 function App() {
   return (
@@ -46,6 +50,8 @@ function App() {
             }
           >
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/activities" element={<Activities />} />
+            <Route path="/activities/:activityId" element={<ActivityDetail />} />
             <Route path="/clubs" element={<Clubs />} />
             {/* Detay id ile çalışır — backend'de slug lookup ucu yok (FRONTEND_CLUBS.md §5.1) */}
             <Route path="/clubs/:clubId" element={<ClubDetail />} />
@@ -70,6 +76,9 @@ function App() {
             <Route path="/admin/users" element={<AdminUsers />} />
             {/* Kulüp yönetimi: başvurular + kulüpler + danışmanlar (granüler club.*) */}
             <Route path="/admin/clubs" element={<AdminClubs />} />
+            {/* Üye & içerik moderasyonu: tenant üstten müdahale (club.member.manage,
+                announcement.moderate, gallery.moderate) */}
+            <Route path="/admin/moderation" element={<AdminModeration />} />
             {/* Akademik yapı: üniversite/domain/fakülte/bölüm */}
             <Route path="/admin/universities" element={<AdminUniversities />} />
             <Route path="/admin/universities/:universityId" element={<AdminUniversityDetail />} />
@@ -78,7 +87,7 @@ function App() {
             <Route path="/admin/permissions" element={<AdminPermissions />} />
           </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
     </BrowserRouter>

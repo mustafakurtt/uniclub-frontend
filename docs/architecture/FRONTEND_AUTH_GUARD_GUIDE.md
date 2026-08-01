@@ -1,6 +1,8 @@
+> **Senkron kopya** — Kaynak: `../uniclub-backend/docs/integration/auth-guards.md` · Backend commit: `806f82a`
+
 # Auth & Guard Rehberi — Frontend (React) İçin
 
-Bu doküman, frontend ekibinin **route/UI guard altyapısını** nasıl kuracağına dair somut bir mimari önerisi ve backend'in şu an neyi verip neyi vermediğinin net dökümüdür. Endpoint detayları ve request/response şemaları için `docs/FRONTEND_AUTH_RBAC.md` (auth/RBAC + ilk 3 feature, örnekli) ve `docs/API.md` (tüm endpoint kataloğu) dokümanlarına bakın.
+Bu doküman, frontend ekibinin **route/UI guard altyapısını** nasıl kuracağına dair somut bir mimari önerisi ve backend'in şu an neyi verip neyi vermediğinin net dökümüdür. Endpoint detayları için [auth.md](auth.md) ve [reference/api.md](../reference/api.md).
 
 ## İçindekiler
 
@@ -167,14 +169,14 @@ Bu tablo seed'deki başlangıç durumudur; roller ve permission'lar `role.manage
 
 ## 6. Hata durumları ve UX kuralları
 
-Backend her hatada aynı zarfı döner: `{ success: false, message: "Türkçe mesaj" }`.
+Backend her hatada aynı zarfı döner: `{ success: false, message, code?, details?, requestId }`. `message` isteğin diline göre çevrilir (`Accept-Language: tr|en`); **mantığı mesaj metnine değil `code`/HTTP status'a bağlayın**.
 
 | HTTP status | Anlamı | Frontend davranışı |
 |---|---|---|
 | `401` | Token yok / geçersiz / süresi dolmuş | Token'ı temizle, `/login`'e yönlendir, `message`'ı göster ("Oturum süreniz dolmuş...") |
 | `403` | Kimlik doğru ama yetki yok (permission/tenant scope/club role) | `message`'ı doğrudan kullanıcıya göster (zaten Türkçe ve anlaşılır) — ayrı bir generic "yetkisiz" metni yazmaya gerek yok |
 | `404` | Kaynak bulunamadı (`message` içinde "bulunamadı" geçtiği için backend bunu 404'e çeviriyor) | Standart "bulunamadı" ekranı |
-| `400` | Validasyon hatası veya iş kuralı ihlali (örn. zaten üye, aynı platformda link var) | Formda inline hata olarak `message` göster; zod validasyon hatalarının gövde formatı farklıdır (`error.issues[]`) |
+| `400` | Doğrulama (`code: "VALIDATION_ERROR"` + `details[]`) veya iş kuralı ihlali | `details` varsa alan-bazlı (`details[].path`), yoksa `message`'ı inline/toast göster |
 
 `403` aldığınızda bunun global permission mı yoksa kulüp rolü mü kaynaklı olduğunu ayırt etmenize gerek yok — backend mesajı zaten hangisi olduğunu Türkçe açıklıyor: `"Bu işlem için yetkiniz bulunmamaktadır."` (permission), `"Bu üniversiteye ait kaynaklara erişim yetkiniz bulunmamaktadır."` (tenant scope), `"Bu işlem için kulüp yöneticisi (başkan/officer) olmalısınız."` / `"Bu işlem için kulüp başkanı olmalısınız."` (kulüp rolü).
 

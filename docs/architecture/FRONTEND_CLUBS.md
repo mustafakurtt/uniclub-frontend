@@ -1,8 +1,10 @@
+> **Senkron kopya** — Kaynak: `../uniclub-backend/docs/integration/clubs.md` · Backend commit: `526035d`
+
 # Clubs Katmanı — Frontend Entegrasyon Dokümanı
 
 **Kapsam:** `clubs` feature'ının (`/api/clubs`) ve ilişkili yüzeylerin tam referansı — kulüp keşfi/üyeliği (öğrenci), kulüp-içi yönetim (officer/başkan), danışman (advisor) yetkileri, kulüp kurma **başvuruları** ve okul yöneticisinin (admin/super_admin) kulüp yönetimi. Alt-kaynaklar (duyurular, galeri) ve `users` self-service'in kulüple ilgili uçları da buradadır.
 
-> Bu doküman kod tabanından birebir doğrulanmıştır (endpoint'ler canlı sunucuda test edildi). Backend'in tüm `message` alanları **Türkçedir** — UI'da doğrudan gösterilebilir. Özet katalog için `docs/API.md §4-7`, tenant/üniversite yönetimi için `docs/FRONTEND_UNIVERSITY.md`, Auth/RBAC için `docs/FRONTEND_AUTH_RBAC.md`'ye bakın.
+> Özet katalog: [reference/api.md](../reference/api.md). Üniversite: [university.md](university.md). Auth: [auth.md](auth.md).
 
 ---
 
@@ -261,13 +263,17 @@ Hata: `400/404 "Bekleyen bir üyelik isteği bulunamadı."` (istek yok veya `pen
 
 ### 9.1 Duyurular — `/api/clubs/:clubId/announcements`
 
+Ayrıntılı yaşam döngüsü, görünürlük ve bildirim kuralları: [announcements.md](announcements.md).
+
 | Method | Path | Kim |
 |---|---|---|
-| GET | `/api/clubs/:clubId/announcements` | Bearer (herkes) |
-| POST | `/api/clubs/:clubId/announcements` | staff (danışman/officer/başkan) |
+| GET | `/api/clubs/:clubId/announcements` | Bearer (görünürlük serviste) |
+| POST | `/api/clubs/:clubId/announcements` | staff |
+| POST | `/api/clubs/:clubId/announcements/:announcementId/publish` | staff |
+| PATCH | `/api/clubs/:clubId/announcements/:announcementId` | staff |
 | DELETE | `/api/clubs/:clubId/announcements/:announcementId` | staff |
 
-`POST` body: `{ "title": "string (3-256)", "content": "string (1-5000)" }`. Liste `createdAt` azalan sırada, gömülü `author`.
+`POST` body: `{ title, content, visibility? ("university"|"members"), pinned? (bool), publish? (bool, vars. true) }`. Liste: `pinned` önce, sonra `publishedAt` azalan. Kulüp başına en fazla **3** sabitlenmiş duyuru.
 
 ### 9.2 Galeri — `/api/clubs/:clubId/gallery`
 
@@ -367,7 +373,7 @@ approval_required : POST /:clubId/join → 201, status "pending"
 ### 13.5 Frontend'de buton görünürlüğü
 - Kulüp-içi rol: `GET /api/users/me/clubs` (`role`,`status`) veya `GET /api/clubs/:id` (`clubMembers[]`). `status==="approved"` şart.
 - Danışmanlık: `GET /api/users/me/advised-clubs`.
-- Global admin: `GET /api/users/me` → `data.roles[]` (flatten permission listesi henüz endpoint'ten dönmez; rol adına bakılır — bkz. `FRONTEND_AUTH_GUARD_GUIDE.md §3`).
+- Global admin: `GET /api/users/me/permissions` → efektif yetki kümesi. Guard: [auth-guards.md](auth-guards.md).
 
 ---
 
