@@ -63,16 +63,18 @@ function ClubDetailBody({
     [setSearchParams]
   );
 
+  const canManageMembers = hasPermission("club.member.manage");
+  const canViewMembershipHistory = canManageMembers || isClubStaff(clubId);
+  const canManageAdvisors = hasPermission("club.advisor.manage");
+  const canModerateAnnouncements = hasPermission("announcement.moderate");
+  const canModerateGallery = hasPermission("gallery.moderate");
+  const advisorVacant = club.counts.advisors === 0;
+
   const visibleTabs = CLUB_DETAIL_TABS.filter((t) => {
     if (t.key === "audit") return hasPermission("audit.view");
     if (t.key === "membership-history") return canViewMembershipHistory;
     return true;
   });
-
-  const canManageMembers = hasPermission("club.member.manage");
-  const canViewMembershipHistory = canManageMembers || isClubStaff(clubId);
-  const canModerateAnnouncements = hasPermission("announcement.moderate");
-  const canModerateGallery = hasPermission("gallery.moderate");
 
   return (
     <div className="space-y-6">
@@ -100,6 +102,15 @@ function ClubDetailBody({
                 {club.description}
               </p>
             )}
+            {advisorVacant && (
+              <div className="alert-error mt-4 flex items-start gap-2 text-sm">
+                <Icon name="advisor" size={16} className="mt-0.5 shrink-0" />
+                <p>
+                  <span className="font-semibold">Danışmansız kulüp.</span> Aktif danışman
+                  atanana kadar kurumsal süreçler eksik sayılır.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -126,9 +137,9 @@ function ClubDetailBody({
             {t.label}
           </button>
         ))}
-        {tab === "advisors" && hasPermission("club.advisor.manage") && (
+        {tab === "advisors" && canManageAdvisors && (
           <button type="button" className="btn-ghost ml-auto text-xs" onClick={() => setAdvisorsOpen(true)}>
-            <Icon name="advisor" size={14} /> Danışman yönet
+            <Icon name="advisor" size={14} /> Danışman davet et
           </button>
         )}
       </div>
@@ -161,7 +172,14 @@ function ClubDetailBody({
           />
         )}
         {tab === "advisors" && (
-          <AdvisorsTab universityId={universityId} clubId={clubId} enabled={tab === "advisors"} />
+          <AdvisorsTab
+            universityId={universityId}
+            clubId={clubId}
+            enabled={tab === "advisors"}
+            advisorVacant={advisorVacant}
+            canManage={canManageAdvisors}
+            onInvite={canManageAdvisors ? () => setAdvisorsOpen(true) : undefined}
+          />
         )}
         {tab === "gallery" && (
           <GalleryTab

@@ -21,3 +21,4 @@ export type * from "./export"; // kurumsal rapor dışa aktarma (T4.5)
 export type * from "./public"; // kamuya açık DTO
 export type * from "./academicTerm"; // akademik dönemler
 export type * from "./membershipHistory"; // kulüp üyelik tarihçesi
+export type * from "./advisorInvitation"; // danışman davet akışı

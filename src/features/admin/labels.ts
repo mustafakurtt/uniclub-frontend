@@ -28,7 +28,7 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "application.view": "Başvuruları görüntüle",
   "club.approve": "Başvuru onay/red",
   "club.update": "Kulüp durum + profil",
-  "club.advisor.manage": "Danışman ata/kaldır",
+  "club.advisor.manage": "Danışman davet et/kaldır",
   "club.member.manage": "Üye çıkar/rol düzelt",
   "club.delete": "Kulüp sil",
   "announcement.moderate": "Duyuru moderasyonu",

@@ -1,4 +1,4 @@
-> **Senkron kopya** — Kaynak: ../uniclub-backend/docs/integration/clubs.md · Backend commit: `5603ec4`
+> **Senkron kopya** — Kaynak: ../uniclub-backend/docs/integration/clubs.md · Backend commit: `3701dfdf37fb81da939cb6aeee6d22f5bbcc1696`
 
 # Clubs Katmanı — Frontend Entegrasyon Dokümanı
 
@@ -57,9 +57,9 @@ Aktörler:
 - **member ↔ officer** geçişi: `PATCH /:clubId/members/:userId/role` (yalnızca **başkan**).
 - **Başkanlık devri:** `POST /:clubId/transfer-presidency` (yalnızca mevcut başkan). Devir sonrası **eski başkan officer'a düşer**, yeni kişi başkan olur — tek transaction. Başkanlık, `role` endpoint'inden atanamaz; ayrı akıştır.
 - Başkan, **başkanlığı devretmeden kulüpten ayrılamaz** ve **çıkarılamaz** (kulüp başkansız kalmasın diye).
-- **Danışman**, kulüp-içi bir rol DEĞİLDİR (ayrı tablo). Bir kişi hem üye/officer hem danışman olabilir; danışman atamayı **admin** yapar (`clubAdvisors`), üye değildir.
+- **Danışman**, kulüp-içi bir rol DEĞİLDİR (ayrı tablo). Bir kişi hem üye/officer hem danışman olabilir; danışman ataması **davet** ile yapılır — akademisyen kabul edene kadar aktif danışman sayılmaz (`clubAdvisors`), üye değildir.
 
-**Danışman uygunluğu:** admin danışman atarken hedef kullanıcının sistemde **`advisor` global rolü** olması şarttır (staff maili ile kaydolanlara otomatik atanır). Öğrenci danışman atanamaz.
+**Danışman uygunluğu:** admin davet gönderirken hedef kullanıcının sistemde **`advisor` global rolü** olması şarttır (staff maili ile kaydolanlara otomatik atanır). Öğrenci danışman olamaz. Davet süresi tenant ayarı `club.advisor.invitation_expiry_days` (varsayılan 14 gün).
 
 ---
 
@@ -333,12 +333,27 @@ Ayrıntılı yaşam döngüsü, görünürlük ve bildirim kuralları: [announce
 
 ## 10. Danışman (advisor) Akışı
 
-Danışman = global `advisor` rolü + bir kulübe `clubAdvisors` ile atanmış kişi. Danışmanı olduğu kulüpte "staff" sayılır:
+Danışman = global `advisor` rolü + bir kulübe `clubAdvisors` ile **kabul edilmiş** atanmış kişi. Danışmanı olduğu kulüpte "staff" sayılır:
 
 - **`GET /api/users/me/advised-clubs`** — danışmanı olduğum kulüpler (gömülü `club`).
+- **`GET /api/users/me/advisor-invitations`** — bana gelen bekleyen davetler (`club`, `inviter`, `message`, `expiresAt`).
+- **`PATCH /api/users/me/advisor-invitations/:id/accept`** — daveti kabul et → `clubAdvisors` satırı oluşur.
+- **`PATCH /api/users/me/advisor-invitations/:id/decline`** — `{ reason }` ile ret (gerekçe zorunlu).
+- **`POST /api/users/me/advised-clubs/:clubId/withdraw`** — `{ reason }` ile görevden çekilme (geri alınamaz).
 - Danışmanı olduğu kulübe **duyuru/galeri girebilir**, **üyelik isteklerini ve üyeleri görüntüleyebilir**.
 - Danışman **karar mercii değildir**: üyelik isteğini onaylamak, üye çıkarmak, rol atamak, profili düzenlemek officer/başkanın işidir.
 - Danışman ataması `clubAdvisors` üzerindendir; danışman kulübün "üyesi" (`clubMembers`) DEĞİLDİR — bu yüzden `GET /users/me/clubs` içinde görünmez, `advised-clubs`'ta görünür.
+- Öğrenci kulüp detayında (`GET /api/clubs/:clubId`) **`advisorVacant: true`** → aktif danışman yok (admin detayında `counts.advisors === 0` ile türetilir).
+
+### Admin davet uçları
+
+| Method | Path | Permission | Açıklama |
+|---|---|---|---|
+| POST | `.../clubs/:clubId/advisors` | `club.advisor.manage` | Davet gönder (`{ userId, message? }`) |
+| GET | `.../clubs/:clubId/advisor-invitations` | `club.advisor.manage` | Bekleyen davetler |
+| DELETE | `.../clubs/:clubId/advisor-invitations/:invitationId` | `club.advisor.manage` | Daveti iptal |
+| GET | `.../clubs/:clubId/advisors` | `club.view` | Aktif danışmanlar |
+| DELETE | `.../clubs/:clubId/advisors/:userId` | `club.advisor.manage` | Danışmanı zorla kaldır |
 
 ---
 
@@ -354,14 +369,16 @@ Danışman = global `advisor` rolü + bir kulübe `clubAdvisors` ile atanmış k
 | GET | `.../clubs?status=` | `club.update` | Kulüpleri listele (tüm durumlar) |
 | PATCH | `.../clubs/:clubId/status` | `club.update` | Durum güncelle (`pending/approved/rejected/archived`) |
 | PATCH | `.../clubs/:clubId` | `club.update` | Profili güncelle (ad/açıklama/logo/kapak/joinPolicy) |
-| GET | `.../clubs/:clubId/advisors` | `club.advisor.manage` | Danışmanları listele |
-| POST | `.../clubs/:clubId/advisors` | `club.advisor.manage` | Danışman ata (`{ userId }`) |
+| GET | `.../clubs/:clubId/advisors` | `club.view` | Danışmanları listele |
+| POST | `.../clubs/:clubId/advisors` | `club.advisor.manage` | Danışman davet et (`{ userId, message? }`) |
+| GET | `.../clubs/:clubId/advisor-invitations` | `club.advisor.manage` | Bekleyen davetler |
+| DELETE | `.../clubs/:clubId/advisor-invitations/:invitationId` | `club.advisor.manage` | Daveti iptal |
 | DELETE | `.../clubs/:clubId/advisors/:userId` | `club.advisor.manage` | Danışman kaldır |
 | DELETE | `.../clubs/:clubId` | `club.delete` | Kulübü **kalıcı sil** (önce archived/rejected olmalı) |
 
 Notlar:
 - **Başvuru onayı** benzersiz slug üretir; başvuran `president` + `approved` üye olur (bkz. `admin.repository.decideClubApplication`). Zaten değerlendirilmiş başvuru → `400 "Bu başvuru zaten değerlendirilmiş."`.
-- **Danışman atama** hedefin `advisor` rolü olmasını şart koşar → yoksa `400 "Danışman olarak yalnızca 'advisor' rolündeki personel atanabilir."`. Ayrıca hedef aynı üniversiteden olmalı.
+- **Danışman daveti** hedefin `advisor` rolü olmasını şart koşar → yoksa `400 "Danışman olarak yalnızca 'advisor' rolündeki personel atanabilir."`. Ayrıca hedef aynı üniversiteden olmalı. Kabul edilene kadar kulüp danışmansız sayılır.
 - **Kulüp silme** yıkıcıdır: bağlı üyeler/danışmanlar/linkler/duyurular/galeri tek transaction'da temizlenir. Aktif kulüp silinmez → `400 "Yalnızca arşivlenmiş veya reddedilmiş kulüpler silinebilir. Önce kulübü arşivleyin."`.
 
 ---
@@ -374,7 +391,7 @@ Eski tek `club.manage` kaldırıldı; kaynak+aksiyon bazlı 4 ayrı yetkiye böl
 |---|---|
 | `club.approve` | Başvuru listeleme / onaylama / reddetme |
 | `club.update` | Kulüp yönetim görünümü + durum + profil güncelleme |
-| `club.advisor.manage` | Danışman listele / ata / kaldır |
+| `club.advisor.manage` | Danışman davet et / iptal / kaldır |
 | `club.delete` | Kulübü kalıcı silme (yıkıcı) |
 
 - Seed'de bu 4 yetkinin tamamı **`admin` ve `super_admin`** rollerine atanır.

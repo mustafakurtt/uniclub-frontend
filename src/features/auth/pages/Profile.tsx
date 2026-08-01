@@ -10,6 +10,7 @@ import { getErrorMessage } from "@/shared/api/client";
 import PageLoader from "@/shared/ui/PageLoader";
 import Reveal from "@/shared/ui/Reveal";
 import AuroraBackground from "@/shared/ui/AuroraBackground";
+import AdvisorAdvisoryPanel from "@/features/auth/components/AdvisorAdvisoryPanel";
 import { Icon, type IconName } from "@/shared/ui/Icon";
 
 const profileSchema = z.object({
@@ -270,6 +271,11 @@ export default function Profile() {
             </div>
           ))}
         </div>
+      </Reveal>
+
+      {/* ====== DANIŞMANLIK ====== */}
+      <Reveal delay={200}>
+        <AdvisorAdvisoryPanel />
       </Reveal>
 
       {/* ====== FORMLAR ====== */}
