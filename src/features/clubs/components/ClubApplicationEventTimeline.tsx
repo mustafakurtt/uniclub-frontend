@@ -49,19 +49,26 @@ function EventBody({ event }: { event: ClubApplicationEvent }) {
 
 interface ClubApplicationEventTimelineProps {
   history: ClubApplicationHistory;
+  /** Öğrenci yüzeyinde özet chip'leri gizle. */
+  compact?: boolean;
 }
 
-export default function ClubApplicationEventTimeline({ history }: ClubApplicationEventTimelineProps) {
+export default function ClubApplicationEventTimeline({
+  history,
+  compact = false,
+}: ClubApplicationEventTimelineProps) {
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-2">
-        <span className="chip text-xs">
-          Toplam revizyon talebi: <strong>{history.revisionRequestCount}</strong>
-        </span>
-        <span className="chip text-xs">
-          Olay sayısı: <strong>{history.events.length}</strong>
-        </span>
-      </div>
+      {!compact && (
+        <div className="flex flex-wrap gap-2">
+          <span className="chip text-xs">
+            Toplam revizyon talebi: <strong>{history.revisionRequestCount}</strong>
+          </span>
+          <span className="chip text-xs">
+            Olay sayısı: <strong>{history.events.length}</strong>
+          </span>
+        </div>
+      )}
 
       <ol className="relative space-y-4 border-l-2 border-slate-100 pl-5">
         {history.events.map((event) => (

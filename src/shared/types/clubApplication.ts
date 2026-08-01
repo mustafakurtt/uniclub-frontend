@@ -19,10 +19,11 @@ export type ClubApplicationAppealStatus = "pending" | "upheld" | "dismissed";
 
 export interface ClubApplicationAppeal {
   status: ClubApplicationAppealStatus;
-  note?: string;
-  createdAt?: string;
-  reviewedAt?: string | null;
-  reviewNote?: string | null;
+  reason: string;
+  submittedAt: string;
+  reviewedAt: string | null;
+  reviewNote: string | null;
+  reviewedBy: SafeUser | null;
 }
 
 export interface ClubApplicationChecklistItem {

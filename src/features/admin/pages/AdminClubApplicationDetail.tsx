@@ -6,7 +6,7 @@ import ClubApplicationApprovalChain from "@/features/admin/components/ClubApplic
 import ClubApplicationAppealReviewSection from "@/features/admin/components/ClubApplicationAppealReviewSection";
 import ClubApplicationChecklistSection from "@/features/admin/components/ClubApplicationChecklistSection";
 import ClubApplicationDecisionPanel from "@/features/admin/components/ClubApplicationDecisionPanel";
-import ClubApplicationEventTimeline from "@/features/admin/components/ClubApplicationEventTimeline";
+import ClubApplicationEventTimeline from "@/features/clubs/components/ClubApplicationEventTimeline";
 import RequireUniversity from "@/features/admin/components/RequireUniversity";
 import {
   getClubApplication,

@@ -4,6 +4,7 @@ import type { SafeUser } from "./user";
 import type {
   ApplicationStatus,
   ClubApplicationApproval,
+  ClubApplicationEvent,
   ClubApplicationRevisionRequest,
   ClubApplicationReviewFields,
 } from "./clubApplication";
@@ -160,4 +161,7 @@ export interface ClubApplication {
 export interface ClubApplicationDetail extends ClubApplication, ClubApplicationReviewFields {
   approvals: ClubApplicationApproval[];
   revisionRequest?: ClubApplicationRevisionRequest | null;
+  /** Sözleşmede gömülü olay geçmişi (yoksa ayrı history ucu). */
+  revisionRequestCount?: number;
+  events?: ClubApplicationEvent[];
 }

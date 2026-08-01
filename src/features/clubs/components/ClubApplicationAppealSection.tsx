@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -46,7 +45,6 @@ interface Props {
 
 export default function ClubApplicationAppealSection({ applicationId, application }: Props) {
   const queryClient = useQueryClient();
-  const [submittedNote, setSubmittedNote] = useState<string | null>(null);
 
   const {
     register,
@@ -60,18 +58,17 @@ export default function ClubApplicationAppealSection({ applicationId, applicatio
 
   const appealMutation = useMutation({
     mutationFn: (note: string) => submitClubApplicationAppeal(applicationId, { note }),
-    onSuccess: async (_data, note) => {
-      setSubmittedNote(note);
+    onSuccess: async () => {
       reset({ note: "" });
       await queryClient.invalidateQueries({ queryKey: ["club-application", applicationId] });
+      queryClient.invalidateQueries({ queryKey: ["club-application-history", applicationId] });
       queryClient.invalidateQueries({ queryKey: ["my-applications"] });
     },
   });
 
-  if (application.status !== "rejected" && !application.appeal && !submittedNote) return null;
+  if (application.status !== "rejected" && !application.appeal) return null;
 
   const appeal = application.appeal;
-  const displayNote = submittedNote ?? appeal?.note ?? null;
 
   return (
     <section className="card border-red-100 bg-red-50/30 p-5 space-y-4">
@@ -91,22 +88,32 @@ export default function ClubApplicationAppealSection({ applicationId, applicatio
         </div>
       </div>
 
-      {appeal || submittedNote ? (
-        <div className="rounded-xl border border-slate-100 bg-white p-4">
+      {appeal ? (
+        <div className="rounded-xl border border-slate-100 bg-white p-4 space-y-2">
           <h3 className="text-sm font-bold text-slate-900">İtirazın</h3>
-          <p className="mt-1 text-xs text-slate-500">
-            Durum:{" "}
-            <strong>{APPEAL_STATUS_LABELS[appeal?.status ?? "pending"]}</strong>
+          <p className="text-xs text-slate-500">
+            Durum: <strong>{APPEAL_STATUS_LABELS[appeal.status]}</strong>
+            {appeal.submittedAt && (
+              <>
+                {" "}
+                · Gönderim: {new Date(appeal.submittedAt).toLocaleString("tr-TR")}
+              </>
+            )}
           </p>
-          {displayNote && (
-            <blockquote className="mt-2 text-sm text-slate-600 whitespace-pre-wrap">
-              {displayNote}
-            </blockquote>
-          )}
-          {appeal?.status === "upheld" && (
-            <p className="mt-2 text-xs text-green-700">
-              İtirazın kabul edildi; başvurun yeniden değerlendirme kuyruğuna alındı.
+          <blockquote className="text-sm text-slate-600 whitespace-pre-wrap">{appeal.reason}</blockquote>
+          {appeal.reviewedAt && (
+            <p className="text-xs text-slate-500">
+              İnceleme: {new Date(appeal.reviewedAt).toLocaleString("tr-TR")}
+              {appeal.reviewedBy
+                ? ` · ${appeal.reviewedBy.firstName} ${appeal.reviewedBy.lastName}`
+                : ""}
             </p>
+          )}
+          {appeal.reviewNote && (
+            <blockquote className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2 text-xs text-slate-600 whitespace-pre-wrap">
+              <span className="font-semibold text-slate-500">İnceleme notu: </span>
+              {appeal.reviewNote}
+            </blockquote>
           )}
         </div>
       ) : application.canAppeal ? (

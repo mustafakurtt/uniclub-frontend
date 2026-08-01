@@ -5,6 +5,9 @@ import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 import PageLoader from "@/shared/ui/PageLoader";
 import { Icon } from "@/shared/ui/Icon";
 import FormationProposalProgress from "@/features/clubs/formation/FormationProposalProgress";
+import FormationProposalSubmittedSection, {
+  FormationProposalCollectingSection,
+} from "@/features/clubs/formation/FormationProposalStatusSections";
 import {
   FORMATION_PROPOSAL_STATUS_CHIP,
   FORMATION_PROPOSAL_STATUS_LABELS,
@@ -119,33 +122,31 @@ export default function FormationProposalDetailPage() {
         <p className="text-sm text-slate-600 whitespace-pre-wrap">{proposal.description}</p>
       )}
 
-      {proposal.supportThreshold > 0 && (
+      {proposal.isProposer && proposal.status === "collecting_support" && (
+        <FormationProposalCollectingSection proposal={proposal} />
+      )}
+
+      {!proposal.isProposer && proposal.supportThreshold > 0 && (
         <FormationProposalProgress
           supportCount={proposal.supportCount}
           supportThreshold={proposal.supportThreshold}
         />
       )}
 
-      <p className="text-xs font-semibold text-slate-400">
-        {isExpired
-          ? "Bu önerinin destek toplama süresi doldu."
-          : formationDaysRemainingLabel(proposal.expiresAt)}
-      </p>
+      {!(proposal.isProposer && proposal.status === "collecting_support") && (
+        <p className="text-xs font-semibold text-slate-400">
+          {isExpired
+            ? "Bu önerinin destek toplama süresi doldu."
+            : formationDaysRemainingLabel(proposal.expiresAt)}
+        </p>
+      )}
 
-      {submitted && (
+      {submitted && proposal.isProposer && <FormationProposalSubmittedSection proposal={proposal} />}
+
+      {submitted && !proposal.isProposer && (
         <div className="alert-success text-sm">
-          <p className="font-semibold">Öneriniz SKS incelemesine düştü.</p>
-          <p className="mt-1">
-            Yeterli destek toplandı; başvuru onay zincirine aktarıldı.
-          </p>
-          {proposal.isProposer && (
-            <Link
-              to={`/applications/${proposal.applicationId}`}
-              className="btn-secondary mt-3 inline-flex text-xs"
-            >
-              Başvuru durumunu gör <Icon name="arrowRight" size={14} />
-            </Link>
-          )}
+          <p className="font-semibold">Bu öneri başvuruya dönüştü.</p>
+          <p className="mt-1">Yeterli destek toplandı; SKS incelemesine aktarıldı.</p>
         </div>
       )}
 

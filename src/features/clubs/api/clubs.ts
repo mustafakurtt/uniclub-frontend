@@ -15,6 +15,7 @@ import type {
   Club,
   ClubApplication,
   ClubApplicationDetail,
+  ClubApplicationHistory,
   ClubDetail,
   CreateClubApplicationResult,
   ClubMemberRow,
@@ -155,6 +156,16 @@ export const submitClubApplicationAppeal = async (
   const response = await apiClient.post<ApiEnvelope<{ id: string; status: string }>>(
     `/clubs/applications/${applicationId}/appeal`,
     body
+  );
+  return response.data.data;
+};
+
+/** GET /clubs/applications/:id/history — kendi başvurunun olay geçmişi. */
+export const getMyClubApplicationHistory = async (
+  applicationId: string
+): Promise<ClubApplicationHistory> => {
+  const response = await apiClient.get<ApiEnvelope<ClubApplicationHistory>>(
+    `/clubs/applications/${applicationId}/history`
   );
   return response.data.data;
 };
