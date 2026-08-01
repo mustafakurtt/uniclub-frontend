@@ -65,7 +65,22 @@ export default function ClubGeneralMeetingsSection({
           {getErrorMessage(listQuery.error, "Genel kurul kayıtları yüklenemedi.")}
         </div>
       ) : meetings.length === 0 ? (
-        <EmptyState icon="calendar" title="Genel kurul kaydı yok" />
+        <EmptyState
+          icon="calendar"
+          title="Henüz genel kurul kaydı yok"
+          description={
+            canCreate
+              ? "İlk toplantıyı kaydederek yönetim ve denetim kurulu seçimlerini, tutanağı ve yoklamayı sisteme işleyebilirsiniz."
+              : "Kulüp yetkilileri genel kurul toplantılarını burada kayıt altına alır."
+          }
+          action={
+            canCreate ? (
+              <button type="button" className="btn-primary text-sm" onClick={() => setCreateOpen(true)}>
+                <Icon name="add" size={14} /> İlk toplantıyı kaydet
+              </button>
+            ) : undefined
+          }
+        />
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-slate-100">
           <table className="w-full min-w-[36rem] text-left text-sm">

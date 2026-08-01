@@ -146,7 +146,15 @@ export default function MembershipHistoryTab({ universityId, clubId, enabled }: 
       </div>
 
       {events.length === 0 ? (
-        <EmptyState icon="members" title="Üyelik olayı bulunamadı" />
+        <EmptyState
+          icon="members"
+          title="Henüz üyelik olayı yok"
+          description={
+            termFilter
+              ? "Seçili dönemde katılım, rol değişikliği veya ayrılma kaydı bulunmuyor. Farklı bir dönem deneyin."
+              : "Üye kabulü, rol değişikliği veya ayrılmalar burada kronolojik olarak listelenir."
+          }
+        />
       ) : (
         <ol className="mt-2">
           {events.map((event) => (

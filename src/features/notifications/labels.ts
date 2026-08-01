@@ -13,12 +13,37 @@ const ICON_BY_TYPE: Record<string, IconName> = {
   "account.suspended": "lock",
   "club.application.decided": "club",
   "club.application.revision_requested": "edit",
+  "club.application.committee_pending": "pending",
   "club.formation.threshold_reached": "party",
   "club.membership.decided": "members",
   "role.assigned": "role",
 };
 
 export const notificationIcon = (type: string): IconName => ICON_BY_TYPE[type] ?? "bell";
+
+/** Zil satırında gösterilecek başlık — backend metni yoksa tipe göre yedek. */
+export function notificationDisplayTitle(notification: AppNotification): string {
+  if (notification.title.trim()) return notification.title;
+  if (notification.type === "club.application.committee_pending") {
+    const proposedName = readString(notification.data, "proposedName");
+    return proposedName
+      ? `${proposedName} — kurul oylamanız bekleniyor`
+      : "Kurul oylamanız bekleniyor";
+  }
+  return "Bildirim";
+}
+
+/** Zil satırı gövdesi — kurul bekleyeninde bağlam ekle. */
+export function notificationDisplayBody(notification: AppNotification): string | null {
+  if (notification.body) return notification.body;
+  if (notification.type === "club.application.committee_pending") {
+    const committeeName = readString(notification.data, "committeeName");
+    return committeeName
+      ? `${committeeName} bu başvuruda oy kullanmanızı bekliyor.`
+      : "Başvuru detayından oyunuzu kullanabilirsiniz.";
+  }
+  return null;
+}
 
 /** `data` serbest yük olduğu için her alanı okumadan önce tipini doğrularız. */
 const readString = (data: Record<string, unknown> | null, key: string): string | null => {
@@ -43,6 +68,10 @@ export function notificationLink(notification: AppNotification): string | null {
     case "club.application.revision_requested": {
       const applicationId = readString(data, "applicationId");
       return applicationId ? `/applications/${applicationId}` : null;
+    }
+    case "club.application.committee_pending": {
+      const applicationId = readString(data, "applicationId");
+      return applicationId ? `/admin/applications/${applicationId}` : null;
     }
     case "club.formation.threshold_reached": {
       const applicationId = readString(data, "applicationId");

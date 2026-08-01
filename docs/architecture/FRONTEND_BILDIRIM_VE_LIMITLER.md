@@ -166,6 +166,7 @@ const { items, nextCursor } = res.data;
 | `account.unsuspended` | — | Bilgilendir; kullanıcı yeniden erişebilir |
 | `account.passwordReset` | — | Geçici şifre uyarısı; giriş sonrası zorunlu şifre değiştirme (`mustChangePassword`) |
 | `club.application.decided` | `{ applicationId, status, clubId }` | `status==="approved"` ? kulüp sayfası : başvuru detayı |
+| `club.application.committee_pending` | `{ applicationId, proposedName?, committeeName? }` | `/admin/applications/:applicationId` |
 | `club.membership.decided` | `{ clubId, status }` | Kulüp sayfası |
 | `role.assigned` | `{ roleId, roleName }` | `me/permissions` refetch (yeni menüler açılır) |
 

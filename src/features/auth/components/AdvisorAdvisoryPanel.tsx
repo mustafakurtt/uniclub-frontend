@@ -13,6 +13,7 @@ import {
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { invitationDaysRemainingLabel } from "@/features/clubs/advisorInvitationLabels";
 import { getErrorMessage } from "@/shared/api/client";
+import EmptyState from "@/shared/ui/EmptyState";
 import Modal from "@/shared/ui/Modal";
 import { Icon } from "@/shared/ui/Icon";
 import type { AdvisedClub } from "@/shared/types";
@@ -149,7 +150,8 @@ function WithdrawDialog({
 
 export default function AdvisorAdvisoryPanel() {
   const queryClient = useQueryClient();
-  const { advisedClubs } = useAuth();
+  const { advisedClubs, roleNames } = useAuth();
+  const isAdvisorRole = roleNames.includes("advisor");
   const [declineTarget, setDeclineTarget] = useState<string | null>(null);
   const [withdrawTarget, setWithdrawTarget] = useState<AdvisedClub | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -201,8 +203,31 @@ export default function AdvisorAdvisoryPanel() {
     return null;
   }
 
-  if (!hasContent) {
+  if (!hasContent && !isAdvisorRole) {
     return null;
+  }
+
+  if (!hasContent && isAdvisorRole) {
+    return (
+      <section className="card-gradient p-8">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="icon-tile">
+            <Icon name="advisor" size={22} className="text-brand-600" />
+          </div>
+          <div>
+            <h2 className="font-display text-xl font-bold text-slate-900">Danışmanlık davetlerim</h2>
+            <p className="text-xs text-slate-500">
+              Kulüp başkanları sizi danışman olarak davet ettiğinde burada yanıtlayabilirsiniz.
+            </p>
+          </div>
+        </div>
+        <EmptyState
+          icon="inbox"
+          title="Bekleyen davet yok"
+          description="Aktif bir danışmanlık davetiniz olmadığında bu alan boş kalır. Davet geldiğinde e-posta ve bildirimle haberdar olursunuz."
+        />
+      </section>
+    );
   }
 
   return (

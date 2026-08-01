@@ -6,6 +6,7 @@ import {
   UNIVERSITY_PERMISSIONS,
 } from "@/features/auth/authorization";
 import RequireUniversity from "@/features/admin/components/RequireUniversity";
+import HomeCommitteeVotePending from "@/features/admin/components/admin-home/HomeCommitteeVotePending";
 import HomeAuditLanding from "@/features/admin/components/admin-home/HomeAuditLanding";
 import HomeModerationLanding from "@/features/admin/components/admin-home/HomeModerationLanding";
 import HomeTenantOverview from "@/features/admin/components/admin-home/HomeTenantOverview";
@@ -51,6 +52,7 @@ function AdminHomeBody({ universityId }: { universityId: string }) {
 
   return (
     <div className="space-y-6">
+      <HomeCommitteeVotePending />
       {variant === "tenant" && <HomeTenantOverview universityId={universityId} />}
       {variant === "workQueue" && <HomeWorkQueue universityId={universityId} />}
       {variant === "moderation" && <HomeModerationLanding />}

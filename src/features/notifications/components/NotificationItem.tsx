@@ -1,5 +1,5 @@
 import { Icon } from "@/shared/ui/Icon";
-import { formatRelativeTime, notificationIcon, notificationLink } from "@/features/notifications/labels";
+import { formatRelativeTime, notificationDisplayBody, notificationDisplayTitle, notificationIcon, notificationLink } from "@/features/notifications/labels";
 import type { AppNotification } from "@/shared/types";
 
 /**
@@ -15,6 +15,8 @@ export default function NotificationItem({
 }) {
   const isUnread = notification.readAt === null;
   const hasLink = notificationLink(notification) !== null;
+  const title = notificationDisplayTitle(notification);
+  const body = notificationDisplayBody(notification);
 
   return (
     <button
@@ -39,16 +41,16 @@ export default function NotificationItem({
               isUnread ? "font-bold text-slate-900" : "font-semibold text-slate-600"
             }`}
           >
-            {notification.title}
+            {title}
           </span>
           <span className="shrink-0 text-[11px] font-medium text-slate-400">
             {formatRelativeTime(notification.createdAt)}
           </span>
         </span>
 
-        {notification.body && (
+        {body && (
           <span className="mt-0.5 line-clamp-2 block text-xs leading-relaxed text-slate-500">
-            {notification.body}
+            {body}
           </span>
         )}
 

@@ -47,7 +47,9 @@ export interface CommitteeApprovalTally {
   committeeId: string;
   committeeName: string;
   memberCount: number;
-  threshold: number;
+  /** Backend eşiği — bazen `requiredApprovals` olarak gelir. */
+  threshold?: number;
+  requiredApprovals?: number;
   approveCount: number;
   rejectCount: number;
   notVotedCount: number;
@@ -61,7 +63,8 @@ export interface CommitteeApprovalTallyStudent {
   committeeId: string;
   committeeName: string;
   memberCount: number;
-  threshold: number;
+  threshold?: number;
+  requiredApprovals?: number;
   approveCount: number;
   rejectCount: number;
   notVotedCount: number;
