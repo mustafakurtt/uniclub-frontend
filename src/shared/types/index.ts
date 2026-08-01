@@ -11,3 +11,4 @@ export type * from "./club"; // kulüp + kulüp içi rol (Katman B)
 export type * from "./activity"; // etkinlikler + RSVP
 export type * from "./rbac"; // yetkiler + yönetim görünümleri
 export type * from "./notification"; // gerçek zamanlı bildirimler (WS + REST)
+export type * from "./public"; // kamuya açık okuma DTO'ları
