@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import SelectField from "@/shared/ui/SelectField";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { getAdminUsers } from "@/features/admin/api";
@@ -87,7 +88,7 @@ function UsersList({ universityId }: { universityId: string }) {
             </button>
           ))}
         </div>
-        <select
+        <SelectField
           className="select-field w-auto py-1.5 text-xs font-semibold text-slate-600"
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value as RoleName | "")}
@@ -99,7 +100,7 @@ function UsersList({ universityId }: { universityId: string }) {
               {roleLabel(r)}
             </option>
           ))}
-        </select>
+        </SelectField>
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}

@@ -5,16 +5,20 @@ import {
   patchTenantSettings,
 } from "@/features/universities/api/tenantSettings";
 import {
+  TenantBooleanSettingField,
   TenantIntegerSettingField,
   TenantRoleChainSettingField,
 } from "@/features/admin/components/tenant-settings/TenantSettingFields";
+import { groupSettingsByCategory } from "@/features/admin/components/tenant-settings/settingMeta";
 import { getErrorMessage } from "@/shared/api/client";
+import PageLoader from "@/shared/ui/PageLoader";
+import { Icon } from "@/shared/ui/Icon";
 import type { TenantSettingsPatch, TenantSettingsResponse } from "@/shared/types";
 
 const PLATFORM_READONLY_REASON =
-  "Bu ayar yalnızca platform operatörü tarafından düzenlenebilir.";
+  "Bu ayar yalnızca platform operatörü tarafından değiştirilebilir.";
 
-type DraftValues = Record<string, number | string[]>;
+type DraftValues = Record<string, number | string[] | boolean>;
 
 function valuesFromResponse(data: TenantSettingsResponse): DraftValues {
   const out: DraftValues = {};
@@ -48,6 +52,73 @@ function validateDraft(
   return errors;
 }
 
+function renderSettingField(
+  key: string,
+  meta: TenantSettingsResponse[string],
+  currentValues: DraftValues,
+  dirtyKeys: Set<string>,
+  setFieldValue: (key: string, value: number | string[] | boolean) => void,
+  resetField: (key: string) => void,
+  fieldErrors: Record<string, string>
+) {
+  const readOnly = meta.editor === "platform";
+  const value = currentValues[key];
+  const dirty = dirtyKeys.has(key);
+
+  if (meta.kind === "role_chain" && Array.isArray(value)) {
+    return (
+      <TenantRoleChainSettingField
+        key={key}
+        settingKey={key}
+        meta={meta}
+        value={value}
+        readOnly={readOnly}
+        readOnlyReason={readOnly ? PLATFORM_READONLY_REASON : undefined}
+        dirty={dirty}
+        onChange={(v) => setFieldValue(key, v)}
+        onReset={() => resetField(key)}
+        error={fieldErrors[key]}
+      />
+    );
+  }
+
+  if (meta.kind === "integer" && typeof value === "number") {
+    return (
+      <TenantIntegerSettingField
+        key={key}
+        settingKey={key}
+        meta={meta}
+        value={value}
+        readOnly={readOnly}
+        readOnlyReason={readOnly ? PLATFORM_READONLY_REASON : undefined}
+        dirty={dirty}
+        onChange={(v) => setFieldValue(key, v)}
+        onReset={() => resetField(key)}
+        error={fieldErrors[key]}
+      />
+    );
+  }
+
+  if (meta.kind === "boolean" && typeof value === "boolean") {
+    return (
+      <TenantBooleanSettingField
+        key={key}
+        settingKey={key}
+        meta={meta}
+        value={value}
+        readOnly={readOnly}
+        readOnlyReason={readOnly ? PLATFORM_READONLY_REASON : undefined}
+        dirty={dirty}
+        onChange={(v) => setFieldValue(key, v)}
+        onReset={() => resetField(key)}
+        error={fieldErrors[key]}
+      />
+    );
+  }
+
+  return null;
+}
+
 interface TenantSettingsPanelProps {
   universityId: string;
 }
@@ -76,6 +147,11 @@ export default function TenantSettingsPanel({ universityId }: TenantSettingsPane
     return dirty;
   }, [serverData, draft]);
 
+  const grouped = useMemo(
+    () => (serverData ? groupSettingsByCategory(Object.entries(serverData)) : []),
+    [serverData]
+  );
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!serverData) return;
@@ -92,7 +168,7 @@ export default function TenantSettingsPanel({ universityId }: TenantSettingsPane
         if (JSON.stringify(cur) === JSON.stringify(meta.default)) {
           patch[key] = null;
         } else {
-          patch[key] = cur as number | string[];
+          patch[key] = cur as number | string[] | boolean;
         }
       }
       if (Object.keys(patch).length === 0) return serverData;
@@ -107,7 +183,7 @@ export default function TenantSettingsPanel({ universityId }: TenantSettingsPane
     },
   });
 
-  const setFieldValue = (key: string, value: number | string[]) => {
+  const setFieldValue = (key: string, value: number | string[] | boolean) => {
     setDraft((prev) => ({
       ...(serverData ? valuesFromResponse(serverData) : {}),
       ...prev,
@@ -122,101 +198,99 @@ export default function TenantSettingsPanel({ universityId }: TenantSettingsPane
 
   const resetField = (key: string) => {
     if (!serverData) return;
-    setFieldValue(key, serverData[key].default as number | string[]);
+    setFieldValue(key, serverData[key].default as number | string[] | boolean);
+  };
+
+  const discardChanges = () => {
+    setDraft(null);
+    setFieldErrors({});
   };
 
   if (settingsQuery.isLoading) {
-    return (
-      <div className="space-y-3">
-        <div className="skeleton h-24 w-full" />
-        <div className="skeleton h-24 w-full" />
-      </div>
-    );
+    return <PageLoader label="Politikalar yükleniyor..." />;
   }
 
   if (settingsQuery.isError || !serverData) {
     return (
       <div className="alert-error">
-        {getErrorMessage(settingsQuery.error, "Ayarlar yüklenemedi.")}
+        {getErrorMessage(settingsQuery.error, "Politikalar yüklenemedi.")}
       </div>
     );
   }
 
-  const entries = Object.entries(serverData);
-
   return (
-    <div className="space-y-4">
-      {entries.map(([key, meta]) => {
-        const readOnly = meta.editor === "platform";
-        const value = currentValues[key];
-        const dirty = dirtyKeys.has(key);
+    <div className="relative pb-24">
+      <div className="card overflow-hidden">
+        {grouped.map(({ category, items }, sectionIndex) => (
+          <section
+            key={category.id}
+            className={sectionIndex > 0 ? "border-t border-slate-100" : ""}
+          >
+            <div className="flex items-start gap-3 border-b border-slate-50 bg-gradient-to-r from-brand-50/60 to-transparent px-6 py-5">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-brand-600 shadow-sm">
+                <Icon name={category.icon} size={20} />
+              </span>
+              <div>
+                <h2 className="font-display text-base font-bold text-slate-900">
+                  {category.title}
+                </h2>
+                <p className="mt-0.5 text-sm text-slate-500">{category.description}</p>
+              </div>
+            </div>
 
-        if (meta.kind === "role_chain" && Array.isArray(value)) {
-          return (
-            <TenantRoleChainSettingField
-              key={key}
-              settingKey={key}
-              meta={meta}
-              value={value}
-              readOnly={readOnly}
-              readOnlyReason={readOnly ? PLATFORM_READONLY_REASON : undefined}
-              dirty={dirty}
-              onChange={(v) => setFieldValue(key, v)}
-              onReset={() => resetField(key)}
-              error={fieldErrors[key]}
-            />
-          );
-        }
-
-        if (meta.kind === "integer" && typeof value === "number") {
-          return (
-            <TenantIntegerSettingField
-              key={key}
-              settingKey={key}
-              meta={meta}
-              value={value}
-              readOnly={readOnly}
-              readOnlyReason={readOnly ? PLATFORM_READONLY_REASON : undefined}
-              dirty={dirty}
-              onChange={(v) => setFieldValue(key, v)}
-              onReset={() => resetField(key)}
-              error={fieldErrors[key]}
-            />
-          );
-        }
-
-        return null;
-      })}
+            <div className="space-y-4 p-6">
+              {items.map(([key, meta]) =>
+                renderSettingField(
+                  key,
+                  meta,
+                  currentValues,
+                  dirtyKeys,
+                  setFieldValue,
+                  resetField,
+                  fieldErrors
+                )
+              )}
+            </div>
+          </section>
+        ))}
+      </div>
 
       {saveMutation.isError &&
         saveMutation.error instanceof Error &&
         saveMutation.error.message !== "validation" && (
-          <div className="alert-error">
-            {getErrorMessage(saveMutation.error, "Ayarlar kaydedilemedi.")}
+          <div className="alert-error mt-4">
+            {getErrorMessage(saveMutation.error, "Politikalar kaydedilemedi.")}
           </div>
         )}
 
-      <div className="flex justify-end gap-2 pt-2">
-        <button
-          type="button"
-          className="btn-ghost"
-          disabled={dirtyKeys.size === 0 || saveMutation.isPending}
-          onClick={() => {
-            setDraft(null);
-            setFieldErrors({});
-          }}
-        >
-          Değişiklikleri geri al
-        </button>
-        <button
-          type="button"
-          className="btn-primary"
-          disabled={dirtyKeys.size === 0 || saveMutation.isPending}
-          onClick={() => saveMutation.mutate()}
-        >
-          {saveMutation.isPending ? "Kaydediliyor…" : "Kaydet"}
-        </button>
-      </div>
+      {dirtyKeys.size > 0 && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-4 py-4 shadow-[0_-8px_30px_rgba(15,23,42,0.08)] backdrop-blur-sm">
+          <div className="mx-auto flex max-w-[90rem] flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-slate-600">
+              <strong className="font-semibold text-slate-900">{dirtyKeys.size}</strong> ayar
+              değiştirildi — kaydetmeden ayrılırsanız değişiklikler kaybolur.
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="btn-ghost"
+                disabled={saveMutation.isPending}
+                onClick={discardChanges}
+              >
+                Geri al
+              </button>
+              <button
+                type="button"
+                className="btn-primary"
+                disabled={saveMutation.isPending}
+                onClick={() => saveMutation.mutate()}
+              >
+                {saveMutation.isPending ? "Kaydediliyor…" : "Değişiklikleri kaydet"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

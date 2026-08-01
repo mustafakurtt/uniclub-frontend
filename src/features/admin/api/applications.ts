@@ -6,6 +6,7 @@ import type {
   ClubApplication,
   ClubApplicationApproval,
   ClubApplicationHistory,
+  ClubApplicationRevisionRequest,
   SafeUser,
 } from "@/shared/types";
 import { adminBase } from "./_base";
@@ -16,6 +17,12 @@ export type AdminClubApplication = ClubApplication & {
   approvals?: ClubApplicationApproval[];
 };
 
+/** GET tekil başvuru — onay zinciri, revizyon talebi ve başvuran gömülü. */
+export type AdminClubApplicationDetail = AdminClubApplication & {
+  approvals: ClubApplicationApproval[];
+  revisionRequest?: ClubApplicationRevisionRequest | null;
+};
+
 export const getClubApplications = async (
   universityId: string,
   status?: ClubApplication["status"]
@@ -23,6 +30,16 @@ export const getClubApplications = async (
   const response = await apiClient.get<ApiEnvelope<AdminClubApplication[]>>(
     `${adminBase(universityId)}/club-applications`,
     { params: status ? { status } : undefined }
+  );
+  return response.data.data;
+};
+
+export const getClubApplication = async (
+  universityId: string,
+  applicationId: string
+): Promise<AdminClubApplicationDetail> => {
+  const response = await apiClient.get<ApiEnvelope<AdminClubApplicationDetail>>(
+    `${adminBase(universityId)}/club-applications/${applicationId}`
   );
   return response.data.data;
 };

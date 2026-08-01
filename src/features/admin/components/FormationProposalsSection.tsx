@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import EmptyState from "@/shared/ui/EmptyState";
 import { Icon } from "@/shared/ui/Icon";
@@ -8,8 +8,8 @@ import {
   FORMATION_PROPOSAL_STATUS_LABELS,
   formationDaysRemainingLabel,
 } from "@/features/clubs/formation/formationProposalLabels";
+import { adminDetailQuery } from "@/features/admin/adminListNav";
 import { getAdminFormationProposals } from "@/features/admin/api";
-import AdminFormationProposalDetailModal from "@/features/admin/components/AdminFormationProposalDetailModal";
 import { getErrorMessage } from "@/shared/api/client";
 import type { FormationProposal, FormationProposalStatus } from "@/shared/types";
 
@@ -22,14 +22,15 @@ const STATUS_FILTERS: { key: FormationProposalStatus | "all"; label: string }[] 
 
 interface FormationProposalsSectionProps {
   universityId: string;
+  statusFilter: FormationProposalStatus | "all";
+  onStatusFilterChange: (status: FormationProposalStatus | "all") => void;
 }
 
-export default function FormationProposalsSection({ universityId }: FormationProposalsSectionProps) {
-  const [statusFilter, setStatusFilter] = useState<FormationProposalStatus | "all">(
-    "collecting_support"
-  );
-  const [detailId, setDetailId] = useState<string | null>(null);
-
+export default function FormationProposalsSection({
+  universityId,
+  statusFilter,
+  onStatusFilterChange,
+}: FormationProposalsSectionProps) {
   const proposalsQuery = useQuery({
     queryKey: ["admin", universityId, "formation-proposals", statusFilter],
     queryFn: () =>
@@ -60,7 +61,7 @@ export default function FormationProposalsSection({ universityId }: FormationPro
             <button
               key={f.key}
               type="button"
-              onClick={() => setStatusFilter(f.key)}
+              onClick={() => onStatusFilterChange(f.key)}
               className={`rounded-full px-3 py-1.5 text-xs font-bold transition-all ${
                 statusFilter === f.key
                   ? "bg-brand-600 text-white shadow-glow"
@@ -90,18 +91,10 @@ export default function FormationProposalsSection({ universityId }: FormationPro
             <FormationProposalAdminRow
               key={proposal.id}
               proposal={proposal}
-              onOpen={() => setDetailId(proposal.id)}
+              statusFilter={statusFilter}
             />
           ))}
         </ul>
-      )}
-
-      {detailId && (
-        <AdminFormationProposalDetailModal
-          universityId={universityId}
-          proposalId={detailId}
-          onClose={() => setDetailId(null)}
-        />
       )}
     </section>
   );
@@ -109,46 +102,51 @@ export default function FormationProposalsSection({ universityId }: FormationPro
 
 function FormationProposalAdminRow({
   proposal,
-  onOpen,
+  statusFilter,
 }: {
   proposal: FormationProposal;
-  onOpen: () => void;
+  statusFilter: FormationProposalStatus | "all";
 }) {
+  const detailHref = `/admin/proposals/${proposal.id}${adminDetailQuery("formation", statusFilter)}`;
+
   return (
-    <li className="flex flex-wrap items-center justify-between gap-3 py-3">
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="truncate font-display text-sm font-bold text-slate-900">
-            {proposal.proposedName}
-          </p>
-          <span
-            className={`chip text-[10px] ${FORMATION_PROPOSAL_STATUS_CHIP[proposal.status]}`}
-          >
-            {FORMATION_PROPOSAL_STATUS_LABELS[proposal.status]}
-          </span>
-        </div>
-        {proposal.proposer && (
-          <p className="mt-0.5 text-xs text-slate-500">
-            {proposal.proposer.firstName} {proposal.proposer.lastName}
-          </p>
-        )}
-        {proposal.supportThreshold > 0 && (
-          <div className="mt-2 max-w-xs">
-            <FormationProposalProgress
-              supportCount={proposal.supportCount}
-              supportThreshold={proposal.supportThreshold}
-            />
+    <li>
+      <Link
+        to={detailHref}
+        className="flex flex-wrap items-center justify-between gap-3 py-3 transition-colors hover:bg-slate-50/80 -mx-2 px-2 rounded-xl"
+      >
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="truncate font-display text-sm font-bold text-slate-900">
+              {proposal.proposedName}
+            </p>
+            <span
+              className={`chip text-[10px] ${FORMATION_PROPOSAL_STATUS_CHIP[proposal.status]}`}
+            >
+              {FORMATION_PROPOSAL_STATUS_LABELS[proposal.status]}
+            </span>
           </div>
-        )}
-        <p className="mt-1 text-[11px] text-slate-400">
-          {proposal.status === "expired"
-            ? "Süresi doldu"
-            : formationDaysRemainingLabel(proposal.expiresAt)}
-        </p>
-      </div>
-      <button type="button" className="btn-ghost text-xs" onClick={onOpen}>
-        <Icon name="audit" size={14} /> Detay
-      </button>
+          {proposal.proposer && (
+            <p className="mt-0.5 text-xs text-slate-500">
+              {proposal.proposer.firstName} {proposal.proposer.lastName}
+            </p>
+          )}
+          {proposal.supportThreshold > 0 && (
+            <div className="mt-2 max-w-xs">
+              <FormationProposalProgress
+                supportCount={proposal.supportCount}
+                supportThreshold={proposal.supportThreshold}
+              />
+            </div>
+          )}
+          <p className="mt-1 text-[11px] text-slate-400">
+            {proposal.status === "expired"
+              ? "Süresi doldu"
+              : formationDaysRemainingLabel(proposal.expiresAt)}
+          </p>
+        </div>
+        <Icon name="chevronRight" size={18} className="shrink-0 text-slate-300" />
+      </Link>
     </li>
   );
 }

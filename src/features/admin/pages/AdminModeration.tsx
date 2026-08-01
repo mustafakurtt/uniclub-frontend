@@ -1,4 +1,5 @@
 import { useState } from "react";
+import SelectField from "@/shared/ui/SelectField";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { getAdminClubs } from "@/features/admin/api";
@@ -47,7 +48,7 @@ function ModerationWorkspace({
         <label className="input-label mb-0" htmlFor="moderation-club-select">
           Kulüp
         </label>
-        <select
+        <SelectField
           id="moderation-club-select"
           className="select-field w-auto max-w-xs py-1.5 text-sm font-semibold text-slate-700"
           value={clubId}
@@ -60,7 +61,7 @@ function ModerationWorkspace({
               {club.name} · {CLUB_STATUS_LABELS[club.status]}
             </option>
           ))}
-        </select>
+        </SelectField>
       </div>
 
       {clubsQuery.isError ? (

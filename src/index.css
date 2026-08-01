@@ -105,25 +105,81 @@
     @apply text-red-500 text-xs mt-1.5 font-medium animate-fade-in;
   }
 
-  /* Açılır liste (native select) — input-field ile aynı görsel dil + markaya
-     uygun özel chevron. Yerel ok gizlenir (appearance-none); ok, sağ tarafta
-     inline SVG arkaplanı olarak çizilir. `<option>` listesi tarayıcı
-     tarafından çizildiği için tema sınırlıdır — kutu ve odak tamamen
-     temaya uyar. */
-  .select-field {
-    @apply input-field cursor-pointer appearance-none bg-no-repeat pr-11;
-    /* brand-500 (#3b82f6) chevron */
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%233b82f6' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-    background-position: right 0.85rem center;
-    background-size: 1.15rem;
+  /* Açılır liste (native select) — tüm `select-field` ve `select.input-field`
+     öğelerine uygulanır. Yerel ok gizlenir; sağda chevron + zemin bandı. */
+  .select-field,
+  select.input-field {
+    @apply w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl
+           text-slate-800 transition-all duration-300 outline-none
+           focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15
+           hover:border-slate-300 cursor-pointer appearance-none bg-no-repeat;
+    padding-right: 3rem;
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"),
+      linear-gradient(to left, rgb(241 245 249) 0%, rgb(241 245 249) 2.875rem, transparent 2.875rem);
+    background-position: right 1rem center, right 0 top;
+    background-size: 1rem, auto;
   }
-  /* Firefox: seçenek metnindeki odak taraması gölgesini kaldır */
-  .select-field:-moz-focusring {
+
+  .select-field:hover:not(:disabled),
+  select.input-field:hover:not(:disabled) {
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"),
+      linear-gradient(to left, rgb(226 232 240) 0%, rgb(226 232 240) 2.875rem, transparent 2.875rem);
+  }
+
+  .select-field:focus,
+  select.input-field:focus {
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"),
+      linear-gradient(to left, rgb(239 246 255) 0%, rgb(239 246 255) 2.875rem, transparent 2.875rem);
+  }
+
+  .select-field:disabled,
+  select.input-field:disabled {
+    @apply cursor-not-allowed opacity-60 bg-slate-100 text-slate-500;
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"),
+      linear-gradient(to left, rgb(241 245 249) 0%, rgb(241 245 249) 2.875rem, transparent 2.875rem);
+  }
+
+  .select-field:-moz-focusring,
+  select.input-field:-moz-focusring {
     color: transparent;
     text-shadow: 0 0 0 theme("colors.slate.800");
   }
-  .select-field option {
-    @apply bg-white text-slate-800 font-medium;
+
+  .select-field option,
+  select.input-field option {
+    @apply bg-white text-slate-800 font-medium py-1;
+  }
+
+  /* Özel SelectField tetikleyicisi — chevron bileşen içinde, arka plan oku yok */
+  .select-trigger {
+    @apply w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl
+           text-slate-800 transition-[border-color,box-shadow,background-color] duration-150 outline-none
+           focus:bg-white focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15
+           hover:border-slate-300 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .select-field-menu {
+    @apply absolute z-50 mt-1.5 w-full overflow-auto rounded-xl border border-slate-200
+           bg-white py-1 shadow-card animate-dropdown-in;
+    max-height: 14rem;
+  }
+
+  .select-field-option {
+    @apply flex w-full items-center gap-2 px-3.5 py-2.5 text-left text-sm text-slate-700
+           transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .select-field-option:hover,
+  .select-field-option.is-highlighted {
+    @apply bg-brand-50 text-brand-800;
+  }
+
+  .select-field-option.is-selected {
+    @apply font-semibold text-brand-800;
   }
 
   /* ---------- Kartlar ve yüzeyler ---------- */

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import SelectField from "@/shared/ui/SelectField";
 import { useMutation } from "@tanstack/react-query";
 import { deleteAnnouncement, updateAnnouncement } from "@/features/clubs/api/clubs";
 import {
@@ -158,18 +159,18 @@ export default function AnnouncementRow({
               >
                 {announcement.pinned ? "Sabitlemeyi Kaldır" : "Sabitle"}
               </button>
-              <select
+              <SelectField
                 value={announcement.visibility}
                 disabled={busy}
                 onChange={(e) =>
                   visibilityMutation.mutate(e.target.value as AnnouncementVisibility)
                 }
-                className="input-field w-auto min-w-[10rem] py-1.5 text-xs"
+                className="select-field w-auto min-w-[10rem] py-1.5 text-xs"
                 aria-label="Görünürlük"
               >
                 <option value="university">{ANNOUNCEMENT_VISIBILITY_LABELS.university}</option>
                 <option value="members">{ANNOUNCEMENT_VISIBILITY_LABELS.members}</option>
-              </select>
+              </SelectField>
             </div>
           )}
         </div>

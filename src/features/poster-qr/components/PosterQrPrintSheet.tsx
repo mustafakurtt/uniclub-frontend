@@ -1,4 +1,5 @@
 import { useState } from "react";
+import SelectField from "@/shared/ui/SelectField";
 import QrCodeDisplay from "@/shared/ui/QrCodeDisplay";
 import { posterQrScanUrl } from "@/shared/lib/qrUrls";
 import type { PosterQrCode } from "@/shared/types";
@@ -64,14 +65,14 @@ export default function PosterQrPrintSheet({
         </div>
 
         <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
-          <select
-            className="input-field py-1.5 text-xs"
+          <SelectField
+            className="select-field py-1.5 text-xs w-auto"
             value={paper}
             onChange={(e) => setPaper(e.target.value as "A4" | "A5")}
           >
             <option value="A4">A4</option>
             <option value="A5">A5</option>
-          </select>
+          </SelectField>
           <button type="button" className="btn-primary" onClick={handlePrint}>
             Yazdır
           </button>

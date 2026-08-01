@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import SelectField from "@/shared/ui/SelectField";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -191,10 +192,10 @@ export default function ActivityFormModal({
         </div>
         <div>
           <label className="input-label">Görünürlük</label>
-          <select {...register("visibility")} className="input-field">
+          <SelectField {...register("visibility")} className="select-field">
             <option value="university">{ACTIVITY_VISIBILITY_LABELS.university}</option>
             <option value="members">{ACTIVITY_VISIBILITY_LABELS.members}</option>
-          </select>
+          </SelectField>
         </div>
         {!isEdit && (
           <PublishTimingFields

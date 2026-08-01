@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import SelectField from "@/shared/ui/SelectField";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -177,10 +178,10 @@ function DomainFormModal({ open, universityId, editing, onSaved, onClose }: Doma
         </div>
         <div>
           <label className="input-label">Tür</label>
-          <select {...register("domainType")} className="select-field">
+          <SelectField {...register("domainType")} className="select-field">
             <option value="student">Öğrenci</option>
             <option value="staff">Personel</option>
-          </select>
+          </SelectField>
         </div>
       </form>
     </Modal>

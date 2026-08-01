@@ -1,4 +1,5 @@
 import { useState } from "react";
+import SelectField from "@/shared/ui/SelectField";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -108,10 +109,10 @@ export default function AnnouncementFormModal({
         </div>
         <div>
           <label className="input-label">Görünürlük</label>
-          <select {...register("visibility")} className="input-field">
+          <SelectField {...register("visibility")} className="select-field">
             <option value="university">{ANNOUNCEMENT_VISIBILITY_LABELS.university}</option>
             <option value="members">{ANNOUNCEMENT_VISIBILITY_LABELS.members}</option>
-          </select>
+          </SelectField>
         </div>
         <label className="flex items-center gap-2 text-sm text-slate-600">
           <input type="checkbox" {...register("pinned")} className="rounded border-slate-300" />

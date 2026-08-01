@@ -1,6 +1,7 @@
 // Kişi bazlı yetki override (claim) — `permission.manage`, yalnızca super_admin (§6.4).
 // granted:true rolden bağımsız yetki ekler, granted:false rolden geleni iptal eder.
 import { useState } from "react";
+import SelectField from "@/shared/ui/SelectField";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   getPermissions,
@@ -82,7 +83,7 @@ export default function PermissionOverridesSection({ universityId, user }: Props
         </ul>
       )}
       <div className="flex flex-wrap items-center gap-2">
-        <select
+        <SelectField
           className="select-field w-auto text-sm"
           value={claimKey}
           onChange={(e) => setClaimKey(e.target.value)}
@@ -94,8 +95,8 @@ export default function PermissionOverridesSection({ universityId, user }: Props
               {p.key}
             </option>
           ))}
-        </select>
-        <select
+        </SelectField>
+        <SelectField
           className="select-field w-auto text-sm"
           value={claimGranted ? "grant" : "deny"}
           onChange={(e) => setClaimGranted(e.target.value === "grant")}
@@ -103,7 +104,7 @@ export default function PermissionOverridesSection({ universityId, user }: Props
         >
           <option value="grant">İzin ver</option>
           <option value="deny">Reddet</option>
-        </select>
+        </SelectField>
         <button
           className="btn-secondary px-3 py-1.5 text-xs"
           disabled={!claimKey || setClaimMutation.isPending}

@@ -2,6 +2,7 @@
 // Kendini askıya alma ve eşit/üst rütbeli kullanıcıya dokunma backend'de 400
 // döner (FRONTEND_RUTBE_VE_PLATFORM.md §4/§5); burada önden disable ediyoruz.
 import { useMutation } from "@tanstack/react-query";
+import SelectField from "@/shared/ui/SelectField";
 import { updateUserStatus } from "@/features/admin/api";
 import { USER_STATUS_CHIP_CLASSES, USER_STATUS_LABELS } from "@/features/admin/labels";
 import { canManageUser, outrankedReason, selfActionReason } from "@/features/admin/rank";
@@ -50,7 +51,7 @@ export default function AccountStatusSection({ universityId, user }: Props) {
         </span>
       </div>
       {canEdit ? (
-        <select
+        <SelectField
           className="select-field text-sm"
           value={user.status}
           disabled={statusMutation.isPending}
@@ -62,7 +63,7 @@ export default function AccountStatusSection({ universityId, user }: Props) {
               {USER_STATUS_LABELS[s]}
             </option>
           ))}
-        </select>
+        </SelectField>
       ) : (
         <p className="text-xs text-slate-400">
           {blockedReason ?? "Durum değiştirme yetkin yok."}

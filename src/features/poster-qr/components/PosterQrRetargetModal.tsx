@@ -1,4 +1,5 @@
 import { useForm } from "react-hook-form";
+import SelectField from "@/shared/ui/SelectField";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
@@ -136,14 +137,14 @@ export default function PosterQrRetargetModal({
         {scope === "university" && targetType === "club" && (
           <div>
             <label className="input-label">Kulüp</label>
-            <select className="input-field" {...register("targetClubId")}>
+            <SelectField className="select-field" {...register("targetClubId")}>
               <option value="">Seçin…</option>
               {clubsQuery.data?.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
                 </option>
               ))}
-            </select>
+            </SelectField>
             {errors.targetClubId && <p className="input-error">{errors.targetClubId.message}</p>}
           </div>
         )}
@@ -153,8 +154,8 @@ export default function PosterQrRetargetModal({
             {scope === "university" && (
               <div>
                 <label className="input-label">Kulüp</label>
-                <select
-                  className="input-field"
+                <SelectField
+                  className="select-field"
                   value={selectedClubId ?? ""}
                   onChange={(e) => {
                     setValue("targetClubId", e.target.value);
@@ -167,19 +168,19 @@ export default function PosterQrRetargetModal({
                       {c.name}
                     </option>
                   ))}
-                </select>
+                </SelectField>
               </div>
             )}
             <div>
               <label className="input-label">Etkinlik</label>
-              <select className="input-field" {...register("targetActivityId")}>
+              <SelectField className="select-field" {...register("targetActivityId")}>
                 <option value="">Seçin…</option>
                 {publishedActivities.map((a) => (
                   <option key={a.id} value={a.id}>
                     {a.title}
                   </option>
                 ))}
-              </select>
+              </SelectField>
               {errors.targetActivityId && (
                 <p className="input-error">{errors.targetActivityId.message}</p>
               )}

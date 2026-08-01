@@ -1,4 +1,5 @@
 import { useState } from "react";
+import SelectField from "@/shared/ui/SelectField";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -108,10 +109,10 @@ function ProfileForm() {
 
         <div>
           <label className="input-label">Tercih Edilen Dil</label>
-          <select {...register("preferredLanguage")} className="select-field">
+          <SelectField {...register("preferredLanguage")} className="select-field">
             <option value="tr">Türkçe</option>
             <option value="en">English</option>
-          </select>
+          </SelectField>
           {errors.preferredLanguage && <p className="input-error">{errors.preferredLanguage.message}</p>}
         </div>
 

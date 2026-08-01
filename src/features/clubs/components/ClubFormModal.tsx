@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import SelectField from "@/shared/ui/SelectField";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -109,10 +110,10 @@ export default function ClubFormModal({
         </div>
         <div>
           <label className="input-label">Üyelik Politikası</label>
-          <select {...register("joinPolicy")} className="select-field">
+          <SelectField {...register("joinPolicy")} className="select-field">
             <option value="open">Herkese açık — istek anında onaylanır</option>
             <option value="approval_required">Onay gerektirir — yönetim onaylar</option>
-          </select>
+          </SelectField>
         </div>
       </form>
     </Modal>
