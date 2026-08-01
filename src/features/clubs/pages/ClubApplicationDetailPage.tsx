@@ -1,20 +1,31 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getMyClubApplication,
+  getMyClubApplicationHistory,
   resubmitClubApplication,
 } from "@/features/clubs/api/clubs";
 import ClubApplicationAppealSection from "@/features/clubs/components/ClubApplicationAppealSection";
+import ClubApplicationEventTimeline from "@/features/clubs/components/ClubApplicationEventTimeline";
 import ClubApplicationResubmitForm from "@/features/clubs/components/ClubApplicationResubmitForm";
 import ClubApplicationApprovalChain from "@/features/admin/components/ClubApplicationApprovalChain";
 import {
   APPLICATION_STATUS_CHIP,
   APPLICATION_STATUS_LABELS,
 } from "@/features/clubs/applicationLabels";
+import { getStudentApplicationStatusLine } from "@/features/clubs/applicationStatus";
 import { approverRoleLabel } from "@/features/admin/labels";
 import PageLoader from "@/shared/ui/PageLoader";
 import { Icon } from "@/shared/ui/Icon";
+import type { ClubApplicationHistory } from "@/shared/types";
+
+function resolveHistory(
+  embedded: ClubApplicationHistory | null,
+  fetched: ClubApplicationHistory | undefined
+): ClubApplicationHistory | null {
+  return embedded ?? fetched ?? null;
+}
 
 export default function ClubApplicationDetailPage() {
   const { applicationId } = useParams<{ applicationId: string }>();
@@ -27,11 +38,32 @@ export default function ClubApplicationDetailPage() {
     enabled: !!applicationId,
   });
 
+  const application = detailQuery.data;
+  const hasEmbeddedHistory =
+    application?.events !== undefined && application.revisionRequestCount !== undefined;
+
+  const embeddedHistory = useMemo((): ClubApplicationHistory | null => {
+    if (!application || !hasEmbeddedHistory) return null;
+    return {
+      applicationId: application.id,
+      revisionRequestCount: application.revisionRequestCount!,
+      events: application.events!,
+    };
+  }, [application, hasEmbeddedHistory]);
+
+  const historyQuery = useQuery({
+    queryKey: ["club-application-history", applicationId],
+    queryFn: () => getMyClubApplicationHistory(applicationId!),
+    enabled: !!applicationId && !!application && !hasEmbeddedHistory,
+    retry: false,
+  });
+
   const resubmitMutation = useMutation({
     mutationFn: (values: { proposedName: string; description?: string }) =>
       resubmitClubApplication(applicationId!, values),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["club-application", applicationId] });
+      await queryClient.invalidateQueries({ queryKey: ["club-application-history", applicationId] });
       queryClient.invalidateQueries({ queryKey: ["my-applications"] });
       setResubmitted(true);
     },
@@ -45,7 +77,7 @@ export default function ClubApplicationDetailPage() {
     return <PageLoader label="Başvuru yükleniyor…" />;
   }
 
-  if (detailQuery.isError || !detailQuery.data) {
+  if (detailQuery.isError || !application) {
     return (
       <div className="card p-8 text-center">
         <Icon name="notFound" size={40} className="mx-auto mb-3 text-slate-400" />
@@ -57,9 +89,10 @@ export default function ClubApplicationDetailPage() {
     );
   }
 
-  const application = detailQuery.data;
   const revision = application.revisionRequest;
   const showResubmit = application.status === "revision_requested" && revision;
+  const statusLine = getStudentApplicationStatusLine(application);
+  const history = resolveHistory(embeddedHistory, historyQuery.data);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -82,6 +115,22 @@ export default function ClubApplicationDetailPage() {
           )}
         </p>
       </div>
+
+      <section className="card border-brand-200 bg-brand-50/60 p-5">
+        <p className="text-[11px] font-bold uppercase tracking-wide text-brand-600">Şu an</p>
+        <p className="mt-1 font-display text-lg font-bold text-slate-900">{statusLine}</p>
+        {application.approvals.length > 0 && (
+          <p className="mt-2 text-xs text-slate-500">
+            Onay kademesi: {application.approvals.length}
+            {application.approvals.filter((a) => a.status === "approved").length > 0 && (
+              <>
+                {" "}
+                · {application.approvals.filter((a) => a.status === "approved").length} tamamlandı
+              </>
+            )}
+          </p>
+        )}
+      </section>
 
       {resubmitted && application.status === "pending" && (
         <div className="alert-success flex items-start gap-3 text-sm">
@@ -143,27 +192,39 @@ export default function ClubApplicationDetailPage() {
       ) : (
         <>
           <section className="card p-5 space-y-3">
+            <h2 className="font-display text-base font-bold text-slate-900">Onay süreci</h2>
+            <ClubApplicationApprovalChain approvals={application.approvals} showAllSteps />
+          </section>
+
+          <ClubApplicationAppealSection applicationId={applicationId} application={application} />
+
+          <section className="card p-5 space-y-3">
             <h2 className="font-display text-base font-bold text-slate-900">Başvuru özeti</h2>
             {application.description ? (
               <p className="text-sm text-slate-600 whitespace-pre-wrap">{application.description}</p>
             ) : (
               <p className="text-sm text-slate-400 italic">Açıklama eklenmemiş.</p>
             )}
-            {application.status === "pending" && (
-              <p className="text-xs text-slate-500">
-                Başvurun değerlendiriliyor. Karar verildiğinde bildirim alırsın.
+          </section>
+
+          <section className="card p-5">
+            <h2 className="mb-3 font-display text-base font-bold text-slate-900">Süreç geçmişi</h2>
+            {historyQuery.isLoading && !history ? (
+              <div className="space-y-3">
+                <div className="skeleton h-14 w-full" />
+                <div className="skeleton h-14 w-full" />
+              </div>
+            ) : historyQuery.isError && !history ? (
+              <p className="text-sm text-slate-500">
+                Olay geçmişi henüz yüklenemedi. Onay adımları yukarıda güncel durumu gösterir.
               </p>
+            ) : history ? (
+              <ClubApplicationEventTimeline history={history} compact />
+            ) : (
+              <p className="text-sm text-slate-500">Henüz kayıtlı süreç olayı yok.</p>
             )}
           </section>
-          <ClubApplicationAppealSection applicationId={applicationId} application={application} />
         </>
-      )}
-
-      {application.approvals.length > 1 && (
-        <section className="card p-5">
-          <h2 className="mb-3 font-display text-base font-bold text-slate-900">Onay süreci</h2>
-          <ClubApplicationApprovalChain approvals={application.approvals} />
-        </section>
       )}
     </div>
   );

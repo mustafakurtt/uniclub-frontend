@@ -1,4 +1,4 @@
-> **Senkron kopya** — Kaynak: ../uniclub-backend/docs/integration/clubs.md · Backend commit: `693d8b7`
+> **Senkron kopya** — Kaynak: ../uniclub-backend/docs/integration/clubs.md · Backend commit: `5603ec4`
 
 # Clubs Katmanı — Frontend Entegrasyon Dokümanı
 
@@ -176,14 +176,25 @@ Yalnızca **kendi** başvurunu görürsün (başkasınınki `404 "Başvuru bulun
       "requestedBy": { /* SafeUser — revizyon isteyen yetkili */ }
     },
     "rejectionReason": "Evraklar eksik…",       // yalnızca status=rejected
-    "appealDeadline": "2026-...",               // ISO — itiraz son tarihi
-    "canAppeal": true,                          // bir kez + süre içinde
-    "appeal": { "status": "pending" } | null    // gönderildiyse durum
+    "appealDeadline": "2026-...",
+    "canAppeal": true,
+    "appeal": {
+      "status": "pending",
+      "reason": "…",
+      "submittedAt": "2026-...",
+      "reviewedAt": null,
+      "reviewNote": null,
+      "reviewedBy": null
+    },
+    "revisionRequestCount": 2,                  // opsiyonel — gömülü geçmiş
+    "events": [ /* ClubApplicationEvent[] */ ]  // opsiyonel — gömülü geçmiş
   }
 }
 ```
 
-Reddedilen başvuruda `rejectionReason` görünür. `canAppeal === true` iken `POST .../appeal` ile itiraz edilir; süre dolmuşsa `canAppeal: false` ve form gösterilmez.
+`appeal` tam nesnesi sayfa yenilense de okunur (`reason`, `submittedAt`, inceleme alanları). Geçmiş gömülü değilse `GET /api/clubs/applications/:applicationId/history` (kendi başvurun) → `{ revisionRequestCount, events[] }`.
+
+Frontend: `/applications/:applicationId` — `ClubApplicationApprovalChain` (`showAllSteps`), `getStudentApplicationStatusLine`, `ClubApplicationEventTimeline`.
 
 ### 6.3 İtiraz — `POST /api/clubs/applications/:applicationId/appeal`
 

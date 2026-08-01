@@ -6,6 +6,7 @@ import { useStreak } from "@/shared/hooks/useStreak";
 import { AchievementsCard } from "@/pages/dashboard/AchievementsCard";
 import { ProfileStrengthCard, profileCompletion } from "@/pages/dashboard/ProfileStrengthCard";
 import { AdvisedClubCard, MembershipCard } from "@/pages/dashboard/ClubCards";
+import ActiveProcessesCard from "@/pages/dashboard/ActiveProcessesCard";
 import { getAvailableClubs } from "@/features/clubs/api/clubs";
 import PageLoader from "@/shared/ui/PageLoader";
 import Reveal from "@/shared/ui/Reveal";
@@ -162,6 +163,8 @@ export default function Dashboard() {
           </div>
         </div>
       </Reveal>
+
+      <ActiveProcessesCard userId={user.id} />
 
       {/* ====== SAYAÇLI İSTATİSTİKLER ====== */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">

@@ -47,8 +47,8 @@ export default function ClubApplicationAppealReviewSection({
   const [pendingDecision, setPendingDecision] = useState<"upheld" | "dismissed" | null>(null);
 
   const submittedEvent = findAppealSubmittedEvent(historyEvents);
-  const studentNote = appeal?.note ?? submittedEvent?.note ?? null;
-  const submittedAt = appeal?.createdAt ?? submittedEvent?.createdAt ?? null;
+  const studentNote = appeal?.reason ?? submittedEvent?.note ?? null;
+  const submittedAt = appeal?.submittedAt ?? submittedEvent?.createdAt ?? null;
 
   const {
     register,
