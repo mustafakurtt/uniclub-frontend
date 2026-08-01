@@ -191,7 +191,7 @@ export default function ActivityFormModal({
         </div>
         <div>
           <label className="input-label">Görünürlük</label>
-          <select {...register("visibility")} className="input-field">
+          <select {...register("visibility")} className="select-field">
             <option value="university">{ACTIVITY_VISIBILITY_LABELS.university}</option>
             <option value="members">{ACTIVITY_VISIBILITY_LABELS.members}</option>
           </select>

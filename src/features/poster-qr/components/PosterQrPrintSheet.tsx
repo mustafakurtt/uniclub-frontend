@@ -65,7 +65,7 @@ export default function PosterQrPrintSheet({
 
         <div className="mt-5 flex flex-wrap items-center justify-end gap-2">
           <select
-            className="input-field py-1.5 text-xs"
+            className="select-field py-1.5 text-xs w-auto"
             value={paper}
             onChange={(e) => setPaper(e.target.value as "A4" | "A5")}
           >

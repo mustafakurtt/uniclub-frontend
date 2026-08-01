@@ -136,7 +136,7 @@ export default function PosterQrRetargetModal({
         {scope === "university" && targetType === "club" && (
           <div>
             <label className="input-label">Kulüp</label>
-            <select className="input-field" {...register("targetClubId")}>
+            <select className="select-field" {...register("targetClubId")}>
               <option value="">Seçin…</option>
               {clubsQuery.data?.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -154,7 +154,7 @@ export default function PosterQrRetargetModal({
               <div>
                 <label className="input-label">Kulüp</label>
                 <select
-                  className="input-field"
+                  className="select-field"
                   value={selectedClubId ?? ""}
                   onChange={(e) => {
                     setValue("targetClubId", e.target.value);
@@ -172,7 +172,7 @@ export default function PosterQrRetargetModal({
             )}
             <div>
               <label className="input-label">Etkinlik</label>
-              <select className="input-field" {...register("targetActivityId")}>
+              <select className="select-field" {...register("targetActivityId")}>
                 <option value="">Seçin…</option>
                 {publishedActivities.map((a) => (
                   <option key={a.id} value={a.id}>

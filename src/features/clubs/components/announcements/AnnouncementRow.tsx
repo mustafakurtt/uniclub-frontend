@@ -164,7 +164,7 @@ export default function AnnouncementRow({
                 onChange={(e) =>
                   visibilityMutation.mutate(e.target.value as AnnouncementVisibility)
                 }
-                className="input-field w-auto min-w-[10rem] py-1.5 text-xs"
+                className="select-field w-auto min-w-[10rem] py-1.5 text-xs"
                 aria-label="Görünürlük"
               >
                 <option value="university">{ANNOUNCEMENT_VISIBILITY_LABELS.university}</option>

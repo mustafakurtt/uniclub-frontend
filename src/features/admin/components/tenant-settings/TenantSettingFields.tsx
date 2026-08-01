@@ -142,7 +142,7 @@ export function TenantRoleChainSettingField({
           <li key={`${settingKey}-${index}`} className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-bold text-slate-400 w-16">Kademe {index + 1}</span>
             <select
-              className="input-field max-w-xs flex-1"
+              className="select-field max-w-xs flex-1"
               value={role}
               disabled={readOnly}
               onChange={(e) => updateStep(index, e.target.value)}

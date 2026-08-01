@@ -156,7 +156,7 @@ export default function PosterQrCreateModal({
             <label className="input-label" htmlFor="targetClubId">
               Kulüp
             </label>
-            <select id="targetClubId" className="input-field" {...register("targetClubId")}>
+            <select id="targetClubId" className="select-field" {...register("targetClubId")}>
               <option value="">Seçin…</option>
               {clubsQuery.data?.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -177,7 +177,7 @@ export default function PosterQrCreateModal({
                 </label>
                 <select
                   id="activityClubId"
-                  className="input-field"
+                  className="select-field"
                   value={selectedClubId ?? ""}
                   onChange={(e) => {
                     setValue("targetClubId", e.target.value);
@@ -197,7 +197,7 @@ export default function PosterQrCreateModal({
               <label className="input-label" htmlFor="targetActivityId">
                 Etkinlik
               </label>
-              <select id="targetActivityId" className="input-field" {...register("targetActivityId")}>
+              <select id="targetActivityId" className="select-field" {...register("targetActivityId")}>
                 <option value="">Seçin…</option>
                 {publishedActivities.map((a) => (
                   <option key={a.id} value={a.id}>

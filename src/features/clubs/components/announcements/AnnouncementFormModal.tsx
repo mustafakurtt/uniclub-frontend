@@ -108,7 +108,7 @@ export default function AnnouncementFormModal({
         </div>
         <div>
           <label className="input-label">Görünürlük</label>
-          <select {...register("visibility")} className="input-field">
+          <select {...register("visibility")} className="select-field">
             <option value="university">{ANNOUNCEMENT_VISIBILITY_LABELS.university}</option>
             <option value="members">{ANNOUNCEMENT_VISIBILITY_LABELS.members}</option>
           </select>
