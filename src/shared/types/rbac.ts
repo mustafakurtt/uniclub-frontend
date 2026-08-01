@@ -33,6 +33,7 @@ export type GlobalPermission =
   | "university.department.update"
   | "university.department.delete"
   | "university.settings.manage"
+  | "university.academic_term.manage"
   | "university.export.generate"
   // RBAC yönetimi (role.manage tenant-scoped; permission.manage platform)
   | "role.manage"

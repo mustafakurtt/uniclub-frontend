@@ -1,4 +1,4 @@
-> **Senkron kopya** — Kaynak: ../uniclub-backend/docs/integration/clubs.md · Backend commit: 3ebc04e
+> **Senkron kopya** — Kaynak: ../uniclub-backend/docs/integration/clubs.md · Backend commit: `693d8b7`
 
 # Clubs Katmanı — Frontend Entegrasyon Dokümanı
 
@@ -245,6 +245,16 @@ Hata: `400/404 "Bekleyen bir üyelik isteği bulunamadı."` (istek yok veya `pen
 `200 "Başkanlık devredildi."` + yeni başkanın üyelik satırı. Eski başkan **officer** olur. Hatalar:
 - `400 "Başkanlığı kendinize devredemezsiniz."`
 - `400 "Yeni başkan, kulübün onaylı bir üyesi olmalıdır."`
+
+### 7.6 Üyelik tarihçesi — `GET /:clubId/membership-history`
+
+Append-only `club_membership_events` tablosundan okur. Erişim: **kulüp staff** (danışman/officer/başkan) veya tenant `club.member.manage` (SKS moderasyon override).
+
+Query: `limit` (varsayılan 50, max 100), `cursor` (ISO `occurredAt` — keyset), `academicTermId` (opsiyonel filtre).
+
+`data.items[]`: `eventType` (`joined` | `role_changed` | `removed` | `left` | `join_rejected`), `role`, `previousRole`, `occurredAt`, `academicTerm` (`{ id, name }` veya `null` → UI'da "Dönem dışı"), `user`, `actor`.
+
+Frontend: `/admin/clubs/:clubId?tab=membership-history` sekmesi. Dönem filtresi `GET /api/universities/:universityId/academic-terms` listesinden beslenir.
 
 ---
 

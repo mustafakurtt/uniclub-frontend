@@ -56,6 +56,7 @@ export default function AdminLayout() {
   const canManagePermissions = hasPermission("permission.manage");
   const canViewAudit = hasPermission("audit.view");
   const canManageSettings = hasPermission("university.settings.manage");
+  const canManageAcademicTerms = hasPermission("university.academic_term.manage");
   const canExport = hasPermission("university.export.generate");
 
   const dailyWorkItems = [
@@ -74,6 +75,7 @@ export default function AdminLayout() {
       items: [
         { to: "/admin/users", label: "Kullanıcılar", icon: "members", visible: canViewUsers },
         { to: "/admin/universities", label: "Akademik Yapı", icon: "university", visible: canManageUniversities },
+        { to: "/admin/academic-terms", label: "Akademik Dönemler", icon: "calendar", visible: canManageAcademicTerms },
         { to: "/admin/settings", label: "Politikalar", icon: "settings", visible: canManageSettings },
       ],
     },

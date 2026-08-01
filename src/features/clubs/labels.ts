@@ -8,6 +8,7 @@ import type {
   ClubStatus,
   ContactPlatform,
   JoinPolicy,
+  MembershipHistoryEventType,
   MembershipStatus,
 } from "@/shared/types";
 import type { IconName } from "@/shared/ui/Icon";
@@ -68,4 +69,12 @@ export const CONTACT_PLATFORM_LABELS: Record<ContactPlatform, { label: string; i
   website: { label: "Web Sitesi", icon: "website" },
   email: { label: "E-posta", icon: "email" },
   other: { label: "Diğer", icon: "link" },
+};
+
+export const MEMBERSHIP_HISTORY_EVENT_LABELS: Record<MembershipHistoryEventType, string> = {
+  joined: "Üyeliğe kabul",
+  join_rejected: "Katılım isteği reddedildi",
+  left: "Kulüpten ayrıldı",
+  removed: "Üyelikten çıkarıldı",
+  role_changed: "Rol değişti",
 };

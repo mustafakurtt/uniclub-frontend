@@ -22,6 +22,7 @@ import MainLayout from "@/layouts/MainLayout";
 import AdminLayout from "@/layouts/AdminLayout";
 import AdminUniversities from "@/features/universities/pages/AdminUniversities";
 import AdminUniversityDetail from "@/features/universities/pages/AdminUniversityDetail";
+import AdminAcademicTerms from "@/features/universities/pages/AdminAcademicTerms";
 import AdminClubs from "@/features/admin/pages/AdminClubs";
 import AdminModeration from "@/features/admin/pages/AdminModeration";
 import AdminHome from "@/features/admin/pages/AdminHome";
@@ -118,6 +119,7 @@ function App() {
             {/* Akademik yapı: üniversite/domain/fakülte/bölüm */}
             <Route path="/admin/universities" element={<AdminUniversities />} />
             <Route path="/admin/universities/:universityId" element={<AdminUniversityDetail />} />
+            <Route path="/admin/academic-terms" element={<AdminAcademicTerms />} />
             {/* RBAC: roller (role.manage) + yetki kataloğu (permission.manage) */}
             <Route path="/admin/roles" element={<AdminRoles />} />
             <Route path="/admin/permissions" element={<AdminPermissions />} />

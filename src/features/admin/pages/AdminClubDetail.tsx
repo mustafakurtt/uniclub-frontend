@@ -8,6 +8,7 @@ import AnnouncementsTab from "@/features/admin/components/club-detail/Announceme
 import AuditTab from "@/features/admin/components/club-detail/AuditTab";
 import GalleryTab from "@/features/admin/components/club-detail/GalleryTab";
 import MembersTab from "@/features/admin/components/club-detail/MembersTab";
+import MembershipHistoryTab from "@/features/admin/components/club-detail/MembershipHistoryTab";
 import {
   CLUB_DETAIL_TABS,
   parseClubDetailTab,
@@ -44,7 +45,7 @@ function ClubDetailBody({
   club: AdminClubDetail;
 }) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { hasPermission } = useAuth();
+  const { hasPermission, isClubStaff } = useAuth();
   const [advisorsOpen, setAdvisorsOpen] = useState(false);
 
   const clubStatus = searchParams.get("clubStatus");
@@ -62,11 +63,14 @@ function ClubDetailBody({
     [setSearchParams]
   );
 
-  const visibleTabs = CLUB_DETAIL_TABS.filter(
-    (t) => t.key !== "audit" || hasPermission("audit.view")
-  );
+  const visibleTabs = CLUB_DETAIL_TABS.filter((t) => {
+    if (t.key === "audit") return hasPermission("audit.view");
+    if (t.key === "membership-history") return canViewMembershipHistory;
+    return true;
+  });
 
   const canManageMembers = hasPermission("club.member.manage");
+  const canViewMembershipHistory = canManageMembers || isClubStaff(clubId);
   const canModerateAnnouncements = hasPermission("announcement.moderate");
   const canModerateGallery = hasPermission("gallery.moderate");
 
@@ -136,6 +140,13 @@ function ClubDetailBody({
             clubId={clubId}
             canManage={canManageMembers}
             enabled={tab === "members"}
+          />
+        )}
+        {tab === "membership-history" && canViewMembershipHistory && (
+          <MembershipHistoryTab
+            universityId={universityId}
+            clubId={clubId}
+            enabled={tab === "membership-history"}
           />
         )}
         {tab === "activities" && (
