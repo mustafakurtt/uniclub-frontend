@@ -18,6 +18,7 @@ import ActivityAttendeesModal from "@/features/activities/components/club-activi
 import ActivityCoHostsPanel from "@/features/activities/components/club-activities/ActivityCoHostsPanel";
 import ActivityCancelDialog from "@/features/activities/components/club-activities/ActivityCancelDialog";
 import ActivityFormModal from "@/features/activities/components/club-activities/ActivityFormModal";
+import ActivityCheckInActions from "@/features/activities/components/club-activities/ActivityCheckInActions";
 import type { ActivityListItem } from "@/shared/types";
 import { Icon } from "@/shared/ui/Icon";
 
@@ -187,6 +188,14 @@ export default function ActivityManageModal({
                 <h4 className="mb-2 font-display text-sm font-bold text-slate-900">Co-host kulüpler</h4>
                 <ActivityCoHostsPanel hostClubId={clubId} activityId={activity.id} />
               </div>
+            )}
+
+            {isHost && (
+              <ActivityCheckInActions
+                clubId={clubId}
+                activityId={activity.id}
+                published={status === "published"}
+              />
             )}
           </div>
         )}

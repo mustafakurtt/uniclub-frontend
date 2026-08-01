@@ -269,6 +269,23 @@ export default function ActivityDetail() {
               </div>
             )}
 
+            {myRsvp && !isCancelled && activity.myRsvp?.checkedInAt && (
+              <p className="mt-4 text-sm font-semibold text-emerald-700">
+                Yoklaman alındı.
+              </p>
+            )}
+
+            {myRsvp && !isCancelled && !isPast && (
+              <div className="mt-4">
+                <Link
+                  to={`/activities/${activityId}/yoklama`}
+                  className="btn-secondary inline-flex text-xs"
+                >
+                  <Icon name="scan" size={14} /> Yoklamaya Katıl
+                </Link>
+              </div>
+            )}
+
             {isPast && !isCancelled && (
               <p className="mt-6 text-sm text-slate-400">Bu etkinlik sona erdi.</p>
             )}

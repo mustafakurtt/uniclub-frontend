@@ -1,4 +1,4 @@
-> **Senkron kopya** - Kaynak: `../uniclub-backend/docs/integration/public.md` - Backend commit: `923519a`
+> **Senkron kopya** — Kaynak: `../uniclub-backend/docs/integration/public.md` · Backend commit: `5e2646e`
 
 # Kamuya açık yüzey (T10.3 / T10.5)
 
@@ -17,9 +17,34 @@ içinde benzersiz):
 |---|---|---|
 | GET | `/api/public/universities/:universitySlug/clubs/:clubSlug` | Kulüp tanıtım + yaklaşan etkinlikler |
 | GET | `/api/public/universities/:universitySlug/activities/:activityId` | Tek etkinlik detayı |
+| GET | `/api/public/qr/:code` | Afiş QR çözümleme (kimliksiz) |
 
 `activityId` UUID — tenant doğrulaması sunucuda: etkinliğin **accepted** host/co-host
 kulüplerinden en az biri bu `universitySlug` tenant'ına ait olmalı.
+
+### Afiş QR çözümleme (`GET /api/public/qr/:code`)
+
+Kısa kod sabit; hedef sonradan güncellenebilir. Yanıt **her zaman 200** (bilinmeyen kod → 404):
+
+```jsonc
+// aktif
+{ "status": "active", "target": { "type": "club", "universitySlug": "...", "clubSlug": "..." } }
+// veya
+{ "status": "active", "target": { "type": "activity", "universitySlug": "...", "activityId": "..." } }
+
+// süresi dolmuş / iptal / henüz başlamamış
+{ "status": "expired" | "cancelled" | "not_yet_active" }
+```
+
+Tarama sayacı arka planda artar (yazım hatası çözümlemeyi engellemez). IP hız sınırı
+aynı (`publicReadIpLimit`). Frontend: `status === "active"` → `target` ile kamuya açık
+sayfa rotasına yönlendir; diğer durumlarda kullanıcıya ayırt edilebilir mesaj göster.
+
+Yönetim uçları: `docs/reference/api.md` §15 (kulüp staff + `poster_qr.university.manage`).
+
+**Tarama analitiği (T6.2):** `GET .../poster-qr/analytics` (kaynak karşılaştırması) ve
+`GET .../poster-qr/:qrId/analytics` (kod bazlı gün/saat dağılımı). Gün sınırları tenant
+`timezone` ile (`universities.timezone`); ölçek için `poster_qr_scans` indeksli + `GROUP BY`.
 
 ## Ne görünür / ne görünmez
 

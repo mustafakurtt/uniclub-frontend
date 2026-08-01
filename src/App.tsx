@@ -8,6 +8,8 @@ import Clubs from "@/features/clubs/pages/Clubs";
 import ClubDetail from "@/features/clubs/pages/ClubDetail";
 import Activities from "@/features/activities/pages/Activities";
 import ActivityDetail from "@/features/activities/pages/ActivityDetail";
+import ActivityCheckInPage from "@/features/activities/pages/ActivityCheckInPage";
+import ActivityCheckInDisplayPage from "@/features/activities/pages/ActivityCheckInDisplayPage";
 import Profile from "@/features/auth/pages/Profile";
 import ProtectedRoute from "@/features/auth/guards/ProtectedRoute";
 import RequireManagement from "@/features/auth/guards/RequireManagement";
@@ -27,6 +29,7 @@ import NotFound from "@/shared/pages/NotFound";
 import PublicLayout from "@/layouts/PublicLayout";
 import PublicClubPage from "@/features/public/pages/PublicClubPage";
 import PublicActivityPage from "@/features/public/pages/PublicActivityPage";
+import PublicQrResolvePage from "@/features/public/pages/PublicQrResolvePage";
 
 function App() {
   return (
@@ -40,8 +43,9 @@ function App() {
           {/* E-postadaki doğrulama linki buraya iner (docs/FRONTEND_AUTH_RBAC.md §2.3) */}
           <Route path="/verify" element={<VerifyEmail />} />
 
-          {/* Kamuya açık QR/afiş yüzeyi — auth yok (FRONTEND_KAMUYA_ACIK.md) */}
+          {/* Kamuya açık vitrin + afiş QR çözümleme (FRONTEND_KAMUYA_ACIK.md) */}
           <Route element={<PublicLayout />}>
+            <Route path="/q/:code" element={<PublicQrResolvePage />} />
             <Route path="/u/:universitySlug/kulup/:clubSlug" element={<PublicClubPage />} />
             <Route path="/u/:universitySlug/etkinlik/:activityId" element={<PublicActivityPage />} />
           </Route>
@@ -61,6 +65,11 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/activities" element={<Activities />} />
             <Route path="/activities/:activityId" element={<ActivityDetail />} />
+            <Route path="/activities/:activityId/yoklama" element={<ActivityCheckInPage />} />
+            <Route
+              path="/clubs/:clubId/activities/:activityId/yoklama-qr"
+              element={<ActivityCheckInDisplayPage />}
+            />
             <Route path="/clubs" element={<Clubs />} />
             {/* Detay id ile çalışır — backend'de slug lookup ucu yok (FRONTEND_CLUBS.md §5.1) */}
             <Route path="/clubs/:clubId" element={<ClubDetail />} />

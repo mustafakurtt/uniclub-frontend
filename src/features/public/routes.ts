@@ -1,9 +1,8 @@
-/** Kamuya açık frontend rotaları — QR/afiş paylaşım linkleri. */
+/** Kamuya açık frontend rotaları — API yolu `/api/public/...` ile eşleşir. */
+export const publicClubPath = (universitySlug: string, clubSlug: string) =>
+  `/u/${universitySlug}/kulup/${clubSlug}`;
 
-export function publicClubPath(universitySlug: string, clubSlug: string): string {
-  return `/u/${universitySlug}/kulup/${clubSlug}`;
-}
+export const publicActivityPath = (universitySlug: string, activityId: string) =>
+  `/u/${universitySlug}/etkinlik/${activityId}`;
 
-export function publicActivityPath(universitySlug: string, activityId: string): string {
-  return `/u/${universitySlug}/etkinlik/${activityId}`;
-}
+export const publicQrPath = (code: string) => `/q/${encodeURIComponent(code)}`;
