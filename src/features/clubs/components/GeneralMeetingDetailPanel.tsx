@@ -1,10 +1,14 @@
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { formatActivityDateTime } from "@/features/activities/formatActivityDateTime";
 import {
   GENERAL_MEETING_TYPE_LABELS,
   quorumRequiredCount,
 } from "@/features/clubs/generalMeetingLabels";
 import GeneralMeetingBoardSection from "@/features/clubs/components/GeneralMeetingBoardSection";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useTenantTimezone } from "@/features/auth/hooks/useTenantTimezone";
+import { exportErrorHint, generateExport, getExportCatalog } from "@/features/exports/api/exports";
+import { getErrorMessage } from "@/shared/api/client";
 import { Icon } from "@/shared/ui/Icon";
 import type { GeneralMeetingDetail } from "@/shared/types";
 
@@ -12,12 +16,46 @@ function userName(user: { firstName: string; lastName: string }): string {
   return `${user.firstName} ${user.lastName}`;
 }
 
+function triggerDownload(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
 interface Props {
+  universityId: string;
   meeting: GeneralMeetingDetail;
 }
 
-export default function GeneralMeetingDetailPanel({ meeting }: Props) {
+export default function GeneralMeetingDetailPanel({ universityId, meeting }: Props) {
   const timezone = useTenantTimezone();
+  const { hasPermission } = useAuth();
+  const canExport = hasPermission("university.export.generate");
+
+  const catalogQuery = useQuery({
+    queryKey: ["exports", universityId, "catalog"],
+    queryFn: () => getExportCatalog(universityId),
+    enabled: canExport,
+    retry: false,
+  });
+
+  const minutesAvailable =
+    canExport &&
+    !catalogQuery.isError &&
+    (catalogQuery.data?.some((r) => r.id === "general-meeting-minutes") ?? false);
+
+  const downloadMutation = useMutation({
+    mutationFn: () =>
+      generateExport(universityId, "general-meeting-minutes", { meetingId: meeting.id }, "pdf"),
+    onSuccess: (file) => triggerDownload(file.blob, file.filename),
+  });
+
+  const downloadErrorHint = exportErrorHint(
+    (downloadMutation.error as Error & { code?: string | null })?.code ?? null
+  );
 
   return (
     <div className="space-y-6 rounded-2xl border border-slate-100 bg-slate-50/80 p-5">
@@ -33,13 +71,33 @@ export default function GeneralMeetingDetailPanel({ meeting }: Props) {
             <p className="mt-1 text-xs text-slate-500">Dönem: {meeting.academicTerm.name}</p>
           )}
         </div>
-        <span
-          className={`chip ${meeting.quorumMet ? "text-emerald-700 bg-emerald-50" : "text-amber-700 bg-amber-50"}`}
-        >
-          Yeter sayı: {meeting.attendeeCount}/{meeting.quorumRequired}
-          {meeting.quorumMet ? " ✓" : ""}
-        </span>
+        <div className="flex flex-wrap items-center gap-2">
+          {minutesAvailable && (
+            <button
+              type="button"
+              className="btn-secondary text-sm"
+              disabled={downloadMutation.isPending}
+              onClick={() => downloadMutation.mutate()}
+            >
+              <Icon name="audit" size={14} />
+              {downloadMutation.isPending ? "İndiriliyor…" : "Tutanağı indir"}
+            </button>
+          )}
+          <span
+            className={`chip ${meeting.quorumMet ? "text-emerald-700 bg-emerald-50" : "text-amber-700 bg-amber-50"}`}
+          >
+            Yeter sayı: {meeting.attendeeCount}/{meeting.quorumRequired}
+            {meeting.quorumMet ? " ✓" : ""}
+          </span>
+        </div>
       </div>
+
+      {downloadMutation.isError && (
+        <div className="alert-error text-sm">
+          {getErrorMessage(downloadMutation.error, "Tutanak indirilemedi.")}
+          {downloadErrorHint && <p className="mt-1 text-xs">{downloadErrorHint}</p>}
+        </div>
+      )}
 
       <section>
         <h4 className="mb-2 text-sm font-bold text-slate-900">Alınan kararlar</h4>

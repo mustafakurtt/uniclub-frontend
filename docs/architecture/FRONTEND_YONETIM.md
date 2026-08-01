@@ -261,10 +261,11 @@ verici rol tenant ayarı `club.application.approval_chain` ile yapılandırılı
 | Method | Path | Yetki | Açıklama |
 |---|---|---|---|
 | GET | `/universities/:uid/approval-committees` | `university.settings.manage` | Kurul listesi (üyeler gömülü) |
+| GET | `/universities/:uid/approval-committees/:committeeId` | `university.settings.manage` | Tek kurul detayı |
 | POST | `/universities/:uid/approval-committees` | `university.settings.manage` | Kurul oluştur (`name`, `memberUserIds[]`, opsiyonel `isActive`) |
 | PATCH | `/universities/:uid/approval-committees/:committeeId` | `university.settings.manage` | Kurul düzenle (ad, üyeler, aktiflik) |
 
-`approvals[]` satırında kurul kademesi: `stepKind: "committee_majority"`, `committeeId`, `approverRole: null`.
+`approvals[]` satırında kurul kademesi: `stepKind: "committee_majority"`, `committeeId`, `approverRole: null`, gömülü `committeeTally` (admin: bireysel oylar + `myVote`; öğrenci: özet, oy detayı yok).
 
 **Kontrol listesi:** Maddeler tenant ayarından gelir (`club.application.review_checklist`). Zorunlu maddeler işaretlenmeden onay `400` + `admin.checklistRequiredIncomplete` (tenant'ta `require_checklist_for_approval` açıksa). UI ayarı okumaz — onay butonu aktif kalır, backend mesajı gösterilir.
 

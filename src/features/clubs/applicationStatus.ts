@@ -28,7 +28,8 @@ export function getStudentApplicationStatusLine(application: ClubApplicationDeta
 
   const current = findCurrentApprovalStep(application.approvals);
   if (current && isCommitteeApprovalStep(current)) {
-    return "Kurul incelemesinde";
+    const name = current.committeeTally?.committeeName;
+    return name ? `${name} incelemesinde` : "Kurul incelemesinde";
   }
   if (current?.approverRole) {
     return waitingAtRolePhrase(current.approverRole);

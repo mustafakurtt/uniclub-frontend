@@ -21,6 +21,16 @@ export const listApprovalCommittees = async (
   return response.data.data;
 };
 
+export const getApprovalCommittee = async (
+  universityId: string,
+  committeeId: string
+): Promise<ApprovalCommittee> => {
+  const response = await apiClient.get<ApiEnvelope<ApprovalCommittee>>(
+    `${committeesBase(universityId)}/${committeeId}`
+  );
+  return response.data.data;
+};
+
 export const createApprovalCommittee = async (
   universityId: string,
   body: CreateApprovalCommitteeDto

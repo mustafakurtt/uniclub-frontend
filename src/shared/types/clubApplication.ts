@@ -1,5 +1,6 @@
 // Kulüp kurma başvurusu — revizyon, geçmiş ve onay zinciri tipleri
 // (FRONTEND_YONETIM.md §5.2, FRONTEND_CLUBS.md §6)
+import type { CommitteeApprovalTally, CommitteeApprovalTallyStudent } from "./approvalCommittee";
 import type { SafeUser } from "./user";
 
 export type ApplicationStatus = "pending" | "approved" | "rejected" | "revision_requested";
@@ -67,6 +68,8 @@ export interface ClubApplicationApproval {
   approver: SafeUser | null;
   reviewedAt: string | null;
   note: string | null;
+  /** Kurul kademesinde gömülü oy durumu; öğrenci yanıtında bireysel oylar yok. */
+  committeeTally?: CommitteeApprovalTally | CommitteeApprovalTallyStudent | null;
 }
 
 export interface ClubApplicationEvent {

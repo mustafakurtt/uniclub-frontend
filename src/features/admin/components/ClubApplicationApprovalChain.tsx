@@ -5,7 +5,7 @@ import {
 } from "@/features/admin/approvalChain";
 import { Icon } from "@/shared/ui/Icon";
 import type { IconName } from "@/shared/ui/Icon";
-import type { ApprovalCommittee, ClubApplicationApproval, CommitteeVoteTally } from "@/shared/types";
+import type { ClubApplicationApproval, CommitteeApprovalTallyStudent } from "@/shared/types";
 
 const STATUS_ICON: Record<ClubApplicationApproval["status"], IconName> = {
   pending: "pending",
@@ -21,38 +21,26 @@ const STATUS_CHIP: Record<ClubApplicationApproval["status"], string> = {
   revision_requested: "bg-violet-50 text-violet-700 border-violet-100",
 };
 
-function committeeStepTitle(
-  row: ClubApplicationApproval,
-  committeesById: Record<string, ApprovalCommittee>
-): string {
-  if (row.committeeId && committeesById[row.committeeId]) {
-    return committeesById[row.committeeId].name;
-  }
-  return "Onay kurulu";
+function committeeStepTitle(row: ClubApplicationApproval): string {
+  return row.committeeTally?.committeeName ?? "Onay kurulu";
 }
 
 function committeeStepSubtitle(
   row: ClubApplicationApproval,
-  committeesById: Record<string, ApprovalCommittee>,
-  tally: CommitteeVoteTally | undefined,
+  tally: CommitteeApprovalTallyStudent | undefined,
   studentView: boolean
 ): string {
-  const committee = row.committeeId ? committeesById[row.committeeId] : undefined;
   if (studentView) {
-    if (row.status === "pending") return "Kurul incelemesinde";
-    if (row.status === "approved") return "Kurul onayı tamamlandı";
-    if (row.status === "rejected") return "Kurul tarafından reddedildi";
-    if (row.status === "revision_requested") return "Kurul revizyon istedi";
-    return "Kurul kademesi";
+    const name = tally?.committeeName ?? "Kurul";
+    if (row.status === "pending") return `${name} incelemesinde`;
+    if (row.status === "approved") return `${name} onayı tamamlandı`;
+    if (row.status === "rejected") return `${name} tarafından reddedildi`;
+    if (row.status === "revision_requested") return `${name} revizyon istedi`;
+    return `${name} kademesi`;
   }
 
-  const memberCount = tally?.memberCount ?? committee?.members.length;
   if (tally) {
-    const abstaining = tally.memberCount - tally.votes;
-    return `${tally.approveCount} / ${tally.threshold} onay · ${abstaining} üye henüz oy vermedi`;
-  }
-  if (memberCount != null) {
-    return `${memberCount} üye · salt çoğunluk oylaması`;
+    return `${tally.approveCount} / ${tally.threshold} onay · ${tally.notVotedCount} üye henüz oy vermedi`;
   }
   return "Salt çoğunluk oylaması";
 }
@@ -63,8 +51,6 @@ interface ClubApplicationApprovalChainProps {
   showAllSteps?: boolean;
   /** Öğrenci yüzeyi — kurul oyu detayı gösterilmez. */
   studentView?: boolean;
-  committeesById?: Record<string, ApprovalCommittee>;
-  tallyByStep?: Record<number, CommitteeVoteTally>;
 }
 
 /** Çok kademeli zincir görünümü — listede tek adımda gizlenir. */
@@ -72,8 +58,6 @@ export default function ClubApplicationApprovalChain({
   approvals,
   showAllSteps = false,
   studentView = false,
-  committeesById = {},
-  tallyByStep = {},
 }: ClubApplicationApprovalChainProps) {
   if (!showAllSteps && approvals.length <= 1) return null;
 
@@ -83,11 +67,12 @@ export default function ClubApplicationApprovalChain({
     <ol className="mt-3 space-y-2 border-l-2 border-slate-100 pl-4">
       {sorted.map((row) => {
         const isCommittee = isCommitteeApprovalStep(row);
+        const tally = row.committeeTally;
         const title = isCommittee
-          ? committeeStepTitle(row, committeesById)
+          ? committeeStepTitle(row)
           : approverRoleLabel(row.approverRole ?? "club_approver");
         const subtitle = isCommittee
-          ? committeeStepSubtitle(row, committeesById, tallyByStep[row.step], studentView)
+          ? committeeStepSubtitle(row, tally ?? undefined, studentView)
           : null;
 
         return (
