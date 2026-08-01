@@ -1,6 +1,6 @@
-// Kamuya açık okuma — /api/public (FRONTEND_KAMUYA_ACIK.md). Auth gerekmez.
+// Kamuya açık okuma — docs/architecture/FRONTEND_KAMUYA_ACIK.md (kimlik yok).
 import { apiClient } from "@/shared/api/client";
-import type { ApiEnvelope, PublicActivityDetail, PublicClubPage } from "@/shared/types";
+import type { ApiEnvelope, PosterQrResolveResult, PublicActivityDetail, PublicClubPage } from "@/shared/types";
 
 export const getPublicClubPage = async (
   universitySlug: string,
@@ -19,5 +19,11 @@ export const getPublicActivity = async (
   const response = await apiClient.get<ApiEnvelope<PublicActivityDetail>>(
     `/public/universities/${universitySlug}/activities/${activityId}`
   );
+  return response.data.data;
+};
+
+/** Bilinmeyen kod → 404; bilinen ama pasif → 200 + status. */
+export const resolvePosterQr = async (code: string): Promise<PosterQrResolveResult> => {
+  const response = await apiClient.get<ApiEnvelope<PosterQrResolveResult>>(`/public/qr/${code}`);
   return response.data.data;
 };

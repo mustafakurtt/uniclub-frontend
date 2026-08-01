@@ -47,6 +47,7 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "university.delete": "Üniversite sil (platform)",
   "role.manage": "Rol yönetimi + atama",
   "permission.manage": "Yetki kataloğu + kişisel claim",
+  "poster_qr.university.manage": "Okul geneli afiş QR yönetimi",
 };
 
 export const permissionLabel = (key: GlobalPermission): string => PERMISSION_LABELS[key] ?? key;

@@ -105,6 +105,7 @@ export const ICONS = {
   theatre: Drama,
   sports: Volleyball,
   photography: Camera,
+  scan: Camera,
   ai: Brain,
   erasmus: Globe,
   literature: BookText,

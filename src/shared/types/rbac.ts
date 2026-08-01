@@ -35,6 +35,8 @@ export type GlobalPermission =
   // RBAC yönetimi (role.manage tenant-scoped; permission.manage platform)
   | "role.manage"
   | "permission.manage"
+  // Afiş QR — okul geneli yönetim (API.md §15)
+  | "poster_qr.university.manage"
   | (string & {});
 
 /** Permission kataloğu satırı — GET /api/auth/permissions (§6.3) */

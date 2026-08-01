@@ -59,6 +59,18 @@ export const cancelActivityRsvp = async (activityId: string): Promise<void> => {
   await apiClient.delete(`/activities/${activityId}/rsvp`);
 };
 
+/** POST /activities/:activityId/check-in — QR yoklama (§ QR yoklama). */
+export const checkInActivity = async (
+  activityId: string,
+  token: string
+): Promise<ActivityRsvpResponse> => {
+  const response = await apiClient.post<ApiEnvelope<ActivityRsvpResponse>>(
+    `/activities/${activityId}/check-in`,
+    { token }
+  );
+  return response.data.data;
+};
+
 /** RSVP yanıtı — backend `myRsvp` benzeri döner. */
 export interface ActivityRsvpResponse {
   status: UserRsvpStatus;
