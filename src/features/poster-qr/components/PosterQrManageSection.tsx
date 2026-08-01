@@ -12,20 +12,17 @@ import {
 } from "@/features/poster-qr/api/posterQr";
 import { getClubActivities } from "@/features/activities/api/activities";
 import { getAdminClubs } from "@/features/admin/api/clubs";
-import { getErrorMessage } from "@/shared/api/client";
-import {
-  effectivePosterQrStatus,
-  POSTER_QR_STATUS_CHIP,
-  POSTER_QR_STATUS_LABELS,
-  POSTER_QR_TARGET_LABELS,
-} from "@/features/poster-qr/labels";
+import PosterQrAnalyticsOverview from "@/features/poster-qr/components/analytics/PosterQrAnalyticsOverview";
+import PosterQrCodeAnalyticsModal from "@/features/poster-qr/components/analytics/PosterQrCodeAnalyticsModal";
 import PosterQrCreateModal from "@/features/poster-qr/components/PosterQrCreateModal";
 import PosterQrRetargetModal from "@/features/poster-qr/components/PosterQrRetargetModal";
 import PosterQrPrintSheet from "@/features/poster-qr/components/PosterQrPrintSheet";
+import PosterQrListTable from "@/features/poster-qr/components/PosterQrListTable";
+import { getErrorMessage } from "@/shared/api/client";
 import EmptyState from "@/shared/ui/EmptyState";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
 import { Icon } from "@/shared/ui/Icon";
-import type { PosterQrCode } from "@/shared/types";
+import type { PosterQrCode, PosterQrOverviewAnalytics } from "@/shared/types";
 
 interface PosterQrManageSectionProps {
   scope: "club" | "university";
@@ -45,10 +42,18 @@ export default function PosterQrManageSection({
   const [retargeting, setRetargeting] = useState<PosterQrCode | null>(null);
   const [printing, setPrinting] = useState<PosterQrCode | null>(null);
   const [cancelling, setCancelling] = useState<PosterQrCode | null>(null);
+  const [analyticsCode, setAnalyticsCode] = useState<{ qrId: string; sourceLabel: string } | null>(
+    null
+  );
   const [actionError, setActionError] = useState<string | null>(null);
 
   const queryKey =
     scope === "club" ? ["clubs", clubId, "poster-qr"] : ["universities", universityId, "poster-qr"];
+
+  const analyticsQueryKey =
+    scope === "club"
+      ? ["clubs", clubId, "poster-qr", "analytics"]
+      : ["universities", universityId, "poster-qr", "analytics"];
 
   const listQuery = useQuery({
     queryKey,
@@ -56,6 +61,9 @@ export default function PosterQrManageSection({
       scope === "club" ? listClubPosterQr(clubId!) : listUniversityPosterQr(universityId!),
     enabled: scope === "club" ? !!clubId : !!universityId,
   });
+
+  const analyticsTimezone =
+    queryClient.getQueryData<PosterQrOverviewAnalytics>(analyticsQueryKey)?.timezone ?? null;
 
   const clubsQuery = useQuery({
     queryKey: ["admin", universityId, "clubs", "approved"],
@@ -84,7 +92,10 @@ export default function PosterQrManageSection({
     return map;
   }, [clubsQuery.data, clubActivitiesQuery.data, listQuery.data]);
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey });
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey });
+    queryClient.invalidateQueries({ queryKey: analyticsQueryKey });
+  };
 
   const createMutation = useMutation({
     mutationFn: (dto: Parameters<typeof createClubPosterQr>[1]) =>
@@ -143,6 +154,16 @@ export default function PosterQrManageSection({
         </button>
       </div>
 
+      <PosterQrAnalyticsOverview
+        scope={scope}
+        clubId={clubId}
+        universityId={universityId}
+        targetLabels={targetLabels}
+        onSelectCode={(qrId, sourceLabel) => setAnalyticsCode({ qrId, sourceLabel })}
+      />
+
+      <h3 className="mb-3 font-display text-sm font-bold text-slate-900">Kod listesi</h3>
+
       {listQuery.isLoading ? (
         <div className="skeleton h-24 w-full" />
       ) : listQuery.isError ? (
@@ -154,71 +175,14 @@ export default function PosterQrManageSection({
           description="Kampüs panoları için bir kod oluşturun."
         />
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] text-left text-sm">
-            <thead>
-              <tr className="border-b border-slate-100 text-[11px] font-bold uppercase tracking-wide text-slate-400">
-                <th className="py-2 pr-3">Kaynak</th>
-                <th className="py-2 pr-3">Hedef</th>
-                <th className="py-2 pr-3">Durum</th>
-                <th className="py-2 pr-3">Tarama</th>
-                <th className="py-2 text-right">İşlem</th>
-              </tr>
-            </thead>
-            <tbody>
-              {listQuery.data!.map((qr) => {
-                const status = effectivePosterQrStatus(qr);
-                return (
-                  <tr key={qr.id} className="border-b border-slate-50">
-                    <td className="py-3 pr-3 font-semibold text-slate-800">{qr.sourceLabel}</td>
-                    <td className="py-3 pr-3 text-slate-600">
-                      <span className="text-xs text-slate-400">
-                        {POSTER_QR_TARGET_LABELS[qr.targetType]}
-                      </span>
-                      <br />
-                      {resolveTargetLabel(qr)}
-                    </td>
-                    <td className="py-3 pr-3">
-                      <span className={`chip text-xs ${POSTER_QR_STATUS_CHIP[status]}`}>
-                        {POSTER_QR_STATUS_LABELS[status]}
-                      </span>
-                    </td>
-                    <td className="py-3 pr-3 text-slate-600">{qr.scanCount}</td>
-                    <td className="py-3 text-right">
-                      <div className="flex flex-wrap justify-end gap-1">
-                        <button
-                          type="button"
-                          className="btn-ghost text-xs"
-                          onClick={() => setPrinting(qr)}
-                        >
-                          Yazdır
-                        </button>
-                        {status !== "cancelled" && (
-                          <>
-                            <button
-                              type="button"
-                              className="btn-ghost text-xs"
-                              onClick={() => setRetargeting(qr)}
-                            >
-                              Hedefi Değiştir
-                            </button>
-                            <button
-                              type="button"
-                              className="btn-ghost text-xs text-red-600"
-                              onClick={() => setCancelling(qr)}
-                            >
-                              İptal
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <PosterQrListTable
+          codes={listQuery.data!}
+          resolveTargetLabel={resolveTargetLabel}
+          onPrint={setPrinting}
+          onRetarget={setRetargeting}
+          onCancel={setCancelling}
+          onAnalytics={(qr) => setAnalyticsCode({ qrId: qr.id, sourceLabel: qr.sourceLabel })}
+        />
       )}
 
       <PosterQrCreateModal
@@ -265,6 +229,17 @@ export default function PosterQrManageSection({
           onClose={() => setPrinting(null)}
         />
       )}
+
+      <PosterQrCodeAnalyticsModal
+        open={!!analyticsCode}
+        scope={scope}
+        clubId={clubId}
+        universityId={universityId}
+        qrId={analyticsCode?.qrId ?? null}
+        sourceLabel={analyticsCode?.sourceLabel ?? ""}
+        timezone={analyticsTimezone}
+        onClose={() => setAnalyticsCode(null)}
+      />
 
       <ConfirmDialog
         open={!!cancelling}

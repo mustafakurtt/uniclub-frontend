@@ -1,6 +1,13 @@
 // Afiş QR yönetimi — API.md §15.
 import { apiClient } from "@/shared/api/client";
-import type { ApiEnvelope, CreatePosterQrDto, PosterQrCode, UpdatePosterQrDto } from "@/shared/types";
+import type {
+  ApiEnvelope,
+  CreatePosterQrDto,
+  PosterQrCode,
+  PosterQrCodeAnalytics,
+  PosterQrOverviewAnalytics,
+  UpdatePosterQrDto,
+} from "@/shared/types";
 
 // ---------------------------------------------------------------------------
 // Kulüp kapsamı (host staff)
@@ -37,6 +44,25 @@ export const updateClubPosterQr = async (
 export const cancelClubPosterQr = async (clubId: string, qrId: string): Promise<PosterQrCode> => {
   const response = await apiClient.post<ApiEnvelope<PosterQrCode>>(
     `/clubs/${clubId}/poster-qr/${qrId}/cancel`
+  );
+  return response.data.data;
+};
+
+export const getClubPosterQrAnalytics = async (
+  clubId: string
+): Promise<PosterQrOverviewAnalytics> => {
+  const response = await apiClient.get<ApiEnvelope<PosterQrOverviewAnalytics>>(
+    `/clubs/${clubId}/poster-qr/analytics`
+  );
+  return response.data.data;
+};
+
+export const getClubPosterQrCodeAnalytics = async (
+  clubId: string,
+  qrId: string
+): Promise<PosterQrCodeAnalytics> => {
+  const response = await apiClient.get<ApiEnvelope<PosterQrCodeAnalytics>>(
+    `/clubs/${clubId}/poster-qr/${qrId}/analytics`
   );
   return response.data.data;
 };
@@ -81,6 +107,25 @@ export const cancelUniversityPosterQr = async (
 ): Promise<PosterQrCode> => {
   const response = await apiClient.post<ApiEnvelope<PosterQrCode>>(
     `/universities/${universityId}/poster-qr/${qrId}/cancel`
+  );
+  return response.data.data;
+};
+
+export const getUniversityPosterQrAnalytics = async (
+  universityId: string
+): Promise<PosterQrOverviewAnalytics> => {
+  const response = await apiClient.get<ApiEnvelope<PosterQrOverviewAnalytics>>(
+    `/universities/${universityId}/poster-qr/analytics`
+  );
+  return response.data.data;
+};
+
+export const getUniversityPosterQrCodeAnalytics = async (
+  universityId: string,
+  qrId: string
+): Promise<PosterQrCodeAnalytics> => {
+  const response = await apiClient.get<ApiEnvelope<PosterQrCodeAnalytics>>(
+    `/universities/${universityId}/poster-qr/${qrId}/analytics`
   );
   return response.data.data;
 };
