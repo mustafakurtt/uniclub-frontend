@@ -126,9 +126,21 @@ export const getMyClubApplication = async (
   return response.data.data;
 };
 
-/** DELETE /clubs/applications/:id — yalnızca pending başvuru geri çekilebilir (§6.3). */
+/** DELETE /clubs/applications/:id — yalnızca pending başvuru geri çekilebilir (§6.4). */
 export const withdrawClubApplication = async (applicationId: string): Promise<void> => {
   await apiClient.delete(`/clubs/applications/${applicationId}`);
+};
+
+/** PATCH /clubs/applications/:id/resubmit — yalnızca revision_requested (§6.3). */
+export const resubmitClubApplication = async (
+  applicationId: string,
+  dto: CreateClubApplicationDto
+): Promise<ClubApplication> => {
+  const response = await apiClient.patch<ApiEnvelope<ClubApplication>>(
+    `/clubs/applications/${applicationId}/resubmit`,
+    dto
+  );
+  return response.data.data;
 };
 
 // ---------------------------------------------------------------------------

@@ -8,6 +8,7 @@ export function findCurrentApprovalStep(
   const sorted = [...approvals].sort((a, b) => a.step - b.step);
   for (const row of sorted) {
     if (row.status === "rejected") return null;
+    if (row.status === "revision_requested") return null;
     if (row.status === "pending") {
       const priorOk = sorted.filter((s) => s.step < row.step).every((s) => s.status === "approved");
       return priorOk ? row : null;
@@ -102,4 +103,5 @@ export const APPROVAL_STATUS_LABELS: Record<ClubApplicationApproval["status"], s
   pending: "Bekliyor",
   approved: "Onaylandı",
   rejected: "Reddedildi",
+  revision_requested: "Revizyon istendi",
 };

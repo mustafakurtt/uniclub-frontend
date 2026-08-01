@@ -7,38 +7,33 @@ import {
   approveClubApplication,
   getClubApplications,
   rejectClubApplication,
+  requestClubApplicationRevision,
   type AdminClubApplication,
 } from "@/features/admin/api";
 import { getApplicationDecisionState } from "@/features/admin/approvalChain";
-import ClubApplicationApprovalChain from "@/features/admin/components/ClubApplicationApprovalChain";
-import ClubApplicationRejectDialog from "@/features/admin/components/ClubApplicationRejectDialog";
+import ClubApplicationHistoryModal from "@/features/admin/components/ClubApplicationHistoryModal";
+import ClubApplicationListItem from "@/features/admin/components/ClubApplicationListItem";
+import ClubApplicationNoteDialog from "@/features/admin/components/ClubApplicationNoteDialog";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { getErrorMessage } from "@/shared/api/client";
 import type { ApplicationStatus } from "@/shared/types";
 
-// Kulüp kurma başvuruları (FRONTEND_YONETIM.md §5.2) — okuma `application.view`,
-// karar çok kademeli onay zincirine göre (varsayılan tek kademe = club.approve).
-
 const STATUS_FILTERS: { key: ApplicationStatus | "all"; label: string }[] = [
-  { key: "pending", label: "Bekleyen" },
+  { key: "pending", label: "Karar bekleyen" },
+  { key: "revision_requested", label: "Revizyon bekleyen" },
   { key: "approved", label: "Onaylanan" },
   { key: "rejected", label: "Reddedilen" },
   { key: "all", label: "Tümü" },
 ];
 
-const STATUS_CHIPS: Record<ApplicationStatus, string> = {
-  pending: "Bekliyor",
-  approved: "Onaylandı",
-  rejected: "Reddedildi",
-};
-
 interface ClubApplicationsSectionProps {
   universityId: string;
 }
 
+type DecisionKind = "approve" | "reject" | "revision";
+
 type PendingDecision =
-  | { kind: "approve"; application: AdminClubApplication }
-  | { kind: "reject"; application: AdminClubApplication }
+  | { kind: DecisionKind; application: AdminClubApplication }
   | null;
 
 export default function ClubApplicationsSection({ universityId }: ClubApplicationsSectionProps) {
@@ -47,6 +42,7 @@ export default function ClubApplicationsSection({ universityId }: ClubApplicatio
   const hasClubApprove = hasPermission("club.approve");
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | "all">("pending");
   const [decision, setDecision] = useState<PendingDecision>(null);
+  const [historyApp, setHistoryApp] = useState<AdminClubApplication | null>(null);
 
   const applicationsQuery = useQuery({
     queryKey: ["admin", universityId, "club-applications", statusFilter],
@@ -56,17 +52,19 @@ export default function ClubApplicationsSection({ universityId }: ClubApplicatio
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["admin", universityId, "club-applications"] });
+    queryClient.invalidateQueries({ queryKey: ["admin", universityId, "club-application-history"] });
     queryClient.invalidateQueries({ queryKey: ["admin", universityId, "clubs"] });
   };
 
   const decideMutation = useMutation({
     mutationFn: async (payload: NonNullable<PendingDecision> & { note?: string }) => {
-      if (payload.kind === "approve") {
-        await approveClubApplication(universityId, payload.application.id);
+      const { kind, application, note } = payload;
+      if (kind === "approve") {
+        await approveClubApplication(universityId, application.id);
+      } else if (kind === "reject") {
+        await rejectClubApplication(universityId, application.id, { note: note ?? "" });
       } else {
-        await rejectClubApplication(universityId, payload.application.id, {
-          note: payload.note ?? "",
-        });
+        await requestClubApplicationRevision(universityId, application.id, { note: note ?? "" });
       }
     },
     onSuccess: () => {
@@ -121,69 +119,20 @@ export default function ClubApplicationsSection({ universityId }: ClubApplicatio
         <EmptyState icon="inbox" title="Bu filtrede başvuru yok" />
       ) : (
         <ul className="divide-y divide-slate-100">
-          {applications.map((app) => {
-            const decisionState =
-              app.status === "pending"
-                ? getApplicationDecisionState(app.approvals, roleNames, hasClubApprove)
-                : null;
-
-            return (
-              <li key={app.id} className="py-3">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-display text-sm font-bold text-slate-900">
-                      {app.proposedName}
-                    </p>
-                    {app.description && (
-                      <p className="mt-0.5 line-clamp-2 max-w-xl text-xs text-slate-500">
-                        {app.description}
-                      </p>
-                    )}
-                    <p className="mt-1 text-[11px] font-semibold text-slate-400">
-                      {app.applicant
-                        ? `${app.applicant.firstName} ${app.applicant.lastName} · `
-                        : ""}
-                      {new Date(app.createdAt).toLocaleDateString("tr-TR")}
-                    </p>
-                    {app.approvals && <ClubApplicationApprovalChain approvals={app.approvals} />}
-                  </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1">
-                    {app.status === "pending" ? (
-                      <>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            className="btn-secondary px-3 py-1.5 text-xs disabled:opacity-50"
-                            disabled={!decisionState?.canDecide || decideMutation.isPending}
-                            title={decisionState?.disabledReason ?? undefined}
-                            onClick={() => setDecision({ kind: "approve", application: app })}
-                          >
-                            <Icon name="check" size={14} /> Onayla
-                          </button>
-                          <button
-                            type="button"
-                            className="btn-ghost px-3 py-1.5 text-xs text-slate-400 hover:text-red-600 disabled:opacity-50"
-                            disabled={!decisionState?.canDecide || decideMutation.isPending}
-                            title={decisionState?.disabledReason ?? undefined}
-                            onClick={() => setDecision({ kind: "reject", application: app })}
-                          >
-                            <Icon name="reject" size={14} /> Reddet
-                          </button>
-                        </div>
-                        {decisionState?.disabledReason && (
-                          <p className="max-w-[14rem] text-right text-[10px] text-slate-400">
-                            {decisionState.disabledReason}
-                          </p>
-                        )}
-                      </>
-                    ) : (
-                      <span className="chip">{STATUS_CHIPS[app.status]}</span>
-                    )}
-                  </div>
-                </div>
-              </li>
-            );
-          })}
+          {applications.map((app) => (
+            <ClubApplicationListItem
+              key={app.id}
+              application={app}
+              decisionState={
+                app.status === "pending"
+                  ? getApplicationDecisionState(app.approvals, roleNames, hasClubApprove)
+                  : null
+              }
+              decidePending={decideMutation.isPending}
+              onDecide={(kind, application) => setDecision({ kind, application })}
+              onShowHistory={setHistoryApp}
+            />
+          ))}
         </ul>
       )}
 
@@ -210,7 +159,8 @@ export default function ClubApplicationsSection({ universityId }: ClubApplicatio
         }}
       />
 
-      <ClubApplicationRejectDialog
+      <ClubApplicationNoteDialog
+        variant="reject"
         open={decision?.kind === "reject"}
         clubName={decision?.kind === "reject" ? decision.application.proposedName : ""}
         loading={decideMutation.isPending}
@@ -223,6 +173,33 @@ export default function ClubApplicationsSection({ universityId }: ClubApplicatio
           decideMutation.reset();
         }}
       />
+
+      <ClubApplicationNoteDialog
+        variant="revision"
+        open={decision?.kind === "revision"}
+        clubName={decision?.kind === "revision" ? decision.application.proposedName : ""}
+        loading={decideMutation.isPending}
+        error={
+          decideMutation.isError && decision?.kind === "revision" ? decideMutation.error : null
+        }
+        onConfirm={(note) =>
+          decision?.kind === "revision" && decideMutation.mutate({ ...decision, note })
+        }
+        onClose={() => {
+          setDecision(null);
+          decideMutation.reset();
+        }}
+      />
+
+      {historyApp && (
+        <ClubApplicationHistoryModal
+          open
+          universityId={universityId}
+          applicationId={historyApp.id}
+          clubName={historyApp.proposedName}
+          onClose={() => setHistoryApp(null)}
+        />
+      )}
     </section>
   );
 }

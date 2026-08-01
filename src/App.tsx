@@ -6,6 +6,7 @@ import VerifyEmail from "@/features/auth/pages/VerifyEmail";
 import Dashboard from "@/pages/Dashboard";
 import Clubs from "@/features/clubs/pages/Clubs";
 import ClubDetail from "@/features/clubs/pages/ClubDetail";
+import ClubApplicationDetailPage from "@/features/clubs/pages/ClubApplicationDetailPage";
 import Activities from "@/features/activities/pages/Activities";
 import ActivityDetail from "@/features/activities/pages/ActivityDetail";
 import ActivityCheckInPage from "@/features/activities/pages/ActivityCheckInPage";
@@ -75,6 +76,7 @@ function App() {
             <Route path="/clubs" element={<Clubs />} />
             {/* Detay id ile çalışır — backend'de slug lookup ucu yok (FRONTEND_CLUBS.md §5.1) */}
             <Route path="/clubs/:clubId" element={<ClubDetail />} />
+            <Route path="/applications/:applicationId" element={<ClubApplicationDetailPage />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
 

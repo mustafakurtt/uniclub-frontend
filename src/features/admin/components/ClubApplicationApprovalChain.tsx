@@ -1,18 +1,21 @@
 import { approverRoleLabel } from "@/features/admin/labels";
 import { APPROVAL_STATUS_LABELS } from "@/features/admin/approvalChain";
 import { Icon } from "@/shared/ui/Icon";
+import type { IconName } from "@/shared/ui/Icon";
 import type { ClubApplicationApproval } from "@/shared/types";
 
-const STATUS_ICON: Record<ClubApplicationApproval["status"], "pending" | "check" | "reject"> = {
+const STATUS_ICON: Record<ClubApplicationApproval["status"], IconName> = {
   pending: "pending",
   approved: "check",
   rejected: "reject",
+  revision_requested: "edit",
 };
 
 const STATUS_CHIP: Record<ClubApplicationApproval["status"], string> = {
   pending: "bg-amber-50 text-amber-700 border-amber-100",
   approved: "bg-green-50 text-green-700 border-green-100",
   rejected: "bg-red-50 text-red-700 border-red-100",
+  revision_requested: "bg-violet-50 text-violet-700 border-violet-100",
 };
 
 interface ClubApplicationApprovalChainProps {

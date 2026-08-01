@@ -1,4 +1,4 @@
-> **Senkron kopya** — Kaynak: `../uniclub-backend/docs/reference/api.md` · Backend commit: `e666b44`
+> **Senkron kopya** — Kaynak: ../uniclub-backend/docs/reference/api.md · Backend commit: e666b44
 
 # University Club Backend — Frontend API Dokümanı
 

@@ -1,4 +1,4 @@
-> **Senkron kopya** — Kaynak: `../uniclub-backend/docs/integration/admin-panel.md` · Backend commit: `e666b44`
+> **Senkron kopya** — Kaynak: ../uniclub-backend/docs/integration/admin-panel.md · Backend commit: e666b44
 
 # Frontend — Yönetim Paneli Entegrasyon Dokümanı (v2)
 
