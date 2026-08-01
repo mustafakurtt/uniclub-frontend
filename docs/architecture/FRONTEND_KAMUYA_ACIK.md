@@ -1,4 +1,4 @@
-> **Senkron kopya** — Kaynak: `../uniclub-backend/docs/integration/public.md` · Backend commit: `5e2646e`
+> **Senkron kopya** — Kaynak: `../uniclub-backend/docs/integration/public.md` · Backend commit: `486a5be`
 
 # Kamuya açık yüzey (T10.3 / T10.5)
 
