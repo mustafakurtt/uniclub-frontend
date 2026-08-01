@@ -1,6 +1,6 @@
 import axios from "axios";
 import { apiClient, getErrorCode, getErrorMessage } from "@/shared/api/client";
-import type { ApiEnvelope, ExportParamsBody, ExportReportDefinition } from "@/shared/types";
+import type { ApiEnvelope, ExportParamsBody, ExportReportDefinition, ExportReportFormat } from "@/shared/types";
 
 export const EXPORT_ERROR_CODES = {
   ROW_LIMIT_EXCEEDED: "exports.rowLimitExceeded",
@@ -12,7 +12,10 @@ export const getExportCatalog = async (universityId: string): Promise<ExportRepo
   const response = await apiClient.get<ApiEnvelope<ExportReportDefinition[]>>(
     `/universities/${universityId}/exports`
   );
-  return response.data.data;
+  return response.data.data.map((report) => ({
+    ...report,
+    format: report.format ?? "xlsx",
+  }));
 };
 
 export interface GeneratedExportFile {
@@ -51,7 +54,8 @@ async function parseBlobError(error: unknown): Promise<{ message: string; code: 
 export const generateExport = async (
   universityId: string,
   reportId: string,
-  params: ExportParamsBody
+  params: ExportParamsBody,
+  format: ExportReportFormat = "xlsx"
 ): Promise<GeneratedExportFile> => {
   try {
     const response = await apiClient.post(
@@ -62,7 +66,7 @@ export const generateExport = async (
 
     const filename =
       parseContentDispositionFilename(response.headers["content-disposition"]) ??
-      `${reportId}.xlsx`;
+      `${reportId}.${format === "pdf" ? "pdf" : "xlsx"}`;
     const usedCsvFallback = response.headers["x-export-fallback"] === "csv";
 
     return {
