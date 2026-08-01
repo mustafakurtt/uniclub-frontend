@@ -12,6 +12,7 @@ const ICON_BY_TYPE: Record<string, IconName> = {
   "account.verified": "check",
   "account.suspended": "lock",
   "club.application.decided": "club",
+  "club.application.revision_requested": "edit",
   "club.membership.decided": "members",
   "role.assigned": "role",
 };
@@ -37,6 +38,10 @@ export function notificationLink(notification: AppNotification): string | null {
     case "club.application.decided": {
       const clubId = readString(data, "clubId");
       return readString(data, "status") === "approved" && clubId ? `/clubs/${clubId}` : null;
+    }
+    case "club.application.revision_requested": {
+      const applicationId = readString(data, "applicationId");
+      return applicationId ? `/applications/${applicationId}` : null;
     }
     case "club.membership.decided": {
       const clubId = readString(data, "clubId");

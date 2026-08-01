@@ -17,6 +17,8 @@ export default function AdminHome() {
     return <Navigate to="/admin/moderation" replace />;
   if (UNIVERSITY_PERMISSIONS.some((p) => hasPermission(p)))
     return <Navigate to="/admin/universities" replace />;
+  if (hasPermission("university.settings.manage"))
+    return <Navigate to="/admin/settings" replace />;
   if (hasPermission("role.manage")) return <Navigate to="/admin/roles" replace />;
   if (hasPermission("permission.manage")) return <Navigate to="/admin/permissions" replace />;
   if (hasPermission("audit.view")) return <Navigate to="/admin/audit" replace />;

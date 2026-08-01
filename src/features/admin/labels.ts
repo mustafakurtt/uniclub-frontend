@@ -49,7 +49,16 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "permission.manage": "Yetki kataloğu + kişisel claim",
   "audit.view": "Denetim izini görüntüle",
   "poster_qr.university.manage": "Okul geneli afiş QR yönetimi",
+  "university.settings.manage": "Tenant politika ayarları",
 };
+
+/** Onay zincirindeki `approverRole` belirteçleri — ham token UI'da gösterilmez. */
+export function approverRoleLabel(role: string): string {
+  if (role === "club_approver") {
+    return "Kulüp onay yetkilisi (club.approve yetkisi taşıyanlar)";
+  }
+  return roleLabel(role as RoleName);
+}
 
 export const permissionLabel = (key: GlobalPermission): string => PERMISSION_LABELS[key] ?? key;
 
