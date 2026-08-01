@@ -30,6 +30,8 @@ import AdminRoles from "@/features/admin/pages/AdminRoles";
 import AdminPermissions from "@/features/admin/pages/AdminPermissions";
 import AdminAudit from "@/features/admin/pages/AdminAudit";
 import AdminSettings from "@/features/admin/pages/AdminSettings";
+import AdminClubApplicationDetail from "@/features/admin/pages/AdminClubApplicationDetail";
+import AdminFormationProposalDetail from "@/features/admin/pages/AdminFormationProposalDetail";
 import AdminExports from "@/features/exports/pages/AdminExports";
 import Forbidden from "@/features/auth/pages/Forbidden";
 import NotFound from "@/shared/pages/NotFound";
@@ -105,6 +107,8 @@ function App() {
             <Route path="/admin/users" element={<AdminUsers />} />
             {/* Kulüp yönetimi: başvurular + kulüpler + danışmanlar (granüler club.*) */}
             <Route path="/admin/clubs" element={<AdminClubs />} />
+            <Route path="/admin/applications/:applicationId" element={<AdminClubApplicationDetail />} />
+            <Route path="/admin/proposals/:proposalId" element={<AdminFormationProposalDetail />} />
             {/* Üye & içerik moderasyonu: tenant üstten müdahale (club.member.manage,
                 announcement.moderate, gallery.moderate) */}
             <Route path="/admin/moderation" element={<AdminModeration />} />
@@ -116,7 +120,7 @@ function App() {
             <Route path="/admin/permissions" element={<AdminPermissions />} />
             {/* Denetim izi: korunan her yazma isteği (audit.view) */}
             <Route path="/admin/audit" element={<AdminAudit />} />
-            {/* Tenant politika ayarları (university.settings.manage) */}
+            {/* Üniversite politikaları (university.settings.manage) */}
             <Route path="/admin/settings" element={<AdminSettings />} />
             {/* Kurumsal rapor dışa aktarma (university.export.generate) */}
             <Route path="/admin/exports" element={<AdminExports />} />

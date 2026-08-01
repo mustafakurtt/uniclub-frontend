@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Outlet, NavLink, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { Icon, type IconName } from "@/shared/ui/Icon";
@@ -9,17 +10,33 @@ import ExportsNavItem from "@/features/exports/components/ExportsNavItem";
 import NotificationBell from "@/features/notifications/components/NotificationBell";
 import LanguageSwitcher from "@/shared/ui/LanguageSwitcher";
 
-// Yönetim panelinin kabuğu (docs/FRONTEND_YONETIM.md §7). Üye arayüzünden
-// (MainLayout) ayrı, kendi sidebar'ı olan bir yönetim alanı. Kabuğa erişim
-// RequireManagement (herhangi bir yönetim yetkisi) ile route seviyesinde
-// kısıtlanır; sidebar linkleri ise ilgili granüler yetkiye göre görünür —
-// böylece 9 rolün her biri yalnızca yetkili olduğu bölümleri görür.
 interface AdminNavItem {
   to: string;
   label: string;
   icon: IconName;
-  /** true → kullanıcının bu bölümü görme/yönetme yetkisi var mı */
   visible: boolean;
+}
+
+interface AdminNavGroup {
+  title: string;
+  items: AdminNavItem[];
+}
+
+function NavGroupSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="mb-4 last:mb-0">
+      <p className="mb-2 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+        {title}
+      </p>
+      <div className="flex flex-col gap-1">{children}</div>
+    </div>
+  );
 }
 
 export default function AdminLayout() {
@@ -39,21 +56,41 @@ export default function AdminLayout() {
   const canManagePermissions = hasPermission("permission.manage");
   const canViewAudit = hasPermission("audit.view");
   const canManageSettings = hasPermission("university.settings.manage");
+  const canExport = hasPermission("university.export.generate");
 
-  const navItems: AdminNavItem[] = [
-    { to: "/admin/users", label: "Kullanıcılar", icon: "members", visible: canViewUsers },
+  const dailyWorkItems = [
     { to: "/admin/clubs", label: "Kulüpler", icon: "club", visible: canViewClubs },
     { to: "/admin/moderation", label: "Moderasyon", icon: "moderation", visible: canModerate },
-    { to: "/admin/universities", label: "Akademik Yapı", icon: "university", visible: canManageUniversities },
-    { to: "/admin/settings", label: "Politikalar", icon: "settings", visible: canManageSettings },
-    { to: "/admin/roles", label: "Roller", icon: "role", visible: canManageRoles },
-    { to: "/admin/permissions", label: "Yetkiler", icon: "lock", visible: canManagePermissions },
-    { to: "/admin/audit", label: "Denetim İzi", icon: "audit", visible: canViewAudit },
+  ].filter((item) => item.visible) as AdminNavItem[];
+
+  const showDailyWork = dailyWorkItems.length > 0 || canExport;
+
+  const navGroups: AdminNavGroup[] = [
+    ...(showDailyWork
+      ? [{ title: "Günlük iş", items: dailyWorkItems }]
+      : []),
+    {
+      title: "Kurum yapısı",
+      items: [
+        { to: "/admin/users", label: "Kullanıcılar", icon: "members", visible: canViewUsers },
+        { to: "/admin/universities", label: "Akademik Yapı", icon: "university", visible: canManageUniversities },
+        { to: "/admin/settings", label: "Politikalar", icon: "settings", visible: canManageSettings },
+      ],
+    },
+    {
+      title: "Sistem",
+      items: [
+        { to: "/admin/roles", label: "Roller", icon: "role", visible: canManageRoles },
+        { to: "/admin/permissions", label: "Yetkiler", icon: "lock", visible: canManagePermissions },
+        { to: "/admin/audit", label: "Denetim İzi", icon: "audit", visible: canViewAudit },
+      ],
+    },
   ];
 
-  const staticNav = navItems.filter((item) => item.visible);
+  const visibleGroups = navGroups
+    .map((group) => ({ ...group, items: group.items.filter((item) => item.visible) }))
+    .filter((group) => group.items.length > 0);
 
-  // Rozet: en yüksek öncelikli rolün Türkçe adı (sıralama = yetki genişliği).
   const primaryRole =
     ([
       "super_admin",
@@ -76,7 +113,6 @@ export default function AdminLayout() {
     <AdminScopeProvider>
     <div className="min-h-screen bg-club-light">
       <div className="mx-auto flex max-w-[90rem] flex-col gap-6 px-4 py-6 lg:flex-row lg:px-8">
-        {/* ==== SIDEBAR ==== */}
         <aside className="lg:w-72 lg:shrink-0">
           <div className="glass sticky top-6 rounded-3xl p-5">
             <Link to="/admin" className="mb-6 flex items-center gap-2 px-2">
@@ -90,20 +126,24 @@ export default function AdminLayout() {
               <LanguageSwitcher />
             </div>
 
-            {/* Hedef tenant — platform hesabında seçici, tenant yöneticisinde
-                sadece kendi üniversitesinin adı (FRONTEND_RUTBE_VE_PLATFORM.md §2). */}
             <div className="mb-5">
               <UniversityScopeSelector />
             </div>
 
-            <nav className="flex flex-col gap-1">
-              {staticNav.map((item) => (
-                <NavLink key={item.to} to={item.to} className={navLinkClass}>
-                  <Icon name={item.icon} size={18} />
-                  {item.label}
-                </NavLink>
+            <nav>
+              {visibleGroups.map((group) => (
+                <NavGroupSection key={group.title} title={group.title}>
+                  {group.items.map((item) => (
+                    <NavLink key={item.to} to={item.to} className={navLinkClass}>
+                      <Icon name={item.icon} size={18} />
+                      {item.label}
+                    </NavLink>
+                  ))}
+                  {group.title === "Günlük iş" && canExport && (
+                    <ExportsNavItem navLinkClass={navLinkClass} />
+                  )}
+                </NavGroupSection>
               ))}
-              <ExportsNavItem navLinkClass={navLinkClass} />
             </nav>
 
             <div className="my-5 h-px bg-slate-200/70" />
@@ -123,13 +163,11 @@ export default function AdminLayout() {
                     {primaryRole ? roleLabel(primaryRole) : "Yönetici"}
                   </p>
                 </div>
-                {/* Dar sidebar: panel sağa hizalansa ekran dışına taşardı. */}
                 <NotificationBell align="left" />
               </div>
             )}
 
             <div className="mt-4 flex flex-col gap-2">
-              {/* Platform hesabının öğrenci uygulaması yoktur (tenant'sız) — §1 */}
               {!isPlatformAccount && (
                 <Link to="/dashboard" className="btn-ghost w-full justify-center text-xs">
                   <Icon name="arrowLeft" size={14} /> Uygulamaya Dön
@@ -142,7 +180,6 @@ export default function AdminLayout() {
           </div>
         </aside>
 
-        {/* ==== İÇERİK ==== */}
         <main className="min-w-0 flex-1 animate-fade-up">
           <Outlet />
         </main>

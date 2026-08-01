@@ -3,11 +3,11 @@
 // bu tipler yanıt şeklini tanımlar.
 
 export type TenantSettingEditor = "tenant" | "platform";
-export type TenantSettingKind = "integer" | "role_chain";
+export type TenantSettingKind = "integer" | "role_chain" | "boolean";
 
 export interface TenantSettingView {
-  value: number | string[];
-  default: number | string[];
+  value: number | string[] | boolean;
+  default: number | string[] | boolean;
   kind: TenantSettingKind;
   min?: number;
   max?: number;
@@ -20,4 +20,4 @@ export interface TenantSettingView {
 export type TenantSettingsResponse = Record<string, TenantSettingView>;
 
 /** PATCH gövdesi — null = varsayılana sıfırla. */
-export type TenantSettingsPatch = Record<string, number | string[] | null>;
+export type TenantSettingsPatch = Record<string, number | string[] | boolean | null>;

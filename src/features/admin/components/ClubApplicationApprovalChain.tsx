@@ -20,11 +20,16 @@ const STATUS_CHIP: Record<ClubApplicationApproval["status"], string> = {
 
 interface ClubApplicationApprovalChainProps {
   approvals: ClubApplicationApproval[];
+  /** Detay sayfasında tek kademeli zinciri de göster. */
+  showAllSteps?: boolean;
 }
 
-/** Çok kademeli zincir görünümü — tek adımda render edilmez (gürültü önleme). */
-export default function ClubApplicationApprovalChain({ approvals }: ClubApplicationApprovalChainProps) {
-  if (approvals.length <= 1) return null;
+/** Çok kademeli zincir görünümü — listede tek adımda gizlenir. */
+export default function ClubApplicationApprovalChain({
+  approvals,
+  showAllSteps = false,
+}: ClubApplicationApprovalChainProps) {
+  if (!showAllSteps && approvals.length <= 1) return null;
 
   const sorted = [...approvals].sort((a, b) => a.step - b.step);
 

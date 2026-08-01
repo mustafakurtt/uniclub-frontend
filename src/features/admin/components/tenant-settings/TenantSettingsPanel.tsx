@@ -5,6 +5,7 @@ import {
   patchTenantSettings,
 } from "@/features/universities/api/tenantSettings";
 import {
+  TenantBooleanSettingField,
   TenantIntegerSettingField,
   TenantRoleChainSettingField,
 } from "@/features/admin/components/tenant-settings/TenantSettingFields";
@@ -15,9 +16,9 @@ import { Icon } from "@/shared/ui/Icon";
 import type { TenantSettingsPatch, TenantSettingsResponse } from "@/shared/types";
 
 const PLATFORM_READONLY_REASON =
-  "Bu limit yalnızca platform operatörü tarafından değiştirilebilir.";
+  "Bu ayar yalnızca platform operatörü tarafından değiştirilebilir.";
 
-type DraftValues = Record<string, number | string[]>;
+type DraftValues = Record<string, number | string[] | boolean>;
 
 function valuesFromResponse(data: TenantSettingsResponse): DraftValues {
   const out: DraftValues = {};
@@ -56,7 +57,7 @@ function renderSettingField(
   meta: TenantSettingsResponse[string],
   currentValues: DraftValues,
   dirtyKeys: Set<string>,
-  setFieldValue: (key: string, value: number | string[]) => void,
+  setFieldValue: (key: string, value: number | string[] | boolean) => void,
   resetField: (key: string) => void,
   fieldErrors: Record<string, string>
 ) {
@@ -84,6 +85,23 @@ function renderSettingField(
   if (meta.kind === "integer" && typeof value === "number") {
     return (
       <TenantIntegerSettingField
+        key={key}
+        settingKey={key}
+        meta={meta}
+        value={value}
+        readOnly={readOnly}
+        readOnlyReason={readOnly ? PLATFORM_READONLY_REASON : undefined}
+        dirty={dirty}
+        onChange={(v) => setFieldValue(key, v)}
+        onReset={() => resetField(key)}
+        error={fieldErrors[key]}
+      />
+    );
+  }
+
+  if (meta.kind === "boolean" && typeof value === "boolean") {
+    return (
+      <TenantBooleanSettingField
         key={key}
         settingKey={key}
         meta={meta}
@@ -150,7 +168,7 @@ export default function TenantSettingsPanel({ universityId }: TenantSettingsPane
         if (JSON.stringify(cur) === JSON.stringify(meta.default)) {
           patch[key] = null;
         } else {
-          patch[key] = cur as number | string[];
+          patch[key] = cur as number | string[] | boolean;
         }
       }
       if (Object.keys(patch).length === 0) return serverData;
@@ -165,7 +183,7 @@ export default function TenantSettingsPanel({ universityId }: TenantSettingsPane
     },
   });
 
-  const setFieldValue = (key: string, value: number | string[]) => {
+  const setFieldValue = (key: string, value: number | string[] | boolean) => {
     setDraft((prev) => ({
       ...(serverData ? valuesFromResponse(serverData) : {}),
       ...prev,
@@ -180,7 +198,7 @@ export default function TenantSettingsPanel({ universityId }: TenantSettingsPane
 
   const resetField = (key: string) => {
     if (!serverData) return;
-    setFieldValue(key, serverData[key].default as number | string[]);
+    setFieldValue(key, serverData[key].default as number | string[] | boolean);
   };
 
   const discardChanges = () => {

@@ -283,3 +283,72 @@ export function TenantRoleChainSettingField({
     </SettingShell>
   );
 }
+
+interface TenantBooleanSettingFieldProps {
+  settingKey: string;
+  meta: TenantSettingView;
+  value: boolean;
+  readOnly: boolean;
+  readOnlyReason?: string;
+  dirty: boolean;
+  onChange: (value: boolean) => void;
+  onReset: () => void;
+  error?: string;
+}
+
+export function TenantBooleanSettingField({
+  settingKey,
+  meta,
+  value,
+  readOnly,
+  readOnlyReason,
+  dirty,
+  onChange,
+  onReset,
+  error,
+}: TenantBooleanSettingFieldProps) {
+  const atDefault = value === meta.default;
+
+  return (
+    <SettingShell
+      settingKey={settingKey}
+      meta={meta}
+      readOnly={readOnly}
+      readOnlyReason={readOnlyReason}
+      dirty={dirty}
+      showReset={!atDefault}
+      onReset={onReset}
+      error={error}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <span
+          className={`chip text-sm ${
+            value
+              ? "border-green-100 bg-green-50 text-green-800"
+              : "border-slate-200 bg-slate-100 text-slate-600"
+          }`}
+        >
+          {value ? "Açık" : "Kapalı"}
+        </span>
+
+        <button
+          id={settingKey}
+          type="button"
+          role="switch"
+          aria-checked={value}
+          disabled={readOnly}
+          onClick={() => !readOnly && onChange(!value)}
+          className={`relative h-7 w-12 shrink-0 rounded-full transition-colors duration-150 ${
+            value ? "bg-brand-600" : "bg-slate-300"
+          } ${readOnly ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
+        >
+          <span
+            className={`absolute top-0.5 left-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform duration-150 ${
+              value ? "translate-x-5" : "translate-x-0"
+            }`}
+          />
+        </button>
+      </div>
+    </SettingShell>
+  );
+}
