@@ -136,6 +136,12 @@ export default function AdminLayoutShell() {
             </div>
 
             <nav>
+              <NavGroupSection title="Ana sayfa">
+                <NavLink to="/admin" end className={navLinkClass}>
+                  <Icon name="home" size={18} />
+                  Genel Bakış
+                </NavLink>
+              </NavGroupSection>
               {visibleGroups.map((group) => (
                 <NavGroupSection key={group.title} title={group.title}>
                   {group.items.map((item) => (

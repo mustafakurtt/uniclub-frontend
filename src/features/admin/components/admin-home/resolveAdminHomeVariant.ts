@@ -1,17 +1,52 @@
 import type { GlobalPermission, RoleName } from "@/shared/types";
-import { isPlatformRole } from "@/features/auth/authorization";
+import {
+  CLUB_PERMISSIONS,
+  isPlatformRole,
+  MODERATION_PERMISSIONS,
+  UNIVERSITY_PERMISSIONS,
+} from "@/features/auth/authorization";
 
-export type AdminHomeVariant = "tenant" | "workQueue" | "moderation" | "audit" | "generic";
+export type AdminHomeVariant =
+  | "tenant"
+  | "workQueue"
+  | "moderation"
+  | "audit"
+  | "structure"
+  | "generic";
 
-const ROLE_VARIANT_PRIORITY: { roles: RoleName[]; variant: AdminHomeVariant }[] = [
-  { roles: ["super_admin", "platform_support", "university_admin"], variant: "tenant" },
-  { roles: ["student_affairs", "academic_affairs"], variant: "workQueue" },
-  { roles: ["content_moderator"], variant: "moderation" },
-  { roles: ["auditor"], variant: "audit" },
+type VariantRule = {
+  variant: AdminHomeVariant;
+  canShow: (hasPermission: (p: GlobalPermission) => boolean, maxRank: number) => boolean;
+};
+
+const VARIANT_RULES: VariantRule[] = [
+  {
+    variant: "tenant",
+    canShow: (hasPermission, maxRank) =>
+      maxRank >= 60 || hasPermission("university.settings.manage"),
+  },
+  {
+    variant: "workQueue",
+    canShow: (hasPermission) => hasPermission("application.view"),
+  },
+  {
+    variant: "moderation",
+    canShow: (hasPermission) =>
+      hasPermission("club.view") && MODERATION_PERMISSIONS.some((p) => hasPermission(p)),
+  },
+  {
+    variant: "audit",
+    canShow: (hasPermission) => hasPermission("audit.view"),
+  },
+  {
+    variant: "structure",
+    canShow: (hasPermission) =>
+      hasPermission("user.view") || UNIVERSITY_PERMISSIONS.some((p) => hasPermission(p)),
+  },
 ];
 
 /**
- * Rol bazlı iniş görünümü — çoklu rolde öncelik sırası + maxRank yedek kuralı.
+ * Yetenek tabanlı iniş görünümü — rol adı değil, etkin yetkiler belirler.
  * Sert yönlendirme yok; yalnızca /admin varsayılan içeriğini belirler.
  */
 export function resolveAdminHomeVariant(
@@ -19,16 +54,13 @@ export function resolveAdminHomeVariant(
   maxRank: number,
   hasPermission: (p: GlobalPermission) => boolean
 ): AdminHomeVariant {
-  for (const entry of ROLE_VARIANT_PRIORITY) {
-    if (entry.roles.some((r) => roleNames.includes(r))) return entry.variant;
+  if (isPlatformRole(roleNames)) return "tenant";
+
+  for (const rule of VARIANT_RULES) {
+    if (rule.canShow(hasPermission, maxRank)) return rule.variant;
   }
 
-  if (maxRank >= 60 || isPlatformRole(roleNames)) return "tenant";
-  if (maxRank >= 45) return "workQueue";
-  if (hasPermission("announcement.moderate") || hasPermission("gallery.moderate")) {
-    return "moderation";
-  }
-  if (hasPermission("audit.view")) return "audit";
+  if (CLUB_PERMISSIONS.some((p) => hasPermission(p))) return "generic";
 
   return "generic";
 }
