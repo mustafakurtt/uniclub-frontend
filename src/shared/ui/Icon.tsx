@@ -8,7 +8,7 @@ import {
   MessageCircle, Camera, Gamepad2, Send, AtSign,
   Rocket, Sparkles, PartyPopper, Hand, Handshake, Bell, Frown, RadioTower, Sprout, Palette,
   Music, Bot, Drama, Volleyball, Brain, BookText, Leaf, Mic, FlaskConical,
-  Eye, EyeOff, Flame, Trophy, Star, ShieldCheck, Pin,
+  Eye, EyeOff, Flame, Trophy, Star, ScrollText, ShieldCheck, Pin,
 } from "lucide-react";
 
 /**
@@ -46,6 +46,7 @@ export const ICONS = {
   link: Link2,
   profile: User,
   role: GraduationCap,
+  audit: ScrollText,
   moderation: ShieldCheck,
   studentNumber: Hash,
   calendar: Calendar,

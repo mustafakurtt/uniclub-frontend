@@ -4,6 +4,7 @@ import { ResendVerificationButton } from "@/features/auth/components/ResendVerif
 import EmailNotVerifiedModal from "@/features/auth/components/EmailNotVerifiedModal";
 import NotificationBell from "@/features/notifications/components/NotificationBell";
 import AuroraBackground from "@/shared/ui/AuroraBackground";
+import LanguageSwitcher from "@/shared/ui/LanguageSwitcher";
 import { Icon } from "@/shared/ui/Icon";
 import BottomTabBar from "./BottomTabBar";
 
@@ -66,6 +67,7 @@ export default function MainLayout() {
               </div>
 
               <div className="flex items-center gap-2 sm:gap-3">
+                <LanguageSwitcher />
                 <NotificationBell />
                 {/* Mobilde avatar profile gider (link alt barda da var); masaüstünde ad da görünür */}
                 <Link

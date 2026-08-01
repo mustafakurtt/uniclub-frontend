@@ -47,6 +47,7 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "university.delete": "Üniversite sil (platform)",
   "role.manage": "Rol yönetimi + atama",
   "permission.manage": "Yetki kataloğu + kişisel claim",
+  "audit.view": "Denetim izini görüntüle",
   "poster_qr.university.manage": "Okul geneli afiş QR yönetimi",
 };
 
@@ -65,6 +66,7 @@ export const PERMISSION_GROUPS: { title: string; match: (key: string) => boolean
   },
   { title: "Akademik Yapı", match: (k) => k.startsWith("university.") },
   { title: "RBAC / Platform", match: (k) => k === "role.manage" || k === "permission.manage" },
+  { title: "Denetim", match: (k) => k.startsWith("audit.") },
 ];
 
 export const USER_STATUS_LABELS: Record<UserStatus, string> = {

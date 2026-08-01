@@ -6,6 +6,7 @@ import { roleLabel } from "@/features/admin/labels";
 import { AdminScopeProvider } from "@/features/admin/context/AdminScopeContext";
 import UniversityScopeSelector from "@/features/admin/components/UniversityScopeSelector";
 import NotificationBell from "@/features/notifications/components/NotificationBell";
+import LanguageSwitcher from "@/shared/ui/LanguageSwitcher";
 
 // Yönetim panelinin kabuğu (docs/FRONTEND_YONETIM.md §7). Üye arayüzünden
 // (MainLayout) ayrı, kendi sidebar'ı olan bir yönetim alanı. Kabuğa erişim
@@ -35,6 +36,7 @@ export default function AdminLayout() {
   const canManageUniversities = UNIVERSITY_PERMISSIONS.some((p) => hasPermission(p));
   const canManageRoles = hasPermission("role.manage");
   const canManagePermissions = hasPermission("permission.manage");
+  const canViewAudit = hasPermission("audit.view");
 
   const navItems: AdminNavItem[] = [
     { to: "/admin/users", label: "Kullanıcılar", icon: "members", visible: canViewUsers },
@@ -43,6 +45,7 @@ export default function AdminLayout() {
     { to: "/admin/universities", label: "Akademik Yapı", icon: "university", visible: canManageUniversities },
     { to: "/admin/roles", label: "Roller", icon: "role", visible: canManageRoles },
     { to: "/admin/permissions", label: "Yetkiler", icon: "lock", visible: canManagePermissions },
+    { to: "/admin/audit", label: "Denetim İzi", icon: "audit", visible: canViewAudit },
   ];
 
   // Rozet: en yüksek öncelikli rolün Türkçe adı (sıralama = yetki genişliği).
@@ -77,6 +80,10 @@ export default function AdminLayout() {
               </span>
               <span className="badge">Yönetim</span>
             </Link>
+
+            <div className="mb-5 flex justify-end">
+              <LanguageSwitcher />
+            </div>
 
             {/* Hedef tenant — platform hesabında seçici, tenant yöneticisinde
                 sadece kendi üniversitesinin adı (FRONTEND_RUTBE_VE_PLATFORM.md §2). */}
