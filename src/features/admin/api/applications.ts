@@ -9,6 +9,7 @@ import type {
   ClubApplicationHistory,
   ClubApplicationRevisionRequest,
   ClubApplicationReviewFields,
+  MyCommitteePendingApplication,
   SafeUser,
 } from "@/shared/types";
 import { adminBase } from "./_base";
@@ -32,6 +33,16 @@ export const getClubApplications = async (
   const response = await apiClient.get<ApiEnvelope<AdminClubApplication[]>>(
     `${adminBase(universityId)}/club-applications`,
     { params: status ? { status } : undefined }
+  );
+  return response.data.data;
+};
+
+/** Kurul üyesinin oy beklediği başvurular — `application.view` gerekmez. */
+export const getMyCommitteePendingApplications = async (
+  universityId: string
+): Promise<MyCommitteePendingApplication[]> => {
+  const response = await apiClient.get<ApiEnvelope<MyCommitteePendingApplication[]>>(
+    `${adminBase(universityId)}/club-applications/my-committee-pending`
   );
   return response.data.data;
 };

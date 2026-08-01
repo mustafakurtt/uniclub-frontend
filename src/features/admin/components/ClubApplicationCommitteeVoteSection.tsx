@@ -11,6 +11,7 @@ import {
   formatCommitteeApprovalProgress,
   formatCommitteeThresholdLabel,
 } from "@/features/admin/committeeTallyDisplay";
+import { myCommitteePendingKeys } from "@/features/admin/hooks/useMyCommitteePending";
 import { getErrorMessage } from "@/shared/api/client";
 import { Icon } from "@/shared/ui/Icon";
 import type {
@@ -94,6 +95,7 @@ export default function ClubApplicationCommitteeVoteSection({
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["admin", universityId, "club-applications"] });
+    queryClient.invalidateQueries({ queryKey: myCommitteePendingKeys.list(universityId) });
     queryClient.invalidateQueries({
       queryKey: ["admin", universityId, "club-application", applicationId],
     });

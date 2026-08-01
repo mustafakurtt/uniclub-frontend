@@ -52,7 +52,7 @@ function AdminHomeBody({ universityId }: { universityId: string }) {
 
   return (
     <div className="space-y-6">
-      <HomeCommitteeVotePending />
+      <HomeCommitteeVotePending universityId={universityId} />
       {variant === "tenant" && <HomeTenantOverview universityId={universityId} />}
       {variant === "workQueue" && <HomeWorkQueue universityId={universityId} />}
       {variant === "moderation" && <HomeModerationLanding />}

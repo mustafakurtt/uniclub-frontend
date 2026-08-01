@@ -1,4 +1,4 @@
-> **Senkron kopya** — Kaynak: ../uniclub-backend/docs/integration/admin-panel.md · Backend commit: `db78c76`
+> **Senkron kopya** — Kaynak: ../uniclub-backend/docs/integration/admin-panel.md · Backend commit: `78f4759`
 
 # Frontend — Yönetim Paneli Entegrasyon Dokümanı (v2)
 
@@ -239,7 +239,8 @@ verici rol tenant ayarı `club.application.approval_chain` ile yapılandırılı
 | Method | Path | Yetki | Açıklama |
 |---|---|---|---|
 | GET | `/universities/:uid/club-applications?status=` | `application.view` | Başvuru listesi (`applicant` + `approvals` gömülü); `status=revision_requested` revizyon kuyruğu |
-| GET | `/universities/:uid/club-applications/:id` | `application.view` | Tekil başvuru (`applicant`, `approvals`, `revisionRequest` gömülü) — FE-5 detay rotası |
+| GET | `/universities/:uid/club-applications/my-committee-pending` | kurul üyeliği (tenant) | Oy bekleyen kurul başvuruları — `application.view` gerekmez; yanıt: `committeeStep`, `committeeId`, `committeeName` gömülü |
+| GET | `/universities/:uid/club-applications/:id` | `application.view` **veya** ilgili kurul kademesi üyeliği | Tekil başvuru (`applicant`, `approvals`, `revisionRequest` gömülü) — FE-5 detay rotası |
 | PATCH | `/universities/:uid/club-applications/:id/approve` | `application.view` | Sıradaki kademeyi onayla — **tüm kademeler** onaylandığında gerçek kulüp oluşur |
 | PATCH | `/universities/:uid/club-applications/:id/reject` | `application.view` | Sıradaki kademeyi reddet (`note` zorunlu) |
 | PATCH | `/universities/:uid/club-applications/:id/request-revision` | `application.view` | Revizyon talep et (`note` zorunlu) — öğrenci düzeltip yeniden gönderir |
@@ -397,7 +398,8 @@ Kulüp-içi katman (officer/president/advisor) korunur; bunlar tenant yöneticis
 |---|---|
 | `/admin/clubs/:clubId?tab=` | Başlık/sayaçlar: `GET .../clubs/:clubId`; sekmeler: members, activities, announcements, advisors, gallery; denetim: `GET /api/audit/universities/:uid?targetId=:clubId` (`audit.view`) |
 | `/admin/users/:userId` | `GET .../users/:userId` — roller, kulüp üyelikleri, override'lar, effective permissions |
-| `/admin/applications/:applicationId` | `GET .../club-applications/:id` + `.../history` |
+| `/admin/applications/:applicationId` | `GET .../club-applications/:id` (+ `.../history` yalnızca `application.view`) |
+| `/admin/committee-tasks` | `GET .../club-applications/my-committee-pending` |
 | `/admin/proposals/:proposalId` | `GET .../formation-proposals/:id` |
 
 Sekme değişimi URL'de (`?tab=members`); açılmayan sekmenin verisi çekilmez.
