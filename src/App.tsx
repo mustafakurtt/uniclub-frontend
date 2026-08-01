@@ -24,6 +24,9 @@ import AdminRoles from "@/features/admin/pages/AdminRoles";
 import AdminPermissions from "@/features/admin/pages/AdminPermissions";
 import Forbidden from "@/features/auth/pages/Forbidden";
 import NotFound from "@/shared/pages/NotFound";
+import PublicLayout from "@/layouts/PublicLayout";
+import PublicClubPage from "@/features/public/pages/PublicClubPage";
+import PublicActivityPage from "@/features/public/pages/PublicActivityPage";
 
 function App() {
   return (
@@ -36,6 +39,12 @@ function App() {
           <Route path="/login" element={<Login />} />
           {/* E-postadaki doğrulama linki buraya iner (docs/FRONTEND_AUTH_RBAC.md §2.3) */}
           <Route path="/verify" element={<VerifyEmail />} />
+
+          {/* Kamuya açık QR/afiş yüzeyi — auth yok (FRONTEND_KAMUYA_ACIK.md) */}
+          <Route element={<PublicLayout />}>
+            <Route path="/u/:universitySlug/kulup/:clubSlug" element={<PublicClubPage />} />
+            <Route path="/u/:universitySlug/etkinlik/:activityId" element={<PublicActivityPage />} />
+          </Route>
 
           {/* Öğrenci self-service kabuğu. Tenant'sız platform hesapları (super_admin,
               platform_support) buraya giremez — backend 400 döner; RequireTenantAccount
