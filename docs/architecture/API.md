@@ -1,4 +1,4 @@
-> **Senkron kopya** — Kaynak: `../uniclub-backend/docs/reference/api.md` · Backend commit: `526035d`
+> **Senkron kopya** — Kaynak: `../uniclub-backend/docs/reference/api.md` · Backend commit: `5e2646e`
 
 # University Club Backend — Frontend API Dokümanı
 
@@ -32,6 +32,7 @@ Bu doküman, frontend ekibinin backend'i entegre ederken ihtiyaç duyacağı tü
   - [Activities (etkinlikler)](#12-activities--apiactivities)
   - [Dashboard & Feed](#13-dashboard--feed--apifeed)
   - [Media (dosya yükleme)](#14-media--apiuploads)
+  - [Public (kamuya açık okuma)](#15-public--apipublic)
 - [Enum Referansı](#enum-referansı)
 - [Bilinmesi Gereken Diğer Detaylar](#bilinmesi-gereken-diğer-detaylar)
 
@@ -39,7 +40,7 @@ Bu doküman, frontend ekibinin backend'i entegre ederken ihtiyaç duyacağı tü
 
 ## Genel Kurallar
 
-**Base URL:** `http://localhost:3000` (dev). Tüm feature route'ları `/api` altında mount edilir. Mount edilen route grupları: `/api/auth`, `/api/admin`, `/api/platform`, `/api/universities`, `/api/users`, `/api/clubs`, `/api/activities`, `/api/feed`, `/api/uploads`, `/api/notifications`, `/api/audit`, `/api/moderation`. Ayrıca yüklenen dosyalar **`/uploads/:key`** (public, `/api` altında değil) altından servis edilir. (**`/api/super-admin` diye bir route grubu yoktur** — sistem yönetimi endpoint'leri `/api/auth`, `/api/platform`, `/api/universities` ve `/api/moderation` altındadır.)
+**Base URL:** `http://localhost:3000` (dev). Tüm feature route'ları `/api` altında mount edilir. Mount edilen route grupları: `/api/auth`, `/api/admin`, `/api/platform`, `/api/public`, `/api/universities`, `/api/users`, `/api/clubs`, `/api/activities`, `/api/feed`, `/api/uploads`, `/api/notifications`, `/api/audit`, `/api/moderation`. Ayrıca yüklenen dosyalar **`/uploads/:key`** (public, `/api` altında değil) altından servis edilir. (**`/api/super-admin` diye bir route grubu yoktur** — sistem yönetimi endpoint'leri `/api/auth`, `/api/platform`, `/api/universities` ve `/api/moderation` altındadır.)
 
 **Başarı zarfı** — her başarılı endpoint aynı şekli döner:
 
@@ -574,6 +575,7 @@ etkinlik birden fazla üniversitenin keşif akışında görünebilir (turnuva s
 | GET | `/api/activities/:activityId` | Detay (görünürlük/tenant/yayın kuralları uygulanır) |
 | POST | `/api/activities/:activityId/rsvp` | Katılım bildir — `{ status: "going"\|"interested" }` (vars. `going`, kapasite kontrollü) |
 | DELETE | `/api/activities/:activityId/rsvp` | Katılımı geri al (idempotent) |
+| POST | `/api/activities/:activityId/check-in` | QR yoklama — `{ token }`; RSVP + görünürlük; ikinci okutma no-op |
 
 **Kulüp-içi yönetim** — `/api/clubs/:clubId/activities` (kulüp alt-kaynağı; yazma = host staff):
 
@@ -586,6 +588,7 @@ etkinlik birden fazla üniversitenin keşif akışında görünebilir (turnuva s
 | POST | `.../:activityId/cancel` | host staff (katılımcılara bildirim) |
 | GET | `.../:activityId/attendees` | host staff |
 | POST\|DELETE | `.../:activityId/attendees/:userId/check-in` | host staff (yoklama işaretle/geri al) |
+| GET | `.../:activityId/check-in-qr` | host staff (dönen yoklama QR token'ı, ~30s ömür) |
 | POST\|GET | `.../:activityId/co-hosts` | host staff (kulüp davet et `{clubId}` / listele) |
 | DELETE | `.../:activityId/co-hosts/:coClubId` | host staff (co-host kaldır) |
 | POST\|DELETE | `.../:activityId/co-host[/accept]` | co-host staff (daveti kabul / reddet-ayrıl) |
@@ -624,6 +627,36 @@ Akış: **yükle → dönen URL'yi mevcut `*Url` alanına yaz** (endpoint'ler h�
 | GET | `/uploads/:key` | Public | Servis (`Cache-Control: immutable`) |
 
 `purpose`: `avatar\|club_logo\|club_cover\|gallery\|other`. Boyut aşımı → `413`; görsel değil → `400`.
+
+---
+
+### 15) Public — `/api/public`
+
+Kimlik doğrulama **yok**. IP başına hız sınırı (120/dk). Tam sözleşme: [`docs/integration/public.md`](../integration/public.md).
+
+| Method | Path | Açıklama |
+|---|---|---|
+| GET | `/api/public/universities/:universitySlug/clubs/:clubSlug` | Kulüp tanıtım + yaklaşan `university` etkinlikleri |
+| GET | `/api/public/universities/:universitySlug/activities/:activityId` | Yayınlanmış `university` etkinlik detayı |
+| GET | `/api/public/qr/:code` | Afiş QR çözümleme — `active` hedef veya `expired`/`cancelled`/`not_yet_active` (404 yalnızca bilinmeyen kod) |
+
+Gizli kaynak (`draft`, `members`, zamanlanmış taslak, başka tenant) → **404**.
+
+#### Afiş QR yönetimi
+
+| Method | Path | Kim | Açıklama |
+|---|---|---|---|
+| GET/POST | `/api/clubs/:clubId/poster-qr` | host staff | Kulüp kapsamı QR oluştur/listele |
+| PATCH | `/api/clubs/:clubId/poster-qr/:qrId` | host staff | Hedef/süre/etiket güncelle |
+| POST | `/api/clubs/:clubId/poster-qr/:qrId/cancel` | host staff | İptal |
+| GET | `/api/clubs/:clubId/poster-qr/analytics` | host staff | Kaynak karşılaştırması (hedef bazlı) |
+| GET | `/api/clubs/:clubId/poster-qr/:qrId/analytics` | host staff | Kod bazlı tarama özeti (gün/saat, tenant TZ) |
+| GET/POST | `/api/universities/:universityId/poster-qr` | `poster_qr.university.manage` | Okul geneli QR |
+| PATCH | `/api/universities/:universityId/poster-qr/:qrId` | aynı | Güncelle |
+| POST | `/api/universities/:universityId/poster-qr/:qrId/cancel` | aynı | İptal |
+| GET | `/api/universities/:universityId/poster-qr/analytics` | aynı | Kurum geneli kaynak karşılaştırması |
+| GET | `/api/universities/:universityId/poster-qr/:qrId/analytics` | aynı | Kod bazlı özet |
+
 
 ---
 

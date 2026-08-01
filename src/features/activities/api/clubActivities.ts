@@ -130,3 +130,23 @@ export const declineActivityCoHostInvite = async (
 ): Promise<void> => {
   await apiClient.delete(`/clubs/${coHostClubId}/activities/${activityId}/co-host`);
 };
+
+// ---------------------------------------------------------------------------
+// Yoklama QR (host staff ekranı)
+// ---------------------------------------------------------------------------
+
+export interface CheckInQrPayload {
+  token: string;
+  expiresAt: string;
+}
+
+/** GET /clubs/:clubId/activities/:activityId/check-in-qr — ~30s ömürlü token. */
+export const getCheckInQr = async (
+  clubId: string,
+  activityId: string
+): Promise<CheckInQrPayload> => {
+  const response = await apiClient.get<ApiEnvelope<CheckInQrPayload>>(
+    `/clubs/${clubId}/activities/${activityId}/check-in-qr`
+  );
+  return response.data.data;
+};

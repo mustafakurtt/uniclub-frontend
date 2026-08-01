@@ -12,3 +12,5 @@ export type * from "./activity"; // etkinlikler + RSVP
 export type * from "./rbac"; // yetkiler + yönetim görünümleri
 export type * from "./notification"; // gerçek zamanlı bildirimler (WS + REST)
 export type * from "./audit"; // denetim izi (audit log)
+export type * from "./posterQr"; // afiş QR
+export type * from "./public"; // kamuya açık DTO

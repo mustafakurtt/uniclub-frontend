@@ -10,6 +10,7 @@ import { Icon } from "@/shared/ui/Icon";
 import NameFormModal, { type NameFormValues } from "@/features/universities/components/NameFormModal";
 import DomainsSection from "@/features/universities/components/DomainsSection";
 import FacultiesSection from "@/features/universities/components/FacultiesSection";
+import PosterQrManageSection from "@/features/poster-qr/components/PosterQrManageSection";
 
 // Tek üniversite yönetim ekranı (docs/FRONTEND_UNIVERSITY.md §8.2 ağaç görünümü):
 // başlık (ad/slug + düzenle/sil) + Domainler + Fakülteler/Bölümler.
@@ -100,6 +101,14 @@ export default function AdminUniversityDetail() {
         <DomainsSection universityId={universityId} domains={university.domains} />
         <FacultiesSection universityId={universityId} />
       </div>
+
+      <RequirePermission permission="poster_qr.university.manage">
+        <PosterQrManageSection
+          scope="university"
+          universityId={universityId}
+          universityName={university.name}
+        />
+      </RequirePermission>
 
       {/* Düzenle */}
       <NameFormModal
