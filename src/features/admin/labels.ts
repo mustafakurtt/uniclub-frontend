@@ -49,7 +49,7 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "permission.manage": "Yetki kataloğu + kişisel claim",
   "audit.view": "Denetim izini görüntüle",
   "poster_qr.university.manage": "Okul geneli afiş QR yönetimi",
-  "university.settings.manage": "Tenant politika ayarları",
+  "university.settings.manage": "Üniversite politikalarını yönet",
   "university.export.generate": "Kurumsal rapor dışa aktarma",
 };
 

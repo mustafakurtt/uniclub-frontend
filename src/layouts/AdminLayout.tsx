@@ -45,7 +45,7 @@ export default function AdminLayout() {
     { to: "/admin/clubs", label: "Kulüpler", icon: "club", visible: canViewClubs },
     { to: "/admin/moderation", label: "Moderasyon", icon: "moderation", visible: canModerate },
     { to: "/admin/universities", label: "Akademik Yapı", icon: "university", visible: canManageUniversities },
-    { to: "/admin/settings", label: "Tenant Ayarları", icon: "settings", visible: canManageSettings },
+    { to: "/admin/settings", label: "Politikalar", icon: "settings", visible: canManageSettings },
     { to: "/admin/roles", label: "Roller", icon: "role", visible: canManageRoles },
     { to: "/admin/permissions", label: "Yetkiler", icon: "lock", visible: canManagePermissions },
     { to: "/admin/audit", label: "Denetim İzi", icon: "audit", visible: canViewAudit },
