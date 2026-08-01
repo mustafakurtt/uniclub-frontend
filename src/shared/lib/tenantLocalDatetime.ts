@@ -63,6 +63,35 @@ export function isTenantLocalDatetimeInPast(localValue: string, timezone: string
   return localValue < tenantNowLocalDatetime(timezone);
 }
 
+/**
+ * datetime-local değerini ISO 8601'e çevirir (akademik dönem API — offset'li UTC).
+ * Tenant timezone varsa duvar saati orada yorumlanır; yoksa tarayıcı TZ'si.
+ */
+export function localDatetimeToIsoOffset(localValue: string, timezone?: string | null): string {
+  if (!isValidScheduledPublishLocal(localValue)) {
+    throw new Error("Geçersiz tarih/saat");
+  }
+  if (!timezone) {
+    return new Date(localValue).toISOString();
+  }
+
+  const [datePart, timePart] = localValue.split("T");
+  const [y, mo, d] = datePart.split("-").map(Number);
+  const [h, mi] = timePart.split(":").map(Number);
+  const base = Date.UTC(y, mo - 1, d, h, mi);
+
+  for (let offsetMin = -16 * 60; offsetMin <= 16 * 60; offsetMin += 1) {
+    const candidate = new Date(base + offsetMin * 60_000);
+    const p = zonedParts(candidate, timezone);
+    const formatted = `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`;
+    if (formatted === localValue) {
+      return candidate.toISOString();
+    }
+  }
+
+  return new Date(localValue).toISOString();
+}
+
 /** Kısa saat dilimi etiketi — örn. "GMT+3", "TRT". */
 export function formatTimezoneShortLabel(timezone: string, locale = "tr-TR"): string {
   try {

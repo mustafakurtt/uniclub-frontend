@@ -1,4 +1,4 @@
-> **Senkron kopya** — Kaynak: `../uniclub-backend/docs/integration/university.md` · Backend commit: `806f82a`
+> **Senkron kopya** — Kaynak: `../uniclub-backend/docs/integration/university.md` · Backend commit: `693d8b7`
 
 # University Katmanı — Frontend Entegrasyon Dokümanı
 
@@ -54,6 +54,7 @@ Eski tek `university.manage` yetkisi kaldırıldı. Yerine **kaynak + aksiyon** 
 | Domain | `university.domain.create` | `university.domain.update` | `university.domain.delete` |
 | Fakülte | `university.faculty.create` | `university.faculty.update` | `university.faculty.delete` |
 | Bölüm | `university.department.create` | `university.department.update` | `university.department.delete` |
+| Akademik dönem | — | `university.academic_term.manage` (CRUD) | — |
 
 - Seed'de bu 12 yetkinin **tamamı `super_admin` rolüne** atanır. Okul yöneticisi (`university_admin`) rolüne varsayılan olarak atanmaz — istenirse `POST /api/auth/roles/:roleId/permissions` ile eklenir (bkz. [auth.md §4](auth.md)).
 - **Okuma (GET) rotaları hiçbir permission gerektirmez** — bu yüzden bir `university.view` anahtarı yoktur.
@@ -341,6 +342,19 @@ bölümler → fakülteler → (kullanıcılar/kulüpler admin panelinden) → d
 
 Kullanıcıya her adımda backend'in döndürdüğü `message`'ı göstermek yeterli; hangi bağımlının kaldığını mesaj zaten söylüyor.
 
+### 8.4 Akademik dönemler (`university.academic_term.manage`)
+
+Kurum kendi takvimini tanımlar; aktif dönem `status = open` ve bugün `[startsAt, endsAt]` aralığında türetilir (`isActive` yanıtta). Çakışan tarih aralıkları DB exclusion ile reddedilir.
+
+```
+GET/POST   /api/universities/:universityId/academic-terms
+PATCH/DELETE /api/universities/:universityId/academic-terms/:termId
+```
+
+Body örneği: `{ "name": "2026–2027 Güz", "startsAt": "2026-09-01T00:00:00+03:00", "endsAt": "2027-01-31T23:59:59+03:00" }`. Bağlı üyelik olayı olan dönem silinemez (`400`).
+
+Frontend: `/admin/academic-terms` (Kurum yapısı menüsü). Çakışma/silme kurallarını istemci tarafında taklit etmeyin — backend `message`'ını gösterin.
+
 ---
 
 ## 9. Hata Durumları Sözlüğü
@@ -362,3 +376,6 @@ Kullanıcıya her adımda backend'in döndürdüğü `message`'ı göstermek yet
 | `Bu bölüme bağlı kullanıcılar var, silinemez.` | 400 | bölüm delete |
 | `Bu işlem için yetkiniz bulunmamaktadır.` | 403 | eksik `university.*` permission |
 | `Bu üniversiteye ait kaynaklara erişim yetkiniz bulunmamaktadır.` | 403 | tenant scope ihlali (super_admin değilse) |
+| `Bu tarih aralığı mevcut bir dönemle çakışıyor.` | 400 | akademik dönem create/update (çakışma) |
+| `Bu döneme bağlı üyelik kayıtları var; silinemez.` | 400 | akademik dönem delete |
+| `Akademik dönem bulunamadı.` | 404 | akademik dönem get/update/delete |

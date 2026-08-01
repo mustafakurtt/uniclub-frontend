@@ -1,5 +1,6 @@
 export const CLUB_DETAIL_TABS = [
   { key: "members", label: "Üyeler" },
+  { key: "membership-history", label: "Üyelik tarihçesi" },
   { key: "activities", label: "Etkinlikler" },
   { key: "announcements", label: "Duyurular" },
   { key: "advisors", label: "Danışmanlar" },
