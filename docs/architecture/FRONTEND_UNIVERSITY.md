@@ -167,6 +167,16 @@ Tenant profili (C2): `timezone` (IANA, geçersiz → `400`), `defaultLocale` (`t
 
 `logoUrl` / `primaryColor` sıfırlamak için `null` gönderin.
 
+**Dashboard hero görseli (planlanan — backend henüz yok):** Öğrenci paneli (`/dashboard`) hero alanı tenant görseli kullanır. Frontend tipi: `university.dashboardHeroUrl` (`GET /users/me` gömülü üniversite). Backend karşılığı henüz tanımlı değil; gelene kadar mavi gradyan yedek kullanılır.
+
+| Özellik | Değer |
+|---|---|
+| En-boy oranı | **3:1** |
+| Önerilen boyut | **1920×640** px |
+| Maks. dosya | **500 KB** |
+| Güvenli alan | Metin sol **%55**, sağ **%45** (3D küp) |
+| `alt` | Dekoratif — boş string |
+
 Yanıt: güncel üniversite satırı. Hatalar: `404 "Üniversite bulunamadı."`, `400 "Bu slug zaten kullanılıyor."`, doğrulama `400` (geçersiz saat dilimi / renk).
 
 **Dil önceliği (API mesajları):** kullanıcı `preferredLanguage` → `Accept-Language` → tenant `defaultLocale` → `tr`. Mail/kuyruk: kullanıcı tercihi → tenant `defaultLocale` → `tr` (başlık yok).

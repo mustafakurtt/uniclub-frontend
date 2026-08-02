@@ -10,6 +10,13 @@ export interface University {
   /** IANA saat dilimi — tenant duvar saati (C2). */
   timezone?: string;
   defaultLocale?: string;
+  logoUrl?: string | null;
+  primaryColor?: string | null;
+  /**
+   * Öğrenci paneli hero görseli (3:1). Backend karşılığı planlanıyor —
+   * `universities.dashboard_hero_url`; yoksa gradyan yedek kullanılır.
+   */
+  dashboardHeroUrl?: string | null;
   // Liste/detay uçları döner; oturum içindeki University alt kümesinde bulunmaz (opsiyonel).
   createdAt?: string;
   updatedAt?: string;
