@@ -6,8 +6,8 @@ import CampusFeedStrip from "@/pages/dashboard/CampusFeedStrip";
 import { toVisualFeedCards } from "@/pages/dashboard/campusFeedVisual";
 import { Icon } from "@/shared/ui/Icon";
 
-/** Şerit sağa taşar; sol kenar içerik sütunuyla hizalı kalır (main px ile eşleşir). */
-const STRIP_BLEED_RIGHT = "-mr-3 sm:-mr-6 lg:-mr-8";
+/** Şerit sağ kenara viewport kadar taşar; sol okuma sütunuyla hizalı kalır. */
+const STRIP_BLEED_RIGHT = "mr-[calc(50%-50vw)]";
 
 /**
  * Kampüs görsel akışı — `GET /api/feed` içinden etkinlik + galeri kartları.
