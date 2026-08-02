@@ -53,6 +53,7 @@ export default function AdminLayoutShell() {
   const canViewUsers = hasPermission("user.view");
   const canViewClubs = CLUB_PERMISSIONS.some((p) => hasPermission(p));
   const canModerate = hasPermission("club.view") && MODERATION_PERMISSIONS.some((p) => hasPermission(p));
+  const canManageUniversityAnnouncements = hasPermission("announcement.university.manage");
   const canManageUniversities = UNIVERSITY_PERMISSIONS.some((p) => hasPermission(p));
   const canManageRoles = hasPermission("role.manage");
   const canManagePermissions = hasPermission("permission.manage");
@@ -65,6 +66,12 @@ export default function AdminLayoutShell() {
   const dailyWorkItems = [
     { to: "/admin/clubs", label: "Kulüpler", icon: "club", visible: canViewClubs },
     { to: "/admin/moderation", label: "Moderasyon", icon: "moderation", visible: canModerate },
+    {
+      to: "/admin/university-announcements",
+      label: "Okul duyuruları",
+      icon: "announcement",
+      visible: canManageUniversityAnnouncements,
+    },
   ].filter((item) => item.visible) as AdminNavItem[];
 
   const showDailyWork = dailyWorkItems.length > 0 || canExport || showCommitteeTasks;

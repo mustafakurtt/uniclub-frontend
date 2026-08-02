@@ -16,6 +16,9 @@ import ActivityDetail from "@/features/activities/pages/ActivityDetail";
 import ActivityCheckInPage from "@/features/activities/pages/ActivityCheckInPage";
 import ActivityCheckInDisplayPage from "@/features/activities/pages/ActivityCheckInDisplayPage";
 import DiscoverPage from "@/features/discover/pages/DiscoverPage";
+import UniversityAnnouncementsPage from "@/features/university-announcements/pages/UniversityAnnouncementsPage";
+import UniversityAnnouncementDetailPage from "@/features/university-announcements/pages/UniversityAnnouncementDetailPage";
+import AdminUniversityAnnouncementsPage from "@/features/university-announcements/pages/AdminUniversityAnnouncementsPage";
 import Profile from "@/features/auth/pages/Profile";
 import ProtectedRoute from "@/features/auth/guards/ProtectedRoute";
 import RequireManagement from "@/features/auth/guards/RequireManagement";
@@ -79,6 +82,8 @@ function App() {
             }
           >
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/duyurular" element={<UniversityAnnouncementsPage />} />
+            <Route path="/duyurular/:announcementId" element={<UniversityAnnouncementDetailPage />} />
             <Route path="/activities" element={<Activities />} />
             <Route path="/activities/:activityId" element={<ActivityDetail />} />
             <Route path="/discover" element={<DiscoverPage />} />
@@ -123,6 +128,10 @@ function App() {
             {/* Üye & içerik moderasyonu: tenant üstten müdahale (club.member.manage,
                 announcement.moderate, gallery.moderate) */}
             <Route path="/admin/moderation" element={<AdminModeration />} />
+            <Route
+              path="/admin/university-announcements"
+              element={<AdminUniversityAnnouncementsPage />}
+            />
             {/* Akademik yapı: üniversite/domain/fakülte/bölüm */}
             <Route path="/admin/universities" element={<AdminUniversities />} />
             <Route path="/admin/universities/:universityId" element={<AdminUniversityDetail />} />

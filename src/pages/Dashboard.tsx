@@ -4,6 +4,7 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { AdvisedClubCard } from "@/pages/dashboard/ClubCards";
 import ActiveProcessesCard from "@/pages/dashboard/ActiveProcessesCard";
 import CampusFeed from "@/pages/dashboard/CampusFeed";
+import UniversityAnnouncementsBlock from "@/pages/dashboard/UniversityAnnouncementsBlock";
 import DashboardHero from "@/pages/dashboard/DashboardHero";
 import { getAvailableClubs } from "@/features/clubs/api/clubs";
 import PageLoader from "@/shared/ui/PageLoader";
@@ -54,6 +55,8 @@ export default function Dashboard() {
       </Reveal>
 
       <ActiveProcessesCard userId={user.id} />
+
+      {user.universityId && <UniversityAnnouncementsBlock universityId={user.universityId} />}
 
       {isAdmin && (
         <Reveal>

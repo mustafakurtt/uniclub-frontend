@@ -28,6 +28,9 @@ export function buildAdminQuickLinks(
   if (hasPermission("club.view") && MODERATION_PERMISSIONS.some((p) => hasPermission(p))) {
     links.push({ to: "/admin/moderation", label: "Moderasyon" });
   }
+  if (hasPermission("announcement.university.manage")) {
+    links.push({ to: "/admin/university-announcements", label: "Okul duyuruları" });
+  }
   if (UNIVERSITY_PERMISSIONS.some((p) => hasPermission(p))) {
     links.push({ to: "/admin/universities", label: "Akademik yapı" });
   }
