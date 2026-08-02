@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import CommitteePendingApplicationsList from "@/features/admin/components/CommitteePendingApplicationsList";
+import { useAdminHomeBlockVisibility } from "@/features/admin/components/admin-home/AdminHomeBlocksContext";
 import { useMyCommitteePendingApplications } from "@/features/admin/hooks/useMyCommitteePending";
 import { Icon } from "@/shared/ui/Icon";
 
@@ -13,7 +14,18 @@ interface HomeCommitteeVotePendingProps {
 export default function HomeCommitteeVotePending({ universityId }: HomeCommitteeVotePendingProps) {
   const pending = useMyCommitteePendingApplications(universityId);
 
-  if (pending.access !== "ok" || pending.items.length === 0) {
+  const visible = pending.access === "ok" && pending.items.length > 0;
+
+  useAdminHomeBlockVisibility(
+    "committee-votes",
+    pending.access === "loading"
+      ? "loading"
+      : visible
+        ? "visible"
+        : "hidden",
+  );
+
+  if (!visible) {
     return null;
   }
 

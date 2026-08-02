@@ -2,7 +2,7 @@
 import type { SafeUser } from "./user";
 
 export type ActivityStatus = "draft" | "published" | "cancelled";
-export type ActivityVisibility = "university" | "members";
+export type ActivityVisibility = "university" | "members" | "inter_university";
 export type ActivityClubRole = "host" | "co_host";
 export type ActivityClubStatus = "invited" | "accepted";
 /** Kullanıcının seçebildiği RSVP durumları — `waitlist` şema düzeyinde var, v1'de UI yok. */
