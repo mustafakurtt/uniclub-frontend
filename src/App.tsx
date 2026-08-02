@@ -14,6 +14,7 @@ import Activities from "@/features/activities/pages/Activities";
 import ActivityDetail from "@/features/activities/pages/ActivityDetail";
 import ActivityCheckInPage from "@/features/activities/pages/ActivityCheckInPage";
 import ActivityCheckInDisplayPage from "@/features/activities/pages/ActivityCheckInDisplayPage";
+import DiscoverPage from "@/features/discover/pages/DiscoverPage";
 import Profile from "@/features/auth/pages/Profile";
 import ProtectedRoute from "@/features/auth/guards/ProtectedRoute";
 import RequireManagement from "@/features/auth/guards/RequireManagement";
@@ -79,6 +80,7 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/activities" element={<Activities />} />
             <Route path="/activities/:activityId" element={<ActivityDetail />} />
+            <Route path="/discover" element={<DiscoverPage />} />
             <Route path="/activities/:activityId/yoklama" element={<ActivityCheckInPage />} />
             <Route
               path="/clubs/:clubId/activities/:activityId/yoklama-qr"
