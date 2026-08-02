@@ -26,4 +26,5 @@ export type * from "./generalMeeting"; // genel kurul
 export type * from "./approvalCommittee"; // onay kurulları + kurul oyu
 export type * from "./feed"; // kampüs akışı (GET /api/feed)
 export type * from "./discover"; // üniversiteler arası keşif (GET /api/discover/activities)
-export type * from "./clubPanel"; // kulüp paneli + devir teslim // üniversiteler arası keşif (GET /api/discover/activities)
+export type * from "./clubPanel"; // kulüp paneli + devir teslim
+export type * from "./universityAnnouncement"; // okul geneli duyurular

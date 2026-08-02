@@ -18,6 +18,7 @@ export type GlobalPermission =
   | "club.delete"
   // İçerik moderasyonu (tenant üstten müdahale)
   | "announcement.moderate"
+  | "announcement.university.manage"
   | "gallery.moderate"
   // University / akademik yapı — granüler (tenant; create/delete platform)
   | "university.create"
