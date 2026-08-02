@@ -25,6 +25,7 @@ export default function BottomTabBar() {
     { to: "/dashboard", label: "Ana Sayfa", icon: "home" },
     { to: "/clubs", label: "Kulüpler", icon: "explore" },
     { to: "/activities", label: "Etkinlik", icon: "calendar" },
+    { to: "/discover", label: "Keşfet", icon: "globe" },
     { to: "/profile", label: "Profil", icon: "profile" },
     ...(isAdmin ? [{ to: "/admin", label: "Yönetim", icon: "officer" as IconName }] : []),
   ];

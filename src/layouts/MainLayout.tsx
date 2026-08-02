@@ -62,6 +62,7 @@ export default function MainLayout() {
                   <NavLink to="/dashboard" className={navLinkClass}>Ana Sayfa</NavLink>
                   <NavLink to="/clubs" className={navLinkClass}>Kulüpler</NavLink>
                   <NavLink to="/activities" className={navLinkClass}>Etkinlikler</NavLink>
+                  <NavLink to="/discover" className={navLinkClass}>Keşfet</NavLink>
                   {isAdmin && <NavLink to="/admin" className={navLinkClass}>Yönetim</NavLink>}
                 </div>
               </div>

@@ -79,6 +79,7 @@ export const ICONS = {
   telegram: Send,
   twitter: AtSign,
   website: Globe,
+  globe: Globe,
 
   // Pazarlama / durum figürleri
   rocket: Rocket,
