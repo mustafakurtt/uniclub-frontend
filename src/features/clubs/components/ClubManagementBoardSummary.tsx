@@ -1,9 +1,11 @@
+import { useQuery } from "@tanstack/react-query";
 import {
   BOARD_TITLE_LABELS,
   BOARD_TYPE_LABELS,
   compareBoardTitles,
 } from "@/features/clubs/generalMeetingLabels";
-import { useActiveBoardMembers } from "@/features/clubs/hooks/useActiveBoardMembers";
+import { getCurrentBoard } from "@/features/clubs/api/generalMeetings";
+import { boardHasMembers, currentBoardToMeetingMembers } from "@/features/clubs/clubBoard";
 import { Icon } from "@/shared/ui/Icon";
 import type { BoardType, GeneralMeetingBoardMember } from "@/shared/types";
 
@@ -48,10 +50,17 @@ interface Props {
 
 /** Kulüp künyesinde güncel yönetim kurulu özeti (asil üyeler, unvanlı). */
 export default function ClubManagementBoardSummary({ clubId, enabled = true }: Props) {
-  const { activeMembers, isLoading, hasMeetings } = useActiveBoardMembers(clubId, enabled);
+  const boardQuery = useQuery({
+    queryKey: ["clubs", clubId, "current-board"],
+    queryFn: () => getCurrentBoard(clubId),
+    enabled: enabled && !!clubId,
+  });
 
-  if (isLoading || !hasMeetings) return null;
+  if (boardQuery.isLoading || !boardQuery.data || !boardHasMembers(boardQuery.data)) {
+    return null;
+  }
 
+  const activeMembers = currentBoardToMeetingMembers(boardQuery.data);
   const management = activeMembers.filter((m) => m.boardType === "management");
   if (management.length === 0) return null;
 

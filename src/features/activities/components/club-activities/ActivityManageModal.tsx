@@ -218,6 +218,7 @@ export default function ActivityManageModal({
         clubId={clubId}
         activityId={activity.id}
         activityTitle={activity.title}
+        canCheckIn={isHost && status === "published"}
         onClose={() => setShowAttendees(false)}
       />
 

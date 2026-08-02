@@ -80,6 +80,30 @@ export const getActivityAttendees = async (
   return response.data.data;
 };
 
+/** POST /clubs/:clubId/activities/:activityId/attendees/:userId/check-in */
+export const checkInAttendee = async (
+  clubId: string,
+  activityId: string,
+  userId: string,
+): Promise<ActivityAttendeeRow> => {
+  const response = await apiClient.post<ApiEnvelope<ActivityAttendeeRow>>(
+    `/clubs/${clubId}/activities/${activityId}/attendees/${userId}/check-in`,
+  );
+  return response.data.data;
+};
+
+/** DELETE /clubs/:clubId/activities/:activityId/attendees/:userId/check-in */
+export const undoCheckInAttendee = async (
+  clubId: string,
+  activityId: string,
+  userId: string,
+): Promise<ActivityAttendeeRow> => {
+  const response = await apiClient.delete<ApiEnvelope<ActivityAttendeeRow>>(
+    `/clubs/${clubId}/activities/${activityId}/attendees/${userId}/check-in`,
+  );
+  return response.data.data;
+};
+
 // ---------------------------------------------------------------------------
 // Co-host
 // ---------------------------------------------------------------------------

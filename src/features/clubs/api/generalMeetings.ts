@@ -3,6 +3,7 @@ import { apiClient } from "@/shared/api/client";
 import type {
   ApiEnvelope,
   CreateGeneralMeetingDto,
+  CurrentBoard,
   GeneralMeetingDetail,
   GeneralMeetingSummary,
 } from "@/shared/types";
@@ -33,6 +34,14 @@ export const createGeneralMeeting = async (
   const response = await apiClient.post<ApiEnvelope<GeneralMeetingDetail>>(
     `/clubs/${clubId}/general-meetings`,
     body
+  );
+  return response.data.data;
+};
+
+/** GET /clubs/:clubId/current-board — onaylı üye; güncel yönetim/denetleme kurulu. */
+export const getCurrentBoard = async (clubId: string): Promise<CurrentBoard> => {
+  const response = await apiClient.get<ApiEnvelope<CurrentBoard>>(
+    `/clubs/${clubId}/current-board`,
   );
   return response.data.data;
 };
