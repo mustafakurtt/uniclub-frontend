@@ -1,3 +1,5 @@
+import { useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import AccountStatusSection from "@/features/admin/components/user-detail/AccountStatusSection";
 import ClubMembershipsSection from "@/features/admin/components/user-detail/ClubMembershipsSection";
@@ -5,6 +7,7 @@ import DepartmentSection from "@/features/admin/components/user-detail/Departmen
 import EffectivePermissionsSection from "@/features/admin/components/user-detail/EffectivePermissionsSection";
 import GlobalRolesSection from "@/features/admin/components/user-detail/GlobalRolesSection";
 import PermissionOverridesSection from "@/features/admin/components/user-detail/PermissionOverridesSection";
+import UserModerationTab from "@/features/admin/components/user-detail/UserModerationTab";
 import { USER_STATUS_CHIP_CLASSES, USER_STATUS_LABELS } from "@/features/admin/labels";
 import type { AdminUserDetail } from "@/shared/types";
 
@@ -20,7 +23,26 @@ export default function UserDetailContent({
   user: AdminUserDetail;
 }) {
   const { hasPermission } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const anonymized = isAnonymized(user);
+  const showModerationTab = hasPermission("user.view") || hasPermission("user.manage");
+  const onModerationTab = searchParams.get("tab") === "moderation";
+
+  const openModerationTab = useCallback(() => {
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev);
+      params.set("tab", "moderation");
+      return params;
+    });
+  }, [setSearchParams]);
+
+  const closeModerationTab = useCallback(() => {
+    setSearchParams((prev) => {
+      const params = new URLSearchParams(prev);
+      params.delete("tab");
+      return params;
+    });
+  }, [setSearchParams]);
 
   return (
     <div className="space-y-6">
@@ -57,18 +79,40 @@ export default function UserDetailContent({
         </div>
       </section>
 
-      <section className="card space-y-6 p-5">
-        <AccountStatusSection universityId={universityId} user={user} />
-        {hasPermission("user.manage") && (
-          <DepartmentSection universityId={universityId} user={user} />
-        )}
-        <GlobalRolesSection universityId={universityId} user={user} />
-        <ClubMembershipsSection memberships={user.clubMemberships} />
-        {hasPermission("permission.manage") && (
-          <PermissionOverridesSection universityId={universityId} user={user} />
-        )}
-        <EffectivePermissionsSection permissions={user.effectivePermissions} />
-      </section>
+      {showModerationTab && (
+        <div className="flex flex-wrap gap-2 border-b border-slate-100 pb-1">
+          <button
+            type="button"
+            onClick={onModerationTab ? closeModerationTab : openModerationTab}
+            className={`rounded-full px-4 py-2 text-xs font-bold transition-all ${
+              onModerationTab
+                ? "bg-brand-600 text-white shadow-glow"
+                : "border border-slate-200 bg-white text-slate-500 hover:border-brand-400"
+            }`}
+          >
+            Moderasyon
+          </button>
+        </div>
+      )}
+
+      {onModerationTab && showModerationTab ? (
+        <section className="card p-5">
+          <UserModerationTab universityId={universityId} user={user} enabled />
+        </section>
+      ) : (
+        <section className="card space-y-6 p-5">
+          <AccountStatusSection universityId={universityId} user={user} />
+          {hasPermission("user.manage") && (
+            <DepartmentSection universityId={universityId} user={user} />
+          )}
+          <GlobalRolesSection universityId={universityId} user={user} />
+          <ClubMembershipsSection memberships={user.clubMemberships} />
+          {hasPermission("permission.manage") && (
+            <PermissionOverridesSection universityId={universityId} user={user} />
+          )}
+          <EffectivePermissionsSection permissions={user.effectivePermissions} />
+        </section>
+      )}
     </div>
   );
 }

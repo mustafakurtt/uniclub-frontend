@@ -8,5 +8,6 @@ export * from "./formationProposals"; // §5.2 kuruluş önerileri (T1.1)
 export * from "./clubs"; // §5.3 kulüp durum/profil/silme
 export * from "./advisors"; // §5.4 danışmanlar
 export * from "./moderation"; // §5.5 üye & içerik moderasyonu
+export * from "./userModeration"; // kullanıcı moderasyonu (ban/unban/geçmiş)
 export * from "./activities"; // etkinlik moderasyonu (activity.moderate)
 export * from "./approvalCommittees"; // onay kurulları + kurul oyu
