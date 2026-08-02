@@ -31,6 +31,12 @@ export function buildAdminQuickLinks(
   if (hasPermission("announcement.university.manage")) {
     links.push({ to: "/admin/university-announcements", label: "Okul duyuruları" });
   }
+  if (hasPermission("platform.tenant.view")) {
+    links.push({ to: "/admin/platform/tenants", label: "Platform tenantları" });
+  }
+  if (hasPermission("platform.user.view")) {
+    links.push({ to: "/admin/platform/users", label: "Platform operatörleri" });
+  }
   if (UNIVERSITY_PERMISSIONS.some((p) => hasPermission(p))) {
     links.push({ to: "/admin/universities", label: "Akademik yapı" });
   }

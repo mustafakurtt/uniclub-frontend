@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Outlet, NavLink, Link, useNavigate } from "react-router-dom";
+import { Outlet, NavLink, Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { Icon, type IconName } from "@/shared/ui/Icon";
 import { CLUB_PERMISSIONS, MODERATION_PERMISSIONS, UNIVERSITY_PERMISSIONS } from "@/features/auth/authorization";
@@ -43,6 +43,8 @@ function NavGroupSection({
 /** AdminScopeProvider içinde render edilir — useAdminScope tüketen nav burada. */
 export default function AdminLayoutShell() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const onPlatformRoute = location.pathname.startsWith("/admin/platform");
   const { user, roleNames, logout, hasPermission, isPlatformAccount } = useAuth();
 
   const handleLogout = () => {
@@ -61,6 +63,8 @@ export default function AdminLayoutShell() {
   const canManageSettings = hasPermission("university.settings.manage");
   const canManageAcademicTerms = hasPermission("university.academic_term.manage");
   const canExport = hasPermission("university.export.generate");
+  const canViewPlatformTenants = hasPermission("platform.tenant.view");
+  const canViewPlatformUsers = hasPermission("platform.user.view");
   const showCommitteeTasks = useShowCommitteeTasksNav();
 
   const dailyWorkItems = [
@@ -104,6 +108,13 @@ export default function AdminLayoutShell() {
     .map((group) => ({ ...group, items: group.items.filter((item) => item.visible) }))
     .filter((group) => group.items.length > 0);
 
+  const platformItems = [
+    { to: "/admin/platform/tenants", label: "Tenantlar", icon: "university" as IconName, visible: canViewPlatformTenants },
+    { to: "/admin/platform/users", label: "Operatörler", icon: "members" as IconName, visible: canViewPlatformUsers },
+  ].filter((item) => item.visible);
+
+  const showPlatformNav = platformItems.length > 0;
+
   const primaryRole =
     ([
       "super_admin",
@@ -138,9 +149,11 @@ export default function AdminLayoutShell() {
               <LanguageSwitcher />
             </div>
 
-            <div className="mb-5">
-              <UniversityScopeSelector />
-            </div>
+            {!onPlatformRoute && (
+              <div className="mb-5">
+                <UniversityScopeSelector />
+              </div>
+            )}
 
             <nav>
               <NavGroupSection title="Ana sayfa">
@@ -149,6 +162,16 @@ export default function AdminLayoutShell() {
                   Genel Bakış
                 </NavLink>
               </NavGroupSection>
+              {showPlatformNav && (
+                <NavGroupSection title="Platform">
+                  {platformItems.map((item) => (
+                    <NavLink key={item.to} to={item.to} className={navLinkClass}>
+                      <Icon name={item.icon} size={18} />
+                      {item.label}
+                    </NavLink>
+                  ))}
+                </NavGroupSection>
+              )}
               {visibleGroups.map((group) => (
                 <NavGroupSection key={group.title} title={group.title}>
                   {group.items.map((item) => (
