@@ -20,6 +20,7 @@ export type GlobalPermission =
   | "announcement.moderate"
   | "announcement.university.manage"
   | "gallery.moderate"
+  | "activity.moderate"
   // University / akademik yapı — granüler (tenant; create/delete platform)
   | "university.create"
   | "university.update"

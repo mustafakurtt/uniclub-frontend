@@ -72,7 +72,8 @@ export default function ActivityFormModal({
         startsAtLocal: toDatetimeLocalValue(activity.startsAt),
         endsAtLocal: activity.endsAt ? toDatetimeLocalValue(activity.endsAt) : "",
         capacity: activity.capacity != null ? String(activity.capacity) : "",
-        visibility: activity.visibility,
+        visibility:
+          activity.visibility === "inter_university" ? "university" : activity.visibility,
       });
     } else {
       reset({
