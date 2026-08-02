@@ -16,6 +16,16 @@ export const listUniversityAnnouncements = async (
   return response.data.data;
 };
 
+export const getUniversityAnnouncement = async (
+  universityId: string,
+  announcementId: string,
+): Promise<UniversityAnnouncement> => {
+  const response = await apiClient.get<ApiEnvelope<UniversityAnnouncement>>(
+    `/universities/${universityId}/announcements/${announcementId}`,
+  );
+  return response.data.data;
+};
+
 export const createUniversityAnnouncement = async (
   universityId: string,
   dto: CreateUniversityAnnouncementDto,

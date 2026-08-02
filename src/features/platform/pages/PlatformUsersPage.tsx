@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { listPlatformUsers } from "@/features/platform/api/operatorUsers";
 import PlatformUserFormModal from "@/features/platform/components/PlatformUserFormModal";
 import { platformUsersQueryKey } from "@/features/platform/queries";
-import { canProvisionPlatformUsers, PLATFORM_ROLE_LABELS } from "@/features/platform/labels";
+import { PLATFORM_ROLE_LABELS } from "@/features/platform/labels";
 import { roleLabel } from "@/features/admin/labels";
 import RequirePermission from "@/features/auth/guards/RequirePermission";
 import Forbidden from "@/features/auth/pages/Forbidden";
@@ -26,7 +26,7 @@ export default function PlatformUsersPage() {
   const queryClient = useQueryClient();
   const { hasPermission } = useAuth();
   const [createOpen, setCreateOpen] = useState(false);
-  const canCreate = canProvisionPlatformUsers(hasPermission);
+  const canCreate = hasPermission("platform.user.manage");
 
   const usersQuery = useQuery({
     queryKey: platformUsersQueryKey,
