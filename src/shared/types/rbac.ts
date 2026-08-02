@@ -43,6 +43,10 @@ export type GlobalPermission =
   | "audit.view"
   // Afiş QR — okul geneli yönetim (API.md §15)
   | "poster_qr.university.manage"
+  | "platform.tenant.view"
+  | "platform.tenant.manage"
+  | "platform.tenant.invite"
+  | "platform.user.view"
   | (string & {});
 
 /** Permission kataloğu satırı — GET /api/auth/permissions (§6.3) */

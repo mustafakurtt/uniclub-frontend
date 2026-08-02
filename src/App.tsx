@@ -43,6 +43,9 @@ import AdminFormationProposalDetail from "@/features/admin/pages/AdminFormationP
 import AdminClubDetail from "@/features/admin/pages/AdminClubDetail";
 import AdminUserDetail from "@/features/admin/pages/AdminUserDetail";
 import AdminExports from "@/features/exports/pages/AdminExports";
+import PlatformTenantsPage from "@/features/platform/pages/PlatformTenantsPage";
+import PlatformTenantDetailPage from "@/features/platform/pages/PlatformTenantDetailPage";
+import PlatformUsersPage from "@/features/platform/pages/PlatformUsersPage";
 import Forbidden from "@/features/auth/pages/Forbidden";
 import NotFound from "@/shared/pages/NotFound";
 import PublicLayout from "@/layouts/PublicLayout";
@@ -146,6 +149,9 @@ function App() {
             <Route path="/admin/settings" element={<AdminSettings />} />
             {/* Kurumsal rapor dışa aktarma (university.export.generate) */}
             <Route path="/admin/exports" element={<AdminExports />} />
+            <Route path="/admin/platform/tenants" element={<PlatformTenantsPage />} />
+            <Route path="/admin/platform/tenants/:universityId" element={<PlatformTenantDetailPage />} />
+            <Route path="/admin/platform/users" element={<PlatformUsersPage />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
