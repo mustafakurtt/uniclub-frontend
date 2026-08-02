@@ -30,6 +30,7 @@ import AdminUniversityDetail from "@/features/universities/pages/AdminUniversity
 import AdminAcademicTerms from "@/features/universities/pages/AdminAcademicTerms";
 import AdminClubs from "@/features/admin/pages/AdminClubs";
 import AdminModeration from "@/features/admin/pages/AdminModeration";
+import AdminActivities from "@/features/admin/pages/AdminActivities";
 import AdminHome from "@/features/admin/pages/AdminHome";
 import AdminUsers from "@/features/admin/pages/AdminUsers";
 import AdminRoles from "@/features/admin/pages/AdminRoles";
@@ -131,6 +132,7 @@ function App() {
             {/* Üye & içerik moderasyonu: tenant üstten müdahale (club.member.manage,
                 announcement.moderate, gallery.moderate) */}
             <Route path="/admin/moderation" element={<AdminModeration />} />
+            <Route path="/admin/activities" element={<AdminActivities />} />
             <Route
               path="/admin/university-announcements"
               element={<AdminUniversityAnnouncementsPage />}
