@@ -6,6 +6,7 @@ export interface VisualFeedCard {
   href: string;
   title: string;
   clubName: string;
+  clubLogoUrl: string | null;
   at: string;
   imageUrl: string | null;
   commentCount?: number;
@@ -47,6 +48,7 @@ export function toVisualFeedCards(items: FeedItem[]): VisualFeedCard[] {
         href: `/activities/${row.item.id}`,
         title: row.item.title?.trim() || "Etkinlik",
         clubName,
+        clubLogoUrl: row.club?.logoUrl ?? null,
         at: row.at,
         imageUrl: row.item.coverUrl?.trim() || null,
         ...social,
@@ -62,6 +64,7 @@ export function toVisualFeedCards(items: FeedItem[]): VisualFeedCard[] {
         href: row.club ? `/clubs/${row.club.id}` : "/clubs",
         title: caption || "Galeri",
         clubName,
+        clubLogoUrl: row.club?.logoUrl ?? null,
         at: row.at,
         imageUrl: row.item.imageUrl?.trim() || null,
         ...social,
