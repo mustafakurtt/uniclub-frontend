@@ -42,14 +42,3 @@ export const PLATFORM_ROLE_LABELS: Record<PlatformAccountRoleName, string> = {
   super_admin: roleLabel("super_admin"),
   platform_support: roleLabel("platform_support"),
 };
-
-/** İzin tabanlı: tam platform yazma yetkisi (super_admin profili). */
-export function canProvisionPlatformUsers(
-  hasPermission: (key: string) => boolean,
-): boolean {
-  return (
-    hasPermission("platform.tenant.manage") &&
-    hasPermission("platform.tenant.invite") &&
-    hasPermission("platform.user.view")
-  );
-}

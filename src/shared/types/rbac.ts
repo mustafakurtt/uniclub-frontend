@@ -47,6 +47,7 @@ export type GlobalPermission =
   | "platform.tenant.manage"
   | "platform.tenant.invite"
   | "platform.user.view"
+  | "platform.user.manage"
   | (string & {});
 
 /** Permission kataloğu satırı — GET /api/auth/permissions (§6.3) */

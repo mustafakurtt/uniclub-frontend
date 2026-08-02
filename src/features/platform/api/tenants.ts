@@ -5,6 +5,7 @@ import type {
   OnboardTenantDto,
   OnboardTenantResult,
   TenantAdminInvitation,
+  TenantListItem,
   TenantListPage,
   UpdateTenantStatusDto,
   University,
@@ -22,6 +23,13 @@ export const listPlatformTenants = async (
   const response = await apiClient.get<ApiEnvelope<TenantListPage>>("/platform/tenants", {
     params,
   });
+  return response.data.data;
+};
+
+export const getPlatformTenant = async (universityId: string): Promise<TenantListItem> => {
+  const response = await apiClient.get<ApiEnvelope<TenantListItem>>(
+    `/platform/tenants/${universityId}`,
+  );
   return response.data.data;
 };
 

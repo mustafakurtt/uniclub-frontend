@@ -1,7 +1,8 @@
 import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { listUniversityAnnouncements } from "@/features/university-announcements/api/universityAnnouncements";
-import { universityAnnouncementsQueryKey } from "@/features/university-announcements/queries";
+import axios from "axios";
+import { getUniversityAnnouncement } from "@/features/university-announcements/api/universityAnnouncements";
+import { universityAnnouncementQueryKey } from "@/features/university-announcements/queries";
 import { formatEditedAtLabel } from "@/shared/lib/announcementEdited";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { getErrorMessage } from "@/shared/api/client";
@@ -18,15 +19,31 @@ function formatDate(iso: string): string {
   });
 }
 
+function NotFoundView() {
+  return (
+    <div className="card p-8 text-center">
+      <Icon name="notFound" size={36} className="mx-auto mb-3 text-brand-500" />
+      <p className="font-semibold text-slate-700">Duyuru bulunamadı veya yayında değil.</p>
+      <Link to="/duyurular" className="btn-primary mt-4 inline-flex">
+        Listeye dön
+      </Link>
+    </div>
+  );
+}
+
 export default function UniversityAnnouncementDetailPage() {
   const { announcementId = "" } = useParams();
   const { user } = useAuth();
   const universityId = user?.universityId ?? "";
 
-  const announcementsQuery = useQuery({
-    queryKey: universityAnnouncementsQueryKey(universityId),
-    queryFn: () => listUniversityAnnouncements(universityId),
-    enabled: !!universityId,
+  const announcementQuery = useQuery({
+    queryKey: universityAnnouncementQueryKey(universityId, announcementId),
+    queryFn: () => getUniversityAnnouncement(universityId, announcementId),
+    enabled: !!universityId && !!announcementId,
+    retry: (failureCount, error) => {
+      if (axios.isAxiosError(error) && error.response?.status === 404) return false;
+      return failureCount < 3;
+    },
   });
 
   if (!universityId) {
@@ -37,32 +54,25 @@ export default function UniversityAnnouncementDetailPage() {
     );
   }
 
-  if (announcementsQuery.isLoading) {
+  if (announcementQuery.isLoading) {
     return <PageLoader label="Duyuru yükleniyor…" />;
   }
 
-  if (announcementsQuery.isError) {
+  if (announcementQuery.isError) {
+    if (axios.isAxiosError(announcementQuery.error) && announcementQuery.error.response?.status === 404) {
+      return <NotFoundView />;
+    }
+
     return (
       <div className="alert-error">
-        {getErrorMessage(announcementsQuery.error, "Duyuru yüklenemedi.")}
+        {getErrorMessage(announcementQuery.error, "Duyuru yüklenemedi.")}
       </div>
     );
   }
 
-  const announcement = (announcementsQuery.data ?? []).find(
-    (a) => a.id === announcementId && a.status === "published",
-  );
-
+  const announcement = announcementQuery.data;
   if (!announcement) {
-    return (
-      <div className="card p-8 text-center">
-        <Icon name="notFound" size={36} className="mx-auto mb-3 text-brand-500" />
-        <p className="font-semibold text-slate-700">Duyuru bulunamadı veya yayında değil.</p>
-        <Link to="/duyurular" className="btn-primary mt-4 inline-flex">
-          Listeye dön
-        </Link>
-      </div>
-    );
+    return <PageLoader label="Duyuru yükleniyor…" />;
   }
 
   const editedLabel = formatEditedAtLabel(announcement.editedAt);

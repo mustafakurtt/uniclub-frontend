@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { listPlatformTenants } from "@/features/platform/api/tenants";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+import { getPlatformTenant } from "@/features/platform/api/tenants";
 import TenantInvitationsSection from "@/features/platform/components/TenantInvitationsSection";
 import TenantStatusDialog from "@/features/platform/components/TenantStatusDialog";
-import { platformTenantsQueryKey } from "@/features/platform/queries";
+import { platformTenantQueryKey, platformTenantsQueryKey } from "@/features/platform/queries";
 import { tenantStatusActions } from "@/features/platform/tenantStatusActions";
 import {
   TENANT_STATUS_CHIP,
@@ -36,42 +37,43 @@ export default function PlatformTenantDetailPage() {
     targetStatus: UniversityLifecycleStatus;
   } | null>(null);
 
-  const tenantsQuery = useInfiniteQuery({
-    queryKey: platformTenantsQueryKey,
-    queryFn: ({ pageParam }) => listPlatformTenants({ limit: 100, cursor: pageParam }),
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (last) => last.nextCursor ?? undefined,
+  const tenantQuery = useQuery({
+    queryKey: platformTenantQueryKey(universityId),
+    queryFn: () => getPlatformTenant(universityId),
+    enabled: !!universityId,
   });
 
-  const tenant = useMemo(() => {
-    const items = tenantsQuery.data?.pages.flatMap((p) => p.items) ?? [];
-    return items.find((t) => t.id === universityId) ?? null;
-  }, [tenantsQuery.data, universityId]);
-
-  const invalidate = () =>
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: platformTenantQueryKey(universityId) });
     queryClient.invalidateQueries({ queryKey: platformTenantsQueryKey });
+  };
 
-  if (tenantsQuery.isLoading) {
+  if (tenantQuery.isLoading) {
     return <PageLoader label="Tenant yükleniyor…" />;
   }
 
-  if (tenantsQuery.isError) {
+  if (tenantQuery.isError) {
+    if (axios.isAxiosError(tenantQuery.error) && tenantQuery.error.response?.status === 404) {
+      return (
+        <div className="card p-8 text-center">
+          <p className="font-semibold text-slate-700">Bu üniversite bulunamadı.</p>
+          <Link to="/admin/platform/tenants" className="btn-primary mt-4 inline-flex">
+            Listeye dön
+          </Link>
+        </div>
+      );
+    }
+
     return (
       <div className="alert-error">
-        {getErrorMessage(tenantsQuery.error, "Tenant yüklenemedi.")}
+        {getErrorMessage(tenantQuery.error, "Tenant yüklenemedi.")}
       </div>
     );
   }
 
+  const tenant = tenantQuery.data;
   if (!tenant) {
-    return (
-      <div className="card p-8 text-center">
-        <p className="font-semibold text-slate-700">Tenant bulunamadı.</p>
-        <Link to="/admin/platform/tenants" className="btn-primary mt-4 inline-flex">
-          Listeye dön
-        </Link>
-      </div>
-    );
+    return <PageLoader label="Tenant yükleniyor…" />;
   }
 
   const actions = tenantStatusActions(tenant.status);
