@@ -9,6 +9,7 @@ import {
   Rocket, Sparkles, PartyPopper, Hand, Handshake, Bell, Frown, RadioTower, Sprout, Palette,
   Music, Bot, Drama, Volleyball, Brain, BookText, Leaf, Mic, FlaskConical,
   Eye, EyeOff, Flame, Trophy, Star, ScrollText, ShieldCheck, Pin,
+  Pause, Play,
 } from "lucide-react";
 
 /**
@@ -101,6 +102,8 @@ export const ICONS = {
   trophy: Trophy,
   star: Star,
   pin: Pin,
+  pause: Pause,
+  play: Play,
 
   // Landing kategori etiketleri
   music: Music,
