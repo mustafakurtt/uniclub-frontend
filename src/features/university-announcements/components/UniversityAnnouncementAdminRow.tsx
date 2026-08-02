@@ -9,6 +9,7 @@ import {
   publishUniversityAnnouncementNow,
   publishUniversityAnnouncementScheduled,
 } from "@/features/university-announcements/publishUniversityAnnouncement";
+import UniversityAnnouncementEditModal from "@/features/university-announcements/components/UniversityAnnouncementEditModal";
 import {
   SCHEDULED_PUBLISH_LABEL,
   UNIVERSITY_ANNOUNCEMENT_STATUS_LABELS,
@@ -16,6 +17,7 @@ import {
 import { formatScheduledPublishAt } from "@/features/activities/formatActivityDateTime";
 import { useTenantTimezone } from "@/features/auth/hooks/useTenantTimezone";
 import { getErrorMessage } from "@/shared/api/client";
+import { formatEditedAtLabel } from "@/shared/lib/announcementEdited";
 import { isScheduledDraft } from "@/shared/lib/publishState";
 import ScheduledPublishManage from "@/shared/ui/ScheduledPublishManage";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
@@ -36,9 +38,11 @@ export default function UniversityAnnouncementAdminRow({
 }: Props) {
   const timezone = useTenantTimezone();
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const scheduled = isScheduledDraft(announcement);
+  const editedLabel = formatEditedAtLabel(announcement.editedAt);
 
   const pinMutation = useMutation({
     mutationFn: (pinned: boolean) =>
@@ -99,6 +103,9 @@ export default function UniversityAnnouncementAdminRow({
                 {UNIVERSITY_ANNOUNCEMENT_STATUS_LABELS.published}
               </span>
             )}
+            {editedLabel && (
+              <span className="chip bg-slate-100 text-[10px] text-slate-500">{editedLabel}</span>
+            )}
           </div>
           <p className="mt-1 line-clamp-3 whitespace-pre-line text-sm leading-relaxed text-slate-600">
             {announcement.content}
@@ -108,6 +115,19 @@ export default function UniversityAnnouncementAdminRow({
               ? `${announcement.author.firstName} ${announcement.author.lastName} · `
               : ""}
             {dateLabel}
+            {editedLabel && announcement.editedAt && (
+              <>
+                {" · "}
+                {new Date(announcement.editedAt).toLocaleDateString("tr-TR", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}{" "}
+                düzenlendi
+              </>
+            )}
             {scheduled && timezone && announcement.scheduledPublishAt && (
               <>
                 {" · Yayın: "}
@@ -118,8 +138,17 @@ export default function UniversityAnnouncementAdminRow({
 
           {actionError && <div className="alert-error mt-3">{actionError}</div>}
 
-          {announcement.status === "draft" && (
-            <div className="mt-3">
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              className="btn-secondary text-xs"
+              disabled={busy}
+              onClick={() => setEditOpen(true)}
+            >
+              <Icon name="edit" size={13} /> Düzenle
+            </button>
+
+            {announcement.status === "draft" && (
               <ScheduledPublishManage
                 scheduledPublishAt={announcement.scheduledPublishAt ?? null}
                 onPublishNow={() =>
@@ -141,11 +170,9 @@ export default function UniversityAnnouncementAdminRow({
                 actionError={actionError}
                 onClearError={() => setActionError(null)}
               />
-            </div>
-          )}
+            )}
 
-          {announcement.status === "published" && (
-            <div className="mt-3">
+            {announcement.status === "published" && (
               <button
                 type="button"
                 className="btn-secondary text-xs"
@@ -154,8 +181,8 @@ export default function UniversityAnnouncementAdminRow({
               >
                 {announcement.pinned ? "Sabitlemeyi kaldır" : "Sabitle"}
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
         <IconButton
           icon="delete"
@@ -166,6 +193,14 @@ export default function UniversityAnnouncementAdminRow({
           onClick={() => setDeleteOpen(true)}
         />
       </div>
+
+      <UniversityAnnouncementEditModal
+        open={editOpen}
+        universityId={universityId}
+        announcement={announcement}
+        onSaved={onUpdated}
+        onClose={() => setEditOpen(false)}
+      />
 
       <ConfirmDialog
         open={deleteOpen}

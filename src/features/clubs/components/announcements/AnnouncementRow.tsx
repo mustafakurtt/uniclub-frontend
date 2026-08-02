@@ -8,6 +8,7 @@ import {
   cancelAnnouncementScheduledPublish,
 } from "@/features/clubs/publishAnnouncement";
 import { getErrorMessage } from "@/shared/api/client";
+import { formatEditedAtLabel } from "@/shared/lib/announcementEdited";
 import {
   ANNOUNCEMENT_STATUS_LABELS,
   ANNOUNCEMENT_VISIBILITY_LABELS,
@@ -18,6 +19,7 @@ import { useTenantTimezone } from "@/features/auth/hooks/useTenantTimezone";
 import { isScheduledDraft } from "@/shared/lib/publishState";
 import ScheduledPublishManage from "@/shared/ui/ScheduledPublishManage";
 import ConfirmDialog from "@/shared/ui/ConfirmDialog";
+import AnnouncementFormModal from "@/features/clubs/components/announcements/AnnouncementFormModal";
 import IconButton from "@/shared/ui/IconButton";
 import { Icon } from "@/shared/ui/Icon";
 import type { Announcement, AnnouncementVisibility } from "@/shared/types";
@@ -37,9 +39,11 @@ export default function AnnouncementRow({
 }: AnnouncementRowProps) {
   const timezone = useTenantTimezone();
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const scheduled = isScheduledDraft(announcement);
+  const editedLabel = formatEditedAtLabel(announcement.editedAt);
 
   const pinMutation = useMutation({
     mutationFn: (pinned: boolean) =>
@@ -113,6 +117,9 @@ export default function AnnouncementRow({
             <span className="chip text-[10px] text-slate-500">
               {ANNOUNCEMENT_VISIBILITY_LABELS[announcement.visibility]}
             </span>
+            {editedLabel && (
+              <span className="chip bg-slate-100 text-[10px] text-slate-500">{editedLabel}</span>
+            )}
           </div>
           <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-slate-600">
             {announcement.content}
@@ -120,6 +127,22 @@ export default function AnnouncementRow({
           <p className="mt-2 text-[11px] font-semibold text-slate-400">
             {announcement.author ? `${announcement.author.firstName} ${announcement.author.lastName} · ` : ""}
             {dateLabel}
+            {editedLabel && announcement.editedAt && canManage && (
+              <>
+                {" · "}
+                {new Date(announcement.editedAt).toLocaleDateString("tr-TR", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}{" "}
+                düzenlendi
+              </>
+            )}
+            {!canManage && editedLabel && (
+              <span className="text-slate-400"> · {editedLabel}</span>
+            )}
             {scheduled && timezone && announcement.scheduledPublishAt && (
               <>
                 {" · Yayın: "}
@@ -131,7 +154,15 @@ export default function AnnouncementRow({
           {actionError && <div className="alert-error mt-3">{actionError}</div>}
 
           {canManage && announcement.status === "draft" && (
-            <div className="mt-3">
+            <div className="mt-3 space-y-3">
+              <button
+                type="button"
+                className="btn-secondary text-xs"
+                disabled={busy}
+                onClick={() => setEditOpen(true)}
+              >
+                <Icon name="edit" size={13} /> Düzenle
+              </button>
               <ScheduledPublishManage
                 scheduledPublishAt={announcement.scheduledPublishAt ?? null}
                 onPublishNow={() =>
@@ -151,6 +182,14 @@ export default function AnnouncementRow({
 
           {canManage && announcement.status === "published" && (
             <div className="mt-3 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                className="btn-secondary text-xs"
+                disabled={busy}
+                onClick={() => setEditOpen(true)}
+              >
+                <Icon name="edit" size={13} /> Düzenle
+              </button>
               <button
                 type="button"
                 className="btn-secondary text-xs"
@@ -185,6 +224,14 @@ export default function AnnouncementRow({
           />
         )}
       </div>
+
+      <AnnouncementFormModal
+        open={editOpen}
+        clubId={clubId}
+        announcement={announcement}
+        onSaved={onUpdated}
+        onClose={() => setEditOpen(false)}
+      />
 
       <ConfirmDialog
         open={deleteOpen}

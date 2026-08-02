@@ -2,6 +2,7 @@ import { Link, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { listUniversityAnnouncements } from "@/features/university-announcements/api/universityAnnouncements";
 import { universityAnnouncementsQueryKey } from "@/features/university-announcements/queries";
+import { formatEditedAtLabel } from "@/shared/lib/announcementEdited";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { getErrorMessage } from "@/shared/api/client";
 import PageLoader from "@/shared/ui/PageLoader";
@@ -64,6 +65,8 @@ export default function UniversityAnnouncementDetailPage() {
     );
   }
 
+  const editedLabel = formatEditedAtLabel(announcement.editedAt);
+
   return (
     <article className="space-y-6">
       <div>
@@ -90,6 +93,7 @@ export default function UniversityAnnouncementDetailPage() {
           {announcement.publishedAt
             ? formatDate(announcement.publishedAt)
             : formatDate(announcement.createdAt)}
+          {editedLabel && <span className="text-slate-400"> · {editedLabel}</span>}
         </p>
       </div>
 

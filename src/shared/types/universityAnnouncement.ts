@@ -17,6 +17,8 @@ export interface UniversityAnnouncement {
   author?: SafeUser;
   /** UTC — yalnızca zamanlanmış taslaklarda dolu. */
   scheduledPublishAt?: string | null;
+  /** İçerik düzenlendiyse UTC ISO — taslakta null kalır. */
+  editedAt?: string | null;
 }
 
 export interface CreateUniversityAnnouncementDto {
@@ -29,6 +31,8 @@ export interface CreateUniversityAnnouncementDto {
 }
 
 export interface UpdateUniversityAnnouncementDto {
+  title?: string;
+  content?: string;
   pinned?: boolean;
   scheduledPublishAtLocal?: string | null;
 }
