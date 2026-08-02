@@ -74,6 +74,7 @@ export const ICONS = {
 
   // İletişim platformları
   whatsapp: MessageCircle,
+  comment: MessageCircle,
   instagram: Camera,
   discord: Gamepad2,
   telegram: Send,

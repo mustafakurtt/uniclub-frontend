@@ -1,11 +1,14 @@
 // Kampüs akışı — GET /api/feed
 //
-// Backend üç kaynağı tek akışta birleştirir (okul geneli duyuru, kulüp duyurusu,
-// etkinlik) ve (at, kind, id) üçlüsüyle imleçli sayfalar. Öğe gövdesi kaynağa
-// göre değişir; ayrım `type` alanından yapılır.
+// Backend kaynakları birleştirir; imleç opak (at + kind + id). Öğe gövdesi
+// kaynağa göre değişir — ayrım `type` alanından yapılır.
 
-/** Akıştaki öğenin kaynağı. */
-export type FeedItemType = "university_announcement" | "announcement" | "activity";
+/** Akıştaki öğenin kaynağı. `gallery` backend bu turda ekleniyor. */
+export type FeedItemType =
+  | "university_announcement"
+  | "announcement"
+  | "activity"
+  | "gallery";
 
 /** Akış satırında görünen kompakt kulüp (okul geneli duyuruda null). */
 export interface FeedClub {
@@ -13,6 +16,13 @@ export interface FeedClub {
   name: string;
   slug: string;
   logoUrl: string | null;
+}
+
+/** Sosyal katman önizlemesi — salt okunur; yazma ucu yok (T2.7). */
+export interface FeedCommentPreview {
+  id: string;
+  body: string;
+  authorName?: string | null;
 }
 
 /** Kaynağa göre değişen gövdeden akışın ihtiyaç duyduğu alanlar. */
@@ -26,6 +36,13 @@ export interface FeedEntity {
   location?: string | null;
   publishedAt?: string | null;
   createdAt?: string;
+  coverUrl?: string | null;
+  imageUrl?: string;
+  caption?: string | null;
+  /** Bayrak kapalı tenant'ta gelmez — kart sosyal bölümü gizlenir. */
+  commentCount?: number;
+  likeCount?: number;
+  recentComments?: FeedCommentPreview[];
 }
 
 export interface FeedItem {

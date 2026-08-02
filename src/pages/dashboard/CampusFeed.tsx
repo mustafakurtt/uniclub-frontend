@@ -1,100 +1,14 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { getFeed } from "@/features/dashboard/api/feed";
-import { Icon, type IconName } from "@/shared/ui/Icon";
-import type { FeedItem, FeedItemType } from "@/shared/types";
-
-const KIND_META: Record<FeedItemType, { label: string; icon: IconName; tone: string }> = {
-  activity: { label: "Etkinlik", icon: "calendar", tone: "bg-brand-50 text-brand-700" },
-  announcement: { label: "Duyuru", icon: "announcement", tone: "bg-accent-50 text-accent-700" },
-  university_announcement: {
-    label: "Okul geneli",
-    icon: "campus",
-    tone: "bg-amber-50 text-amber-700",
-  },
-};
-
-/** "3 saat önce" / "2 gün önce" — mutlak tarih başlıkta değil, satırda göreli. */
-function relativeTime(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const minutes = Math.round(diff / 60_000);
-  if (minutes < 1) return "az önce";
-  if (minutes < 60) return `${minutes} dk önce`;
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours} saat önce`;
-  const days = Math.round(hours / 24);
-  if (days < 30) return `${days} gün önce`;
-  return new Date(iso).toLocaleDateString("tr-TR", { day: "numeric", month: "long" });
-}
+import CampusFeedStrip from "@/pages/dashboard/CampusFeedStrip";
+import { toVisualFeedCards } from "@/pages/dashboard/campusFeedVisual";
+import { Icon } from "@/shared/ui/Icon";
 
 /**
- * Tek satırlık alt bilgi. Etkinlikte "kulüp · tarih · yer", duyuruda
- * "kulüp · kaynak". İçerik özeti bilerek yok — üst üste iki uzun satır
- * akışı okunmaz hale getiriyordu.
- */
-function itemSubtitle(row: FeedItem): string {
-  const parts: string[] = [];
-  if (row.club) parts.push(row.club.name);
-
-  if (row.type === "activity" && row.item.startsAt) {
-    parts.push(
-      new Date(row.item.startsAt).toLocaleString("tr-TR", {
-        day: "numeric",
-        month: "long",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    );
-    if (row.item.location) parts.push(row.item.location);
-  } else if (row.type === "university_announcement") {
-    parts.push("Okul geneli duyuru");
-  } else if (row.type === "announcement") {
-    parts.push("Duyuru");
-  }
-
-  return parts.join(" · ");
-}
-
-function itemHref(row: FeedItem): string {
-  if (row.type === "activity") return `/activities/${row.item.id}`;
-  if (row.club) return `/clubs/${row.club.id}`;
-  return "/dashboard";
-}
-
-function FeedRow({ row }: { row: FeedItem }) {
-  const meta = KIND_META[row.type];
-  return (
-    <Link
-      to={itemHref(row)}
-      className="group flex items-center gap-4 py-4 transition-colors hover:bg-slate-50/70"
-    >
-      <span
-        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${meta.tone}`}
-        title={meta.label}
-      >
-        <Icon name={meta.icon} size={18} />
-      </span>
-
-      <div className="min-w-0 flex-1">
-        <p className="truncate font-semibold text-slate-900 group-hover:text-brand-700">
-          {row.item.title ?? "Başlıksız"}
-        </p>
-        <p className="mt-0.5 truncate text-sm text-slate-500">{itemSubtitle(row)}</p>
-      </div>
-
-      <span className="hidden shrink-0 text-xs text-slate-400 sm:block">{relativeTime(row.at)}</span>
-    </Link>
-  );
-}
-
-/**
- * Kampüs akışı — dashboard'un merkezi.
- *
- * Backend üç kaynağı tek akışta birleştiriyor (`GET /api/feed`); bu uç uzun
- * süre bağlanmamıştı ve dashboard yerine "Çok yakında" yer tutucuları
- * gösteriliyordu. Kapsam kullanıcının onaylı kulüp üyelikleri + okul geneli
- * duyurular olduğu için içerik kişiye göre değişir.
+ * Kampüs görsel akışı — `GET /api/feed` içinden etkinlik + galeri kartları.
+ * Metin duyuruları dashboard'da gösterilmez (kulüp/okul sayfalarında kalır).
  */
 export default function CampusFeed() {
   const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } =
@@ -106,14 +20,35 @@ export default function CampusFeed() {
     });
 
   const rows = useMemo(() => (data?.pages ?? []).flatMap((p) => p.items), [data]);
+  const visualCards = useMemo(() => toVisualFeedCards(rows), [rows]);
+
+  // Sayfada yalnızca duyuru varsa sonraki sayfayı otomatik dene.
+  useEffect(() => {
+    if (
+      !isLoading &&
+      !isFetchingNextPage &&
+      hasNextPage &&
+      rows.length > 0 &&
+      visualCards.length === 0
+    ) {
+      fetchNextPage();
+    }
+  }, [
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    rows.length,
+    visualCards.length,
+  ]);
 
   return (
     <section className="card p-6">
-      <div className="mb-2 flex items-center justify-between">
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="font-display text-xl font-extrabold text-slate-900">Kampüste ne oluyor</h2>
           <p className="text-sm text-slate-500">
-            Kulüplerinden ve okuldan gelen son duyurular, yaklaşan etkinlikler.
+            Kulüplerinden gelen görseller ve etkinlik kapakları — kaydırarak keşfet.
           </p>
         </div>
         <Link to="/activities" className="shrink-0 text-sm font-bold text-brand-600 hover:underline">
@@ -122,13 +57,17 @@ export default function CampusFeed() {
       </div>
 
       {isLoading && (
-        <div className="space-y-3 py-4">
+        <div className="flex gap-4 overflow-hidden">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="flex gap-4 p-4">
-              <div className="h-11 w-11 shrink-0 animate-pulse rounded-2xl bg-slate-100" />
-              <div className="flex-1 space-y-2">
-                <div className="h-3 w-24 animate-pulse rounded bg-slate-100" />
-                <div className="h-4 w-2/3 animate-pulse rounded bg-slate-100" />
+            <div
+              key={i}
+              className="card w-[min(85vw,18rem)] shrink-0 overflow-hidden p-0 sm:w-72"
+              aria-hidden
+            >
+              <div className="aspect-[16/9] animate-pulse bg-slate-100" />
+              <div className="space-y-2 p-4">
+                <div className="h-3 w-16 animate-pulse rounded bg-slate-100" />
+                <div className="h-4 w-3/4 animate-pulse rounded bg-slate-100" />
               </div>
             </div>
           ))}
@@ -141,37 +80,32 @@ export default function CampusFeed() {
         </p>
       )}
 
-      {!isLoading && !isError && rows.length === 0 && (
+      {!isLoading && !isError && visualCards.length === 0 && (
         <div className="py-10 text-center">
-          <Icon name="explore" size={28} className="mx-auto mb-3 text-brand-400" />
-          <p className="font-display font-bold text-slate-800">Akışın henüz sessiz</p>
+          <Icon name="gallery" size={28} className="mx-auto mb-3 text-brand-400" />
+          <p className="font-display font-bold text-slate-800">Henüz görsel içerik yok</p>
           <p className="mx-auto mt-1 max-w-sm text-sm text-slate-500">
-            Bir kulübe katıldığında onun duyuruları ve etkinlikleri burada görünür.
+            Kulüp galerileri ve etkinlik kapakları burada görünür. Duyurular kulüp sayfalarında,
+            etkinlikler etkinlikler sayfasında.
           </p>
-          <Link to="/clubs" className="btn-primary mt-5 inline-flex">
-            Kulüpleri keşfet
-          </Link>
+          <div className="mt-5 flex flex-wrap justify-center gap-3">
+            <Link to="/activities" className="btn-primary inline-flex">
+              Etkinliklere git
+            </Link>
+            <Link to="/clubs" className="btn-secondary inline-flex">
+              Kulüpleri keşfet
+            </Link>
+          </div>
         </div>
       )}
 
-      {rows.length > 0 && (
-        <>
-          <div className="divide-y divide-slate-100">
-            {rows.map((row) => (
-              <FeedRow key={`${row.type}-${row.id}`} row={row} />
-            ))}
-          </div>
-          {hasNextPage && (
-            <button
-              type="button"
-              onClick={() => fetchNextPage()}
-              disabled={isFetchingNextPage}
-              className="mt-4 w-full rounded-2xl border border-slate-200 py-2.5 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-50 disabled:opacity-60"
-            >
-              {isFetchingNextPage ? "Yükleniyor…" : "Daha fazla göster"}
-            </button>
-          )}
-        </>
+      {visualCards.length > 0 && (
+        <CampusFeedStrip
+          cards={visualCards}
+          hasNextPage={!!hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          onLoadMore={() => fetchNextPage()}
+        />
       )}
     </section>
   );
