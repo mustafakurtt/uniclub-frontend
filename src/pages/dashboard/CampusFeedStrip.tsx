@@ -16,6 +16,8 @@ interface CampusFeedStripProps {
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
   onLoadMore: () => void;
+  /** Sağa viewport taşması — scroll clientWidth'i şişirmeden padding ile uygulanır. */
+  bleedClassName?: string;
 }
 
 const SCROLL_STEP = 300;
@@ -49,6 +51,7 @@ export default function CampusFeedStrip({
   hasNextPage,
   isFetchingNextPage,
   onLoadMore,
+  bleedClassName = "",
 }: CampusFeedStripProps) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -66,6 +69,7 @@ export default function CampusFeedStrip({
   });
   const reducedMotionRef = useRef(false);
   const scrollUiRef = useRef({ canLeft: false, canRight: false });
+  const canAutoScrollRef = useRef(false);
   const onLoadMoreRef = useRef(onLoadMore);
 
   const hasNextPageRef = useRef(hasNextPage);
@@ -76,6 +80,8 @@ export default function CampusFeedStrip({
 
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  /** Otomatik kaydırma için yatay taşma var — pause düğmesi yalnızca bu durumda gösterilir. */
+  const [canAutoScroll, setCanAutoScroll] = useState(false);
   /** Yalnızca Duraklat/Oynat düğmesi etiketi için — rAF bunu okumaz. */
   const [userPaused, setUserPaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(
@@ -119,6 +125,12 @@ export default function CampusFeedStrip({
     const maxScroll = el.scrollWidth - el.clientWidth;
     const canLeft = el.scrollLeft > 8;
     const canRight = el.scrollLeft < maxScroll - 8;
+    const canAuto = maxScroll > END_THRESHOLD;
+
+    if (canAuto !== canAutoScrollRef.current) {
+      canAutoScrollRef.current = canAuto;
+      setCanAutoScroll(canAuto);
+    }
 
     if (canLeft !== scrollUiRef.current.canLeft) {
       scrollUiRef.current.canLeft = canLeft;
@@ -158,6 +170,17 @@ export default function CampusFeedStrip({
     syncScrollUi();
     maybeLoadMore();
   }, [cards.length, maybeLoadMore, syncScrollUi]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      syncScrollUi();
+      maybeLoadMore();
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [maybeLoadMore, syncScrollUi]);
 
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
@@ -306,7 +329,7 @@ export default function CampusFeedStrip({
       onFocusCapture={handleFocusIn}
       onBlurCapture={handleFocusOut}
     >
-      {!reducedMotion && (
+      {!reducedMotion && canAutoScroll && (
         <div className="mb-2 flex justify-end">
           <button
             type="button"
@@ -353,7 +376,7 @@ export default function CampusFeedStrip({
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
           onTouchCancel={handleTouchEnd}
-          className={`no-scrollbar flex gap-4 overflow-x-auto pb-2 pt-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 ${
+          className={`no-scrollbar flex w-full gap-4 overflow-x-auto pb-2 pt-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 ${bleedClassName} ${
             snapEnabled ? "scroll-smooth snap-x snap-mandatory" : "snap-none"
           }`}
         >

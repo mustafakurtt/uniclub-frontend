@@ -1,19 +1,92 @@
 import { useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import { getFeed } from "@/features/dashboard/api/feed";
 import CampusFeedStrip from "@/pages/dashboard/CampusFeedStrip";
 import { toVisualFeedCards } from "@/pages/dashboard/campusFeedVisual";
 import { Icon } from "@/shared/ui/Icon";
 
-/** Şerit sağ kenara viewport kadar taşar; sol okuma sütunuyla hizalı kalır. */
-const STRIP_BLEED_RIGHT = "mr-[calc(50%-50vw)]";
+/** Şerit sağa viewport kenarına taşar; sol okuma sütunuyla hizalı kalır (padding, genişlik şişirmez). */
+const STRIP_BLEED_RIGHT = "pr-[calc(50vw-50%)]";
+
+function FeedEmptyState({
+  isAdmin,
+  hasApprovedClub,
+}: {
+  isAdmin: boolean;
+  hasApprovedClub: boolean;
+}) {
+  if (isAdmin) {
+    return (
+      <div className="card py-10 text-center">
+        <Icon name="officer" size={32} className="mx-auto mb-3 text-brand-500" />
+        <p className="font-display font-bold text-slate-800">Kulüp akışın boş</p>
+        <p className="mx-auto mt-1 max-w-md text-sm text-slate-500">
+          Bu bölüm üye olduğun kulüplerin galeri ve etkinlik kapaklarını gösterir.
+          Personel hesaplarında kulüp üyeliği olmayabilir — günlük işlerin yönetim
+          panelinde.
+        </p>
+        <div className="mt-5 flex flex-wrap justify-center gap-3">
+          <Link to="/admin" className="btn-primary inline-flex">
+            Yönetim paneline git
+          </Link>
+          <Link to="/activities" className="btn-secondary inline-flex">
+            Etkinliklere göz at
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!hasApprovedClub) {
+    return (
+      <div className="card py-10 text-center">
+        <Icon name="explore" size={32} className="mx-auto mb-3 text-brand-400" />
+        <p className="font-display font-bold text-slate-800">Henüz kulüp akışın yok</p>
+        <p className="mx-auto mt-1 max-w-sm text-sm text-slate-500">
+          Bir kulübe katıldığında galeri görselleri ve etkinlik kapakları burada görünür.
+        </p>
+        <div className="mt-5 flex flex-wrap justify-center gap-3">
+          <Link to="/clubs" className="btn-primary inline-flex">
+            Kulüpleri keşfet
+          </Link>
+          <Link to="/activities" className="btn-secondary inline-flex">
+            Etkinliklere git
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="card py-10 text-center">
+      <Icon name="gallery" size={28} className="mx-auto mb-3 text-brand-400" />
+      <p className="font-display font-bold text-slate-800">Henüz görsel içerik yok</p>
+      <p className="mx-auto mt-1 max-w-sm text-sm text-slate-500">
+        Kulüp galerileri ve etkinlik kapakları burada görünür. Duyurular kulüp sayfalarında,
+        etkinlikler etkinlikler sayfasında.
+      </p>
+      <div className="mt-5 flex flex-wrap justify-center gap-3">
+        <Link to="/activities" className="btn-primary inline-flex">
+          Etkinliklere git
+        </Link>
+        <Link to="/clubs" className="btn-secondary inline-flex">
+          Kulüpleri keşfet
+        </Link>
+      </div>
+    </div>
+  );
+}
 
 /**
  * Kampüs görsel akışı — `GET /api/feed` içinden etkinlik + galeri kartları.
  * Metin duyuruları dashboard'da gösterilmez (kulüp/okul sayfalarında kalır).
  */
 export default function CampusFeed() {
+  const { isAdmin, clubMemberships } = useAuth();
+  const hasApprovedClub = clubMemberships.some((m) => m.status === "approved");
+
   const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteQuery({
       queryKey: ["feed"],
@@ -51,7 +124,9 @@ export default function CampusFeed() {
         <div>
           <h2 className="font-display text-xl font-extrabold text-slate-900">Kampüste ne oluyor</h2>
           <p className="text-sm text-slate-500">
-            Kulüplerinden gelen görseller ve etkinlik kapakları — kaydırarak keşfet.
+            {isAdmin
+              ? "Üye olduğun kulüplerin galeri ve etkinlik kapakları burada görünür."
+              : "Kulüplerinden gelen görseller ve etkinlik kapakları — kaydırarak keşfet."}
           </p>
         </div>
         <Link to="/activities" className="shrink-0 text-sm font-bold text-brand-600 hover:underline">
@@ -60,7 +135,7 @@ export default function CampusFeed() {
       </div>
 
       {isLoading && (
-        <div className={`flex gap-4 overflow-hidden ${STRIP_BLEED_RIGHT}`}>
+        <div className={`flex w-full gap-4 overflow-hidden ${STRIP_BLEED_RIGHT}`}>
           {[0, 1, 2].map((i) => (
             <div
               key={i}
@@ -84,33 +159,17 @@ export default function CampusFeed() {
       )}
 
       {!isLoading && !isError && visualCards.length === 0 && (
-        <div className="card py-10 text-center">
-          <Icon name="gallery" size={28} className="mx-auto mb-3 text-brand-400" />
-          <p className="font-display font-bold text-slate-800">Henüz görsel içerik yok</p>
-          <p className="mx-auto mt-1 max-w-sm text-sm text-slate-500">
-            Kulüp galerileri ve etkinlik kapakları burada görünür. Duyurular kulüp sayfalarında,
-            etkinlikler etkinlikler sayfasında.
-          </p>
-          <div className="mt-5 flex flex-wrap justify-center gap-3">
-            <Link to="/activities" className="btn-primary inline-flex">
-              Etkinliklere git
-            </Link>
-            <Link to="/clubs" className="btn-secondary inline-flex">
-              Kulüpleri keşfet
-            </Link>
-          </div>
-        </div>
+        <FeedEmptyState isAdmin={isAdmin} hasApprovedClub={hasApprovedClub} />
       )}
 
       {visualCards.length > 0 && (
-        <div className={STRIP_BLEED_RIGHT}>
-          <CampusFeedStrip
-            cards={visualCards}
-            hasNextPage={!!hasNextPage}
-            isFetchingNextPage={isFetchingNextPage}
-            onLoadMore={() => fetchNextPage()}
-          />
-        </div>
+        <CampusFeedStrip
+          cards={visualCards}
+          hasNextPage={!!hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          onLoadMore={() => fetchNextPage()}
+          bleedClassName={STRIP_BLEED_RIGHT}
+        />
       )}
     </section>
   );
