@@ -6,6 +6,7 @@ import VerifyEmail from "@/features/auth/pages/VerifyEmail";
 import Dashboard from "@/pages/Dashboard";
 import Clubs from "@/features/clubs/pages/Clubs";
 import ClubDetail from "@/features/clubs/pages/ClubDetail";
+import ClubPanelPage from "@/features/clubs/pages/ClubPanelPage";
 import ClubApplicationDetailPage from "@/features/clubs/pages/ClubApplicationDetailPage";
 import FormationProposalsPage from "@/features/clubs/pages/FormationProposalsPage";
 import FormationProposalDetailPage from "@/features/clubs/pages/FormationProposalDetailPage";
@@ -91,6 +92,7 @@ function App() {
             <Route path="/clubs/proposals/:proposalId" element={<FormationProposalDetailPage />} />
             <Route path="/clubs/new" element={<CreateClubApplicationPage />} />
             {/* Detay id ile çalışır — backend'de slug lookup ucu yok (FRONTEND_CLUBS.md §5.1) */}
+            <Route path="/clubs/:clubId/panel" element={<ClubPanelPage />} />
             <Route path="/clubs/:clubId" element={<ClubDetail />} />
             <Route path="/applications/:applicationId" element={<ClubApplicationDetailPage />} />
             <Route path="/profile" element={<Profile />} />

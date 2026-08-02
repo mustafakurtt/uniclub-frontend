@@ -149,6 +149,11 @@ export default function ClubDetail() {
 
               {/* Aksiyonlar — üyelik durumuna göre (§5.3-5.4) */}
               <div className="flex flex-wrap items-center gap-2 pb-1">
+                {isStaff && (
+                  <Link to={`/clubs/${clubId}/panel`} className="btn-primary text-sm">
+                    <Icon name="settings" size={14} /> Kulüp paneli
+                  </Link>
+                )}
                 {isPresident && (
                   <button className="btn-secondary text-xs" onClick={() => setEditing(true)}>
                     <Icon name="edit" size={14} /> Kulübü Düzenle
@@ -213,7 +218,9 @@ export default function ClubDetail() {
                 ))}
               </div>
             )}
-            {isStaff && <ClubManagementBoardSummary clubId={clubId} enabled={isStaff} />}
+            {isApprovedMember && (
+              <ClubManagementBoardSummary clubId={clubId} enabled={isApprovedMember} />
+            )}
           </div>
         </div>
       </Reveal>
