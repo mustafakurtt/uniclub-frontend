@@ -61,6 +61,8 @@ export default function AdminLayoutShell() {
   const canManageSettings = hasPermission("university.settings.manage");
   const canManageAcademicTerms = hasPermission("university.academic_term.manage");
   const canExport = hasPermission("university.export.generate");
+  // Etkinlik yönetimi listeyi kulüp uçlarından topluyor; ikisi de gerekli.
+  const canModerateActivities = hasPermission("activity.moderate") && canViewClubs;
   const canViewPlatformTenants = hasPermission("platform.tenant.view");
   const canViewPlatformUsers = hasPermission("platform.user.view");
 
@@ -68,6 +70,7 @@ export default function AdminLayoutShell() {
     { to: "/admin/clubs", label: "Kulüpler", icon: "club", visible: canViewClubs },
     { to: "/admin/users", label: "Kişiler", icon: "members", visible: canViewUsers },
     { to: "/admin/moderation", label: "Moderasyon", icon: "moderation", visible: canModerate },
+    { to: "/admin/activities", label: "Etkinlikler", icon: "calendar", visible: canModerateActivities },
     {
       to: "/admin/university-announcements",
       label: "Duyurular",
