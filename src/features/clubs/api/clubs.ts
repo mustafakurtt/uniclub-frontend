@@ -61,6 +61,8 @@ export interface CreateAnnouncementDto {
 }
 
 export interface UpdateAnnouncementDto {
+  title?: string;
+  content?: string;
   pinned?: boolean;
   visibility?: "university" | "members";
   scheduledPublishAtLocal?: string | null;

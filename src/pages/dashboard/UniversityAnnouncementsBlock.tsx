@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { listUniversityAnnouncements } from "@/features/university-announcements/api/universityAnnouncements";
 import { universityAnnouncementsQueryKey } from "@/features/university-announcements/queries";
+import { formatEditedAtLabel } from "@/shared/lib/announcementEdited";
 import { Icon } from "@/shared/ui/Icon";
 import Reveal from "@/shared/ui/Reveal";
 
@@ -74,6 +75,7 @@ export default function UniversityAnnouncementsBlock({ universityId }: Props) {
         <div className="space-y-3">
           {preview.map((item) => {
             const isPinned = item.pinned;
+            const editedLabel = formatEditedAtLabel(item.editedAt);
             return (
               <Link
                 key={item.id}
@@ -105,6 +107,7 @@ export default function UniversityAnnouncementsBlock({ universityId }: Props) {
                     </p>
                     <p className="mt-2 text-[11px] font-semibold text-slate-400">
                       {item.publishedAt ? formatDate(item.publishedAt) : formatDate(item.createdAt)}
+                      {editedLabel && <span> · {editedLabel}</span>}
                     </p>
                   </div>
                   <Icon name="chevronRight" size={18} className="mt-1 shrink-0 text-slate-300" />

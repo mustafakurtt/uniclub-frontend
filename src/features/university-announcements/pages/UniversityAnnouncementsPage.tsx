@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { listUniversityAnnouncements } from "@/features/university-announcements/api/universityAnnouncements";
 import { universityAnnouncementsQueryKey } from "@/features/university-announcements/queries";
+import { formatEditedAtLabel } from "@/shared/lib/announcementEdited";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { getErrorMessage } from "@/shared/api/client";
 import PageLoader from "@/shared/ui/PageLoader";
@@ -74,7 +75,9 @@ export default function UniversityAnnouncementsPage() {
         <EmptyState icon="announcement" title="Henüz yayınlanmış duyuru yok" />
       ) : (
         <ul className="space-y-4">
-          {ordered.map((item) => (
+          {ordered.map((item) => {
+            const editedLabel = formatEditedAtLabel(item.editedAt);
+            return (
             <li key={item.id}>
               <Link
                 to={`/duyurular/${item.id}`}
@@ -93,10 +96,12 @@ export default function UniversityAnnouncementsPage() {
                 <p className="mt-2 line-clamp-2 text-sm text-slate-600">{item.content}</p>
                 <p className="mt-3 text-[11px] font-semibold text-slate-400">
                   {item.publishedAt ? formatDate(item.publishedAt) : formatDate(item.createdAt)}
+                  {editedLabel && <span> · {editedLabel}</span>}
                 </p>
               </Link>
             </li>
-          ))}
+            );
+          })}
         </ul>
       )}
     </div>
