@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { AdvisedClubCard } from "@/pages/dashboard/ClubCards";
@@ -12,7 +12,7 @@ import { Icon } from "@/shared/ui/Icon";
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { user, clubMemberships, advisedClubs, isLoading } = useAuth();
+  const { user, clubMemberships, advisedClubs, isLoading, isAdmin } = useAuth();
 
   // Üyelik satırları logo/kapak taşımaz (ClubSummary); görselleri kulüp
   // listesinden eşleriz. Clubs sayfasıyla aynı anahtar — cache paylaşılır.
@@ -54,6 +54,32 @@ export default function Dashboard() {
       </Reveal>
 
       <ActiveProcessesCard userId={user.id} />
+
+      {isAdmin && (
+        <Reveal>
+          <Link
+            to="/admin"
+            className="card-hover group flex items-center gap-4 p-5 transition-all sm:p-6"
+          >
+            <span className="icon-tile shrink-0">
+              <Icon name="officer" size={24} className="text-brand-600" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <h2 className="font-display text-lg font-extrabold text-slate-900 transition-colors group-hover:text-brand-700">
+                Yönetim paneli
+              </h2>
+              <p className="mt-0.5 text-sm text-slate-500">
+                Başvurular, kulüpler, kullanıcılar ve kurumsal ayarlar burada.
+              </p>
+            </div>
+            <Icon
+              name="chevronRight"
+              size={22}
+              className="shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-brand-600"
+            />
+          </Link>
+        </Reveal>
+      )}
 
       <Reveal>
         <CampusFeed />
