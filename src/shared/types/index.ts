@@ -29,3 +29,4 @@ export type * from "./discover"; // üniversiteler arası keşif (GET /api/disco
 export type * from "./clubPanel"; // kulüp paneli + devir teslim
 export type * from "./universityAnnouncement"; // okul geneli duyurular
 export type * from "./platform"; // SaaS operatör paneli
+export type * from "./dashboard"; // tenant yönetim paneli özeti

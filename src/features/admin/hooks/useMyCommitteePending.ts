@@ -46,7 +46,7 @@ export function useMyCommitteePendingApplications(
   return { access: "ok", items: query.data.items };
 }
 
-/** Günlük iş grubunun görünürlüğü — menü öğesi yokken grup başlığını gizlememek için. */
+/** Kurul görevleri ana sayfa bloğu — menüden çıkarıldı (Dalga 1 IA). */
 export function useShowCommitteeTasksNav(): boolean {
   const { universityId } = useAdminScope();
   const pending = useMyCommitteePendingApplications(universityId);

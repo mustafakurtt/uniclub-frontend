@@ -41,6 +41,7 @@ export type GlobalPermission =
   | "permission.manage"
   // Denetim izi (salt-okunur; docs/DENETIM_VE_HATA.md §1)
   | "audit.view"
+  | "dashboard.view"
   // Afiş QR — okul geneli yönetim (API.md §15)
   | "poster_qr.university.manage"
   | "platform.tenant.view"

@@ -5,9 +5,6 @@ import { Icon, type IconName } from "@/shared/ui/Icon";
 import { CLUB_PERMISSIONS, MODERATION_PERMISSIONS, UNIVERSITY_PERMISSIONS } from "@/features/auth/authorization";
 import { roleLabel } from "@/features/admin/labels";
 import UniversityScopeSelector from "@/features/admin/components/UniversityScopeSelector";
-import CommitteeTasksNavItem from "@/features/admin/components/CommitteeTasksNavItem";
-import { useShowCommitteeTasksNav } from "@/features/admin/hooks/useMyCommitteePending";
-import ExportsNavItem from "@/features/exports/components/ExportsNavItem";
 import NotificationBell from "@/features/notifications/components/NotificationBell";
 import LanguageSwitcher from "@/shared/ui/LanguageSwitcher";
 
@@ -18,21 +15,22 @@ interface AdminNavItem {
   visible: boolean;
 }
 
-interface AdminNavGroup {
-  title: string;
-  items: AdminNavItem[];
-}
-
 function NavGroupSection({
   title,
   children,
+  muted = false,
 }: {
   title: string;
   children: ReactNode;
+  muted?: boolean;
 }) {
   return (
-    <div className="mb-4 last:mb-0">
-      <p className="mb-2 px-4 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+    <div className={`mb-4 last:mb-0 ${muted ? "mt-6 border-t border-slate-200/70 pt-5" : ""}`}>
+      <p
+        className={`mb-2 px-4 text-[10px] font-bold uppercase tracking-wider ${
+          muted ? "text-slate-300" : "text-slate-400"
+        }`}
+      >
         {title}
       </p>
       <div className="flex flex-col gap-1">{children}</div>
@@ -65,54 +63,47 @@ export default function AdminLayoutShell() {
   const canExport = hasPermission("university.export.generate");
   const canViewPlatformTenants = hasPermission("platform.tenant.view");
   const canViewPlatformUsers = hasPermission("platform.user.view");
-  const showCommitteeTasks = useShowCommitteeTasksNav();
 
-  const dailyWorkItems = [
+  const workspaceItems = [
     { to: "/admin/clubs", label: "Kulüpler", icon: "club", visible: canViewClubs },
+    { to: "/admin/users", label: "Kişiler", icon: "members", visible: canViewUsers },
     { to: "/admin/moderation", label: "Moderasyon", icon: "moderation", visible: canModerate },
     {
       to: "/admin/university-announcements",
-      label: "Okul duyuruları",
+      label: "Duyurular",
       icon: "announcement",
       visible: canManageUniversityAnnouncements,
     },
   ].filter((item) => item.visible) as AdminNavItem[];
 
-  const showDailyWork = dailyWorkItems.length > 0 || canExport || showCommitteeTasks;
-
-  const navGroups: AdminNavGroup[] = [
-    ...(showDailyWork
-      ? [{ title: "Günlük iş", items: dailyWorkItems }]
-      : []),
+  const settingsItems = [
+    { to: "/admin/universities", label: "Akademik Yapı", icon: "university", visible: canManageUniversities },
     {
-      title: "Kurum yapısı",
-      items: [
-        { to: "/admin/users", label: "Kullanıcılar", icon: "members", visible: canViewUsers },
-        { to: "/admin/universities", label: "Akademik Yapı", icon: "university", visible: canManageUniversities },
-        { to: "/admin/academic-terms", label: "Akademik Dönemler", icon: "calendar", visible: canManageAcademicTerms },
-        { to: "/admin/approval-committees", label: "Onay Kurulları", icon: "members", visible: canManageSettings },
-        { to: "/admin/settings", label: "Politikalar", icon: "settings", visible: canManageSettings },
-      ],
+      to: "/admin/academic-terms",
+      label: "Akademik Dönemler",
+      icon: "calendar",
+      visible: canManageAcademicTerms,
     },
+    { to: "/admin/settings", label: "Politikalar", icon: "settings", visible: canManageSettings },
     {
-      title: "Sistem",
-      items: [
-        { to: "/admin/roles", label: "Roller", icon: "role", visible: canManageRoles },
-        { to: "/admin/permissions", label: "Yetkiler", icon: "lock", visible: canManagePermissions },
-        { to: "/admin/audit", label: "Denetim İzi", icon: "audit", visible: canViewAudit },
-      ],
+      to: "/admin/approval-committees",
+      label: "Onay Kurulları",
+      icon: "members",
+      visible: canManageSettings,
     },
-  ];
-
-  const visibleGroups = navGroups
-    .map((group) => ({ ...group, items: group.items.filter((item) => item.visible) }))
-    .filter((group) => group.items.length > 0);
+    { to: "/admin/roles", label: "Roller", icon: "role", visible: canManageRoles },
+    { to: "/admin/permissions", label: "Yetkiler", icon: "lock", visible: canManagePermissions },
+    { to: "/admin/audit", label: "Denetim İzi", icon: "audit", visible: canViewAudit },
+    { to: "/admin/exports", label: "Dışa Aktarma", icon: "archive", visible: canExport },
+  ].filter((item) => item.visible) as AdminNavItem[];
 
   const platformItems = [
     { to: "/admin/platform/tenants", label: "Tenantlar", icon: "university" as IconName, visible: canViewPlatformTenants },
     { to: "/admin/platform/users", label: "Operatörler", icon: "members" as IconName, visible: canViewPlatformUsers },
   ].filter((item) => item.visible);
 
+  const showWorkspaceNav = workspaceItems.length > 0;
+  const showSettingsNav = settingsItems.length > 0;
   const showPlatformNav = platformItems.length > 0;
 
   const primaryRole =
@@ -131,6 +122,13 @@ export default function AdminLayoutShell() {
       isActive
         ? "bg-brand-600 text-white shadow-glow"
         : "text-slate-600 hover:bg-brand-50 hover:text-brand-700"
+    }`;
+
+  const settingsNavLinkClass = ({ isActive }: { isActive: boolean }) =>
+    `flex items-center gap-3 rounded-lg px-4 py-2.5 text-[13px] font-medium transition-all duration-200 ${
+      isActive
+        ? "bg-slate-200/80 text-slate-800"
+        : "text-slate-400 hover:bg-slate-100/80 hover:text-slate-600"
     }`;
 
   return (
@@ -162,6 +160,7 @@ export default function AdminLayoutShell() {
                   Genel Bakış
                 </NavLink>
               </NavGroupSection>
+
               {showPlatformNav && (
                 <NavGroupSection title="Platform">
                   {platformItems.map((item) => (
@@ -172,22 +171,28 @@ export default function AdminLayoutShell() {
                   ))}
                 </NavGroupSection>
               )}
-              {visibleGroups.map((group) => (
-                <NavGroupSection key={group.title} title={group.title}>
-                  {group.items.map((item) => (
+
+              {showWorkspaceNav && (
+                <NavGroupSection title="Çalışma alanı">
+                  {workspaceItems.map((item) => (
                     <NavLink key={item.to} to={item.to} className={navLinkClass}>
                       <Icon name={item.icon} size={18} />
                       {item.label}
                     </NavLink>
                   ))}
-                  {group.title === "Günlük iş" && (
-                    <CommitteeTasksNavItem navLinkClass={navLinkClass} />
-                  )}
-                  {group.title === "Günlük iş" && canExport && (
-                    <ExportsNavItem navLinkClass={navLinkClass} />
-                  )}
                 </NavGroupSection>
-              ))}
+              )}
+
+              {showSettingsNav && (
+                <NavGroupSection title="Ayarlar" muted>
+                  {settingsItems.map((item) => (
+                    <NavLink key={item.to} to={item.to} className={settingsNavLinkClass}>
+                      <Icon name={item.icon} size={16} />
+                      {item.label}
+                    </NavLink>
+                  ))}
+                </NavGroupSection>
+              )}
             </nav>
 
             <div className="my-5 h-px bg-slate-200/70" />
