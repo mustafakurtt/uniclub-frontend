@@ -6,6 +6,9 @@ import CampusFeedStrip from "@/pages/dashboard/CampusFeedStrip";
 import { toVisualFeedCards } from "@/pages/dashboard/campusFeedVisual";
 import { Icon } from "@/shared/ui/Icon";
 
+/** Şerit sağa taşar; sol kenar içerik sütunuyla hizalı kalır (main px ile eşleşir). */
+const STRIP_BLEED_RIGHT = "-mr-3 sm:-mr-6 lg:-mr-8";
+
 /**
  * Kampüs görsel akışı — `GET /api/feed` içinden etkinlik + galeri kartları.
  * Metin duyuruları dashboard'da gösterilmez (kulüp/okul sayfalarında kalır).
@@ -43,7 +46,7 @@ export default function CampusFeed() {
   ]);
 
   return (
-    <section className="card p-6">
+    <section className="py-2">
       <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="font-display text-xl font-extrabold text-slate-900">Kampüste ne oluyor</h2>
@@ -57,11 +60,11 @@ export default function CampusFeed() {
       </div>
 
       {isLoading && (
-        <div className="flex gap-4 overflow-hidden">
+        <div className={`flex gap-4 overflow-hidden ${STRIP_BLEED_RIGHT}`}>
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="card w-[min(85vw,18rem)] shrink-0 overflow-hidden p-0 sm:w-72"
+              className="card w-[min(78vw,20rem)] shrink-0 overflow-hidden p-0 sm:w-80"
               aria-hidden
             >
               <div className="aspect-[16/9] animate-pulse bg-slate-100" />
@@ -81,7 +84,7 @@ export default function CampusFeed() {
       )}
 
       {!isLoading && !isError && visualCards.length === 0 && (
-        <div className="py-10 text-center">
+        <div className="card py-10 text-center">
           <Icon name="gallery" size={28} className="mx-auto mb-3 text-brand-400" />
           <p className="font-display font-bold text-slate-800">Henüz görsel içerik yok</p>
           <p className="mx-auto mt-1 max-w-sm text-sm text-slate-500">
@@ -100,12 +103,14 @@ export default function CampusFeed() {
       )}
 
       {visualCards.length > 0 && (
-        <CampusFeedStrip
-          cards={visualCards}
-          hasNextPage={!!hasNextPage}
-          isFetchingNextPage={isFetchingNextPage}
-          onLoadMore={() => fetchNextPage()}
-        />
+        <div className={STRIP_BLEED_RIGHT}>
+          <CampusFeedStrip
+            cards={visualCards}
+            hasNextPage={!!hasNextPage}
+            isFetchingNextPage={isFetchingNextPage}
+            onLoadMore={() => fetchNextPage()}
+          />
+        </div>
       )}
     </section>
   );

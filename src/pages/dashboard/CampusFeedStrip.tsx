@@ -23,6 +23,7 @@ const SCROLL_STEP = 300;
 const AUTO_SCROLL_PX_PER_SEC = 22;
 const MANUAL_IDLE_MS = 3000;
 const END_THRESHOLD = 4;
+const SCROLL_TOLERANCE = 2;
 
 export default function CampusFeedStrip({
   cards,
@@ -35,7 +36,7 @@ export default function CampusFeedStrip({
   const rafRef = useRef<number | null>(null);
   const lastFrameTimeRef = useRef<number | null>(null);
   const directionRef = useRef<1 | -1>(1);
-  const isProgrammaticScrollRef = useRef(false);
+  const expectedScrollLeftRef = useRef<number | null>(null);
   const idleResumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const hasNextPageRef = useRef(hasNextPage);
@@ -108,10 +109,15 @@ export default function CampusFeedStrip({
   }, [cards.length, updateScrollState]);
 
   const handleScroll = useCallback(() => {
-    if (isProgrammaticScrollRef.current) {
-      isProgrammaticScrollRef.current = false;
-    } else {
-      interruptAutoScroll();
+    const el = scrollRef.current;
+    if (el) {
+      const expected = expectedScrollLeftRef.current;
+      const isProgrammatic =
+        expected !== null && Math.abs(el.scrollLeft - expected) <= SCROLL_TOLERANCE;
+      if (!isProgrammatic) {
+        expectedScrollLeftRef.current = null;
+        interruptAutoScroll();
+      }
     }
     updateScrollState();
   }, [interruptAutoScroll, updateScrollState]);
@@ -197,7 +203,7 @@ export default function CampusFeedStrip({
           directionRef.current = 1;
         }
 
-        isProgrammaticScrollRef.current = true;
+        expectedScrollLeftRef.current = nextLeft;
         el.scrollLeft = nextLeft;
         updateScrollState();
       }
@@ -286,7 +292,7 @@ export default function CampusFeedStrip({
           ))}
           {isFetchingNextPage && (
             <div
-              className="card flex w-[min(85vw,18rem)] shrink-0 snap-start items-center justify-center sm:w-72"
+              className="card flex w-[min(78vw,20rem)] shrink-0 snap-start items-center justify-center sm:w-80"
               aria-hidden
             >
               <div className="h-40 w-full animate-pulse bg-slate-100" />
