@@ -19,11 +19,30 @@ interface CampusFeedStripProps {
 }
 
 const SCROLL_STEP = 300;
-/** ~22 px/s — 288px kart ~13 sn'de kayar; başlık + kulüp adı okunabilir. */
+/** ~22 px/s — kart başlığı okunabilir hızda. */
 const AUTO_SCROLL_PX_PER_SEC = 22;
 const MANUAL_IDLE_MS = 3000;
 const END_THRESHOLD = 4;
 const SCROLL_TOLERANCE = 2;
+
+interface PauseFlags {
+  user: boolean;
+  hover: boolean;
+  focus: boolean;
+  touch: boolean;
+  manual: boolean;
+}
+
+function isPaused(flags: PauseFlags, reducedMotion: boolean) {
+  return (
+    reducedMotion ||
+    flags.user ||
+    flags.hover ||
+    flags.focus ||
+    flags.touch ||
+    flags.manual
+  );
+}
 
 export default function CampusFeedStrip({
   cards,
@@ -38,39 +57,54 @@ export default function CampusFeedStrip({
   const directionRef = useRef<1 | -1>(1);
   const expectedScrollLeftRef = useRef<number | null>(null);
   const idleResumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pauseRef = useRef<PauseFlags>({
+    user: false,
+    hover: false,
+    focus: false,
+    touch: false,
+    manual: false,
+  });
+  const reducedMotionRef = useRef(false);
+  const scrollUiRef = useRef({ canLeft: false, canRight: false });
+  const onLoadMoreRef = useRef(onLoadMore);
 
   const hasNextPageRef = useRef(hasNextPage);
   const isFetchingNextPageRef = useRef(isFetchingNextPage);
   hasNextPageRef.current = hasNextPage;
   isFetchingNextPageRef.current = isFetchingNextPage;
+  onLoadMoreRef.current = onLoadMore;
 
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  /** Yalnızca Duraklat/Oynat düğmesi etiketi için — rAF bunu okumaz. */
   const [userPaused, setUserPaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(
     () =>
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
-  const [hoverPaused, setHoverPaused] = useState(false);
-  const [focusPaused, setFocusPaused] = useState(false);
-  const [touchPaused, setTouchPaused] = useState(false);
-  const [manualPaused, setManualPaused] = useState(false);
+  /** snap-x ↔ snap-none; yalnızca duraklatma değişiminde güncellenir, kare başına değil. */
+  const [snapEnabled, setSnapEnabled] = useState(() =>
+    isPaused(pauseRef.current, reducedMotion),
+  );
 
-  const autoScrollActive =
-    !userPaused &&
-    !reducedMotion &&
-    !hoverPaused &&
-    !focusPaused &&
-    !touchPaused &&
-    !manualPaused;
+  reducedMotionRef.current = reducedMotion;
+
+  const refreshSnapMode = useCallback(() => {
+    const next = isPaused(pauseRef.current, reducedMotionRef.current);
+    setSnapEnabled((prev) => (prev === next ? prev : next));
+  }, []);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const onChange = (event: MediaQueryListEvent) => setReducedMotion(event.matches);
+    const onChange = (event: MediaQueryListEvent) => {
+      reducedMotionRef.current = event.matches;
+      setReducedMotion(event.matches);
+      refreshSnapMode();
+    };
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
-  }, []);
+  }, [refreshSnapMode]);
 
   const clearIdleResumeTimer = useCallback(() => {
     if (idleResumeTimerRef.current !== null) {
@@ -79,34 +113,51 @@ export default function CampusFeedStrip({
     }
   }, []);
 
-  const scheduleManualResume = useCallback(() => {
-    clearIdleResumeTimer();
-    idleResumeTimerRef.current = setTimeout(() => {
-      setManualPaused(false);
-      idleResumeTimerRef.current = null;
-    }, MANUAL_IDLE_MS);
-  }, [clearIdleResumeTimer]);
-
-  const interruptAutoScroll = useCallback(() => {
-    setManualPaused(true);
-    scheduleManualResume();
-  }, [scheduleManualResume]);
-
-  const updateScrollState = useCallback(() => {
+  const syncScrollUi = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
     const maxScroll = el.scrollWidth - el.clientWidth;
-    setCanScrollLeft(el.scrollLeft > 8);
-    setCanScrollRight(el.scrollLeft < maxScroll - 8);
+    const canLeft = el.scrollLeft > 8;
+    const canRight = el.scrollLeft < maxScroll - 8;
 
-    if (hasNextPageRef.current && !isFetchingNextPageRef.current && maxScroll - el.scrollLeft < 120) {
-      onLoadMore();
+    if (canLeft !== scrollUiRef.current.canLeft) {
+      scrollUiRef.current.canLeft = canLeft;
+      setCanScrollLeft(canLeft);
     }
-  }, [onLoadMore]);
+    if (canRight !== scrollUiRef.current.canRight) {
+      scrollUiRef.current.canRight = canRight;
+      setCanScrollRight(canRight);
+    }
+  }, []);
+
+  const maybeLoadMore = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    if (
+      hasNextPageRef.current &&
+      !isFetchingNextPageRef.current &&
+      maxScroll - el.scrollLeft < 120
+    ) {
+      onLoadMoreRef.current();
+    }
+  }, []);
+
+  const interruptAutoScroll = useCallback(() => {
+    pauseRef.current.manual = true;
+    refreshSnapMode();
+    clearIdleResumeTimer();
+    idleResumeTimerRef.current = setTimeout(() => {
+      pauseRef.current.manual = false;
+      refreshSnapMode();
+      idleResumeTimerRef.current = null;
+    }, MANUAL_IDLE_MS);
+  }, [clearIdleResumeTimer, refreshSnapMode]);
 
   useEffect(() => {
-    updateScrollState();
-  }, [cards.length, updateScrollState]);
+    syncScrollUi();
+    maybeLoadMore();
+  }, [cards.length, maybeLoadMore, syncScrollUi]);
 
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
@@ -119,8 +170,9 @@ export default function CampusFeedStrip({
         interruptAutoScroll();
       }
     }
-    updateScrollState();
-  }, [interruptAutoScroll, updateScrollState]);
+    syncScrollUi();
+    maybeLoadMore();
+  }, [interruptAutoScroll, maybeLoadMore, syncScrollUi]);
 
   const scrollBy = useCallback(
     (delta: number) => {
@@ -146,34 +198,48 @@ export default function CampusFeedStrip({
     interruptAutoScroll();
     el.scrollLeft += event.deltaY;
     event.preventDefault();
-    updateScrollState();
+    syncScrollUi();
+    maybeLoadMore();
   };
 
-  const handleFocusIn = () => setFocusPaused(true);
+  const handleFocusIn = () => {
+    pauseRef.current.focus = true;
+    refreshSnapMode();
+  };
 
   const handleFocusOut = (event: FocusEvent<HTMLDivElement>) => {
     const wrapper = wrapperRef.current;
     const next = event.relatedTarget;
     if (wrapper && next instanceof Node && wrapper.contains(next)) return;
-    setFocusPaused(false);
+    pauseRef.current.focus = false;
+    refreshSnapMode();
   };
 
-  const handleTouchStart = () => setTouchPaused(true);
+  const handleTouchStart = () => {
+    pauseRef.current.touch = true;
+    refreshSnapMode();
+  };
 
   const handleTouchEnd = () => {
-    setTouchPaused(false);
+    pauseRef.current.touch = false;
+    refreshSnapMode();
     interruptAutoScroll();
   };
 
+  const handleTogglePause = () => {
+    pauseRef.current.user = !pauseRef.current.user;
+    setUserPaused(pauseRef.current.user);
+    refreshSnapMode();
+  };
+
+  // rAF döngüsü mount'ta bir kez kurulur; pause bayrakları ref'ten okunur.
   useEffect(() => {
     if (reducedMotion) return;
 
     const tick = (time: number) => {
       const el = scrollRef.current;
-      const paused =
-        userPaused || hoverPaused || focusPaused || touchPaused || manualPaused;
 
-      if (!el || paused) {
+      if (!el || isPaused(pauseRef.current, reducedMotionRef.current)) {
         lastFrameTimeRef.current = null;
         rafRef.current = requestAnimationFrame(tick);
         return;
@@ -205,7 +271,14 @@ export default function CampusFeedStrip({
 
         expectedScrollLeftRef.current = nextLeft;
         el.scrollLeft = nextLeft;
-        updateScrollState();
+
+        if (
+          hasNextPageRef.current &&
+          !isFetchingNextPageRef.current &&
+          maxScroll - nextLeft < 120
+        ) {
+          onLoadMoreRef.current();
+        }
       }
 
       lastFrameTimeRef.current = time;
@@ -217,22 +290,19 @@ export default function CampusFeedStrip({
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
       clearIdleResumeTimer();
     };
-  }, [
-    clearIdleResumeTimer,
-    focusPaused,
-    hoverPaused,
-    manualPaused,
-    reducedMotion,
-    touchPaused,
-    updateScrollState,
-    userPaused,
-  ]);
+  }, [clearIdleResumeTimer, reducedMotion]);
 
   return (
     <div
       ref={wrapperRef}
-      onMouseEnter={() => setHoverPaused(true)}
-      onMouseLeave={() => setHoverPaused(false)}
+      onMouseEnter={() => {
+        pauseRef.current.hover = true;
+        refreshSnapMode();
+      }}
+      onMouseLeave={() => {
+        pauseRef.current.hover = false;
+        refreshSnapMode();
+      }}
       onFocusCapture={handleFocusIn}
       onBlurCapture={handleFocusOut}
     >
@@ -240,7 +310,7 @@ export default function CampusFeedStrip({
         <div className="mb-2 flex justify-end">
           <button
             type="button"
-            onClick={() => setUserPaused((value) => !value)}
+            onClick={handleTogglePause}
             className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
             aria-label={userPaused ? "Oynat" : "Duraklat"}
           >
@@ -283,8 +353,8 @@ export default function CampusFeedStrip({
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
           onTouchCancel={handleTouchEnd}
-          className={`flex gap-4 overflow-x-auto pb-2 pt-1 [-ms-overflow-style:none] [scrollbar-width:thin] focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 ${
-            autoScrollActive ? "snap-none" : "scroll-smooth snap-x snap-mandatory"
+          className={`no-scrollbar flex gap-4 overflow-x-auto pb-2 pt-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 ${
+            snapEnabled ? "scroll-smooth snap-x snap-mandatory" : "snap-none"
           }`}
         >
           {cards.map((card) => (

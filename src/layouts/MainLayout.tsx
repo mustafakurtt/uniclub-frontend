@@ -115,7 +115,7 @@ export default function MainLayout() {
       </header>
 
       {/* Sayfa içeriği — altta sabit tab bar kadar boşluk bırakılır */}
-      <main className="relative z-10 mx-auto max-w-7xl animate-fade-up px-3 pb-28 pt-6 sm:px-6 sm:pb-8 sm:pt-8 lg:px-8">
+      <main className="relative z-10 mx-auto max-w-7xl overflow-x-clip animate-fade-up px-3 pb-28 pt-6 sm:px-6 sm:pb-8 sm:pt-8 lg:px-8">
         <Outlet />
       </main>
 
